@@ -10,8 +10,12 @@ import uuid
 # Load environment variables (for Discord token)
 load_dotenv()
 
-# Initialize the bot with a command prefix
-bot = commands.Bot(command_prefix="!")
+# Define intents
+intents = discord.Intents.default()
+intents.message_content = True  # Allows the bot to read messages (needed for slash commands and other interactions)
+
+# Initialize the bot with a command prefix and intents
+bot = commands.Bot(command_prefix="/", intents=intents)
 
 # Load team and region pairings from the teammap.json file
 def load_config():
