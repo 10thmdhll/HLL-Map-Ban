@@ -9,7 +9,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 
-# Load environment variables (Discord token)
+# Load env
 load_dotenv()
 intents = discord.Intents.default()
 intents.message_content = True
@@ -18,33 +18,44 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 STATE_FILE = "state.json"
 
 # In‐memory state
-# ongoing_bans[channel_id] = {
-#     "team_a": { map_name: [sides] },
-#     "team_b": { map_name: [sides] }
-# }
+# ongoing_bans[channel] = {"team_a": {map:[]}, "team_b": {map:[]}}
 ongoing_bans: dict[int, dict[str, dict[str, list[str]]]] = {}
 match_turns: dict[int, str] = {}  # "team_a" or "team_b"
 
 def load_state():
     global ongoing_bans, match_turns
-    if not os.path.exists(STATE_FILE):
+    if not os.path.isfile(STATE_FILE):
         return
     try:
         with open(STATE_FILE, "r") as f:
             data = json.load(f)
-        ongoing_bans = {
-            int(ch): {
-                "team_a": maps["team_a"],
-                "team_b": maps["team_b"]
-            }
-            for ch, maps in data.get("ongoing_bans", {}).items()
-        }
-        match_turns = {int(k): v for k, v in data.get("match_turns", {}).items()}
     except json.JSONDecodeError:
-        print(f"⚠️ Could not parse {STATE_FILE}, resetting state.")
-        ongoing_bans = {}
-        match_turns = {}
+        print("⚠️ state.json malformed; resetting state.")
         save_state()
+        return
+
+    raw = data.get("ongoing_bans", {})
+    # Detect nested-per-team structure
+    nested = True
+    for maps in raw.values():
+        if not isinstance(maps, dict) or "team_a" not in maps or "team_b" not in maps:
+            nested = False
+            break
+
+    if not nested:
+        print("⚠️ Detected old/flat state format; resetting state.")
+        save_state()
+        return
+
+    # Build typed dicts
+    ongoing_bans = {
+        int(ch): {
+            "team_a": d["team_a"],
+            "team_b": d["team_b"]
+        }
+        for ch, d in raw.items()
+    }
+    match_turns = {int(k): v for k, v in data.get("match_turns", {}).items()}
 
 def save_state():
     with open(STATE_FILE, "w") as f:
@@ -60,18 +71,12 @@ def save_state():
         }, f, indent=4)
 
 def load_config():
-    try:
-        with open("teammap.json","r") as f:
-            return json.load(f)
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Error parsing teammap.json: {e}")
+    with open("teammap.json","r") as f:
+        return json.load(f)
 
 def load_maplist():
-    try:
-        with open("maplist.json","r") as f:
-            return json.load(f)["maps"]
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Error parsing maplist.json: {e}")
+    with open("maplist.json","r") as f:
+        return json.load(f)["maps"]
 
 def determine_ban_option(a: str, b: str, cfg: dict) -> str:
     rp = cfg.get("region_pairings", {})
@@ -99,9 +104,9 @@ def create_ban_status_image(
         name = m["name"]
         a_bans = bans[name]["team_a"]
         b_bans = bans[name]["team_b"]
-        any_bans = set(a_bans + b_bans)
-        allied_banned = "Allied" in any_bans
-        axis_banned   = "Axis" in any_bans
+        combined = set(a_bans + b_bans)
+        allied_banned = "Allied" in combined
+        axis_banned   = "Axis" in combined
         bg = (255,0,0) if allied_banned or axis_banned else (255,255,255)
         draw.rectangle([20, y, width-20, y+40], fill=bg)
         status = (
@@ -125,15 +130,14 @@ async def map_autocomplete(interaction: discord.Interaction, current: str):
     if ch not in ongoing_bans:
         return []
     team_key = match_turns[ch]
-    choices = []
+    opts = []
     for m in load_maplist():
         name = m["name"]
-        # skip if both sides already banned for this team
         if len(ongoing_bans[ch][team_key][name]) >= 2:
             continue
         if current.lower() in name.lower():
-            choices.append(app_commands.Choice(name=name, value=name))
-    return choices[:25]
+            opts.append(app_commands.Choice(name=name, value=name))
+    return opts[:25]
 
 @bot.tree.command(name="match_create", description="Create a new match")
 async def match_create(
@@ -144,7 +148,7 @@ async def match_create(
     description: str = "No description provided"
 ):
     ch = interaction.channel_id
-    # prevent a second match if one is active
+    # Prevent duplicate
     if ch in ongoing_bans and any(
         ongoing_bans[ch]["team_a"][m] or ongoing_bans[ch]["team_b"][m]
         for m in ongoing_bans[ch]["team_a"]
@@ -158,7 +162,7 @@ async def match_create(
     try:
         cfg = load_config()
         maps = load_maplist()
-    except RuntimeError as e:
+    except Exception as e:
         await interaction.response.send_message(str(e), ephemeral=True)
         return
 
@@ -167,10 +171,9 @@ async def match_create(
     rb = cfg["team_regions"].get(b, "Unknown")
     ban_opt = determine_ban_option(ra, rb, cfg)
 
-    # initialize bans per team per map
     ongoing_bans[ch] = {
-        "team_a":  {m["name"]: [] for m in maps},
-        "team_b":  {m["name"]: [] for m in maps}
+        "team_a": {m["name"]: [] for m in maps},
+        "team_b": {m["name"]: [] for m in maps}
     }
     match_turns[ch] = "team_a"
     save_state()
@@ -214,7 +217,7 @@ async def ban_map(
     team_key = match_turns[ch]
     other_key = "team_b" if team_key == "team_a" else "team_a"
 
-    # record this team's ban
+    # record ban for this team
     if side in ongoing_bans[ch][team_key][map]:
         await interaction.response.send_message(f"{side} already banned by your team.", ephemeral=True)
         return
@@ -224,7 +227,6 @@ async def ban_map(
     opp = "Axis" if side == "Allied" else "Allied"
     ongoing_bans[ch][other_key][map].append(opp)
 
-    # rotate turn
     match_turns[ch] = other_key
     save_state()
 
