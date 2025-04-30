@@ -1,0 +1,18 @@
+{
+  "maps": [
+    {
+      "name": "Dust 2",
+      "options": {
+        "Allied": "Available",
+        "Axis": "Available"
+      }
+    },
+    {
+      "name": "Mirage",
+      "options": {
+        "Allied": "Available",
+        "Axis": "Available"
+      }
+    }
+  ]
+}
