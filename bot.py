@@ -209,7 +209,7 @@ async def match_setup(ctx, team_a_name, team_b_name, title, description, selecte
     await ctx.send(result_message)
 
 # /ban command: Allow users to ban a map and side, with team-specific permissions
-@bot.slash_command(name="ban", description="Ban a map and side for the match")
+@bot.command(name="ban")
 async def ban(ctx, map: str, side: str):
     match_id = ctx.channel.id  # Using the channel ID as match ID (for simplicity)
     team_role = "team_a" if match_turns.get(match_id, {}).get("current_turn") == "team_a" else "team_b"
