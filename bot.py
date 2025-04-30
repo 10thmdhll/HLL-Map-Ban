@@ -17,6 +17,9 @@ intents.message_content = True  # Allows the bot to read messages (needed for sl
 # Initialize the bot with a command prefix and intents
 bot = commands.Bot(command_prefix="/", intents=intents)
 
+# In-memory dictionary to hold match-specific ban states
+ongoing_bans = {}
+
 # Load team and region pairings from the teammap.json file
 def load_config():
     with open('teammap.json', 'r') as f:
@@ -29,7 +32,7 @@ def load_maplist():
         map_data = json.load(f)
     return map_data['maps']
 
-# Save updated maplist.json after each ban
+# Save updated maplist.json after each ban (not required for match-specific tracking, but kept for future use)
 def save_maplist(maplist):
     with open('maplist.json', 'w') as f:
         json.dump({"maps": maplist}, f, indent=4)
@@ -53,18 +56,8 @@ def determine_ban_option(team_a_region, team_b_region, config):
     # Default if no specific pairing found
     return "server host"  # Default to "server host" if no "ExtraBan" mapping is found
 
-# Get the Discord role for the team
-async def get_team_role(ctx, team_name):
-    guild = ctx.guild
-    role = discord.utils.get(guild.roles, name=team_name)
-    if role:
-        return role
-    else:
-        await ctx.send(f"Role {team_name} not found!")
-        return None
-
 # Function to create the ban status image
-def create_ban_status_image(map_list, banned_maps, host_team=None, final_assignments=None, final_map=None, current_turn=None):
+def create_ban_status_image(map_list, match_bans, host_team=None, final_assignments=None, final_map=None, current_turn=None):
     # Define image dimensions and properties
     width = 600
     height = len(map_list) * 50 + 50  # Height based on the number of maps
@@ -84,8 +77,8 @@ def create_ban_status_image(map_list, banned_maps, host_team=None, final_assignm
     y_offset = 50
     for map_info in map_list:
         map_name = map_info['name']
-        allied_ban = "Allied" in banned_maps.get(map_name, [])
-        axis_ban = "Axis" in banned_maps.get(map_name, [])
+        allied_ban = "Allied" in match_bans.get(map_name, [])
+        axis_ban = "Axis" in match_bans.get(map_name, [])
 
         # Determine colors
         if allied_ban and axis_ban:
@@ -130,10 +123,6 @@ def create_ban_status_image(map_list, banned_maps, host_team=None, final_assignm
     image.save(image_path)
     return image_path
 
-# Store ongoing match ban states and turn order (tracked by match ID)
-ongoing_bans = {}
-match_turns = {}  # Key: match_id, Value: {"current_turn": "team_a" or "team_b", "host": team_a or team_b, "first_ban_team": team_a or team_b}
-
 # Match setup logic to be triggered when a match is created
 async def match_setup(ctx, team_a_name, team_b_name, title, description, selected_map, side_choice, match_id, first_ban_team=None, host_team=None):
     # Load config (region mappings)
@@ -145,14 +134,14 @@ async def match_setup(ctx, team_a_name, team_b_name, title, description, selecte
     # Hardcode BansAndPredictionsEnabled as "yes"
     bans_and_predictions_enabled = "yes"
 
-    # Initialize banned maps if match is new
+    # Initialize banned maps for this match if not already initialized
     if match_id not in ongoing_bans:
         ongoing_bans[match_id] = {map_info['name']: [] for map_info in map_list}
 
     # If a side is banned, mark the corresponding side as banned for the map
     ongoing_bans[match_id][selected_map].append(side_choice)
 
-    # Save the updated map list
+    # Save the updated map list (if necessary)
     save_maplist(map_list)
 
     # Check if only one valid combination remains
@@ -210,8 +199,12 @@ async def match_setup(ctx, team_a_name, team_b_name, title, description, selecte
 
 # /match_create command: Allows users to create a new match
 @bot.tree.command(name="match_create", description="Create a new match")
-async def match_create(interaction: discord.Interaction, team_a_name: str, team_b_name: str, title: str, description: str = "No description provided"):
+async def match_create(interaction: discord.Interaction, team_a_name: discord.Role, team_b_name: discord.Role, title: str, description: str = "No description provided"):
     """Creates a new match between two teams."""
+    
+    # Get the team names and regions from Discord roles
+    team_a_name = team_a_name.name
+    team_b_name = team_b_name.name
     
     # Load config (region mappings)
     config = load_config()
@@ -229,9 +222,9 @@ async def match_create(interaction: discord.Interaction, team_a_name: str, team_
     # Send the match creation info to Discord
     await interaction.response.send_message(match_info)
 
-# /ban command: Allow users to ban a map and side, with team-specific permissions
-@bot.tree.command(name="ban", description="Ban a map and side for the match")
-async def ban(interaction: discord.Interaction, map: str, side: str):
+# /ban_map command: Allow users to ban a map and side, with team-specific permissions
+@bot.tree.command(name="ban_map", description="Ban a map and side for the match")
+async def ban_map(interaction: discord.Interaction, map: str, side: str):
     """Ban a side (Allied or Axis) of a specific map."""
     
     # Load map list from the config
