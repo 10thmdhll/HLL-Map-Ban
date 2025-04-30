@@ -15,6 +15,8 @@ This bot manages a map banning system for team-based games like "Hell Let Loose"
 1. Clone the repository or create a new project folder.
 ```git clone https://github.com/10thmdhll/HLL-Map-Ban```
 
+	`cd HLL-Map-Ban`
+
 2. Create a virtual environment:
 ```python -m venv venv```
 
