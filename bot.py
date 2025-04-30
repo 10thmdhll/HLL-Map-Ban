@@ -197,7 +197,7 @@ async def match_setup(ctx, team_a_name, team_b_name, title, description, selecte
 
     await ctx.send(result_message)
 
-# /match_create command: Allows users to create a new match
+# /match_create command: Allows users to create a new match with dynamic role selection
 @bot.tree.command(name="match_create", description="Create a new match")
 async def match_create(interaction: discord.Interaction, team_a_name: discord.Role, team_b_name: discord.Role, title: str, description: str = "No description provided"):
     """Creates a new match between two teams."""
@@ -224,35 +224,37 @@ async def match_create(interaction: discord.Interaction, team_a_name: discord.Ro
 
 # /ban_map command: Allow users to ban a map and side, with team-specific permissions
 @bot.tree.command(name="ban_map", description="Ban a map and side for the match")
-async def ban_map(interaction: discord.Interaction, map: str, side: str):
+async def ban_map(interaction: discord.Interaction):
     """Ban a side (Allied or Axis) of a specific map."""
     
     # Load map list from the config
     map_list = load_maplist()
     
-    # Check if the map is valid
-    selected_map = next((m for m in map_list if m["name"] == map), None)
-    if not selected_map:
-        await interaction.response.send_message(f"The map {map} is not valid or available.")
-        return
+    # Prepare map options
+    available_maps = [map_info['name'] for map_info in map_list if "Allied" not in ongoing_bans.get(map_info['name'], []) and "Axis" not in ongoing_bans.get(map_info['name'], [])]
 
-    # Check if the side is valid
-    if side not in ["Allied", "Axis"]:
-        await interaction.response.send_message("The side must be either 'Allied' or 'Axis'.")
-        return
+    # Prepare the dropdown for map selection
+    map_select = discord.ui.Select(
+        placeholder="Select a map",
+        options=[discord.SelectOption(label=map_name) for map_name in available_maps]
+    )
 
-    # Mark the side as banned
-    if side in selected_map["options"]:
-        selected_map["options"][side] = "Banned"
-        opposite_side = "Axis" if side == "Allied" else "Allied"
-        selected_map["options"][opposite_side] = "Banned"
-        
-        # Save the updated map list
-        save_maplist(map_list)
+    # Prepare side options (Allied and Axis)
+    side_select = discord.ui.Select(
+        placeholder="Select a side (Allied/Axis)",
+        options=[
+            discord.SelectOption(label="Allied"),
+            discord.SelectOption(label="Axis")
+        ]
+    )
 
-        await interaction.response.send_message(f"{side} side of {map} has been banned. The opposite side ({opposite_side}) is also banned.")
-    else:
-        await interaction.response.send_message(f"{side} side of {map} was already banned.")
+    # Create the view with the selects
+    view = discord.ui.View()
+    view.add_item(map_select)
+    view.add_item(side_select)
+
+    # Send the message with the interactive components
+    await interaction.response.send_message("Please select a map and side to ban:", view=view)
 
 # Register the slash commands
 @bot.event
