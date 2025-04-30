@@ -209,69 +209,64 @@ async def match_setup(ctx, team_a_name, team_b_name, title, description, selecte
     await ctx.send(result_message)
 
 # /match_create command: Allows users to create a new match
-@bot.command()
-async def match_create(ctx, team_a_name: str, team_b_name: str, title: str, description: str = "No description provided"):
+@bot.tree.command(name="match_create", description="Create a new match")
+async def match_create(interaction: discord.Interaction, team_a_name: str, team_b_name: str, title: str, description: str = "No description provided"):
     """Creates a new match between two teams."""
     
     # Load config (region mappings)
     config = load_config()
 
     # Get the regions of both teams
-    team_a_region = get_team_region(team_a_name, config)
-    team_b_region = get_team_region(team_b_name, config)
+    team_a_region = config["team_regions"].get(team_a_name, "Unknown Region")
+    team_b_region = config["team_regions"].get(team_b_name, "Unknown Region")
 
-    # Generate a unique match ID based on the current time or a UUID
-    match_id = uuid.uuid4()
+    # Generate a unique match ID (UUID or random string)
+    match_id = os.urandom(4).hex()
 
-    # Generate and display the match info
+    # Prepare the match info
     match_info = f"Match Created!\n\n**Title**: {title}\n**Team A**: {team_a_name} (Region: {team_a_region})\n**Team B**: {team_b_name} (Region: {team_b_region})\n**Description**: {description}\n\nMatch ID: {match_id}"
-    await ctx.send(match_info)
 
-    # Further setup logic (e.g., create a match state, image generation, etc.) can go here.
+    # Send the match creation info to Discord
+    await interaction.response.send_message(match_info)
 
 # /ban command: Allow users to ban a map and side, with team-specific permissions
-@bot.command(name="ban")
-async def ban(ctx, map: str, side: str):
-    match_id = ctx.channel.id  # Using the channel ID as match ID (for simplicity)
-    team_role = "team_a" if match_turns.get(match_id, {}).get("current_turn") == "team_a" else "team_b"
-
-    # Check if user has the correct role for banning
-    member = ctx.author
-    role = discord.utils.get(member.roles, name=team_role)
-
-    if not role:
-        await ctx.send(f"You cannot ban right now. It's {team_role}'s turn to ban.")
-        return
-
-    # Load map list
+@bot.tree.command(name="ban", description="Ban a map and side for the match")
+async def ban(interaction: discord.Interaction, map: str, side: str):
+    """Ban a side (Allied or Axis) of a specific map."""
+    
+    # Load map list from the config
     map_list = load_maplist()
-
-    # Check if map is available for banning
-    selected_map = next((map_info for map_info in map_list if map_info["name"] == map), None)
-
+    
+    # Check if the map is valid
+    selected_map = next((m for m in map_list if m["name"] == map), None)
     if not selected_map:
-        await ctx.send("This map is not available.")
+        await interaction.response.send_message(f"The map {map} is not valid or available.")
         return
 
-    # Check if the side is available
-    if selected_map["options"].get(side) == "Banned":
-        await ctx.send(f"The {side} side of {map} has already been banned.")
+    # Check if the side is valid
+    if side not in ["Allied", "Axis"]:
+        await interaction.response.send_message("The side must be either 'Allied' or 'Axis'.")
         return
 
-    # Ban the side and mark the opposite side as banned
-    selected_map["options"][side] = "Banned"
-    opposite_side = "Allied" if side == "Axis" else "Axis"
-    selected_map["options"][opposite_side] = "Banned"
+    # Mark the side as banned
+    if side in selected_map["options"]:
+        selected_map["options"][side] = "Banned"
+        opposite_side = "Axis" if side == "Allied" else "Allied"
+        selected_map["options"][opposite_side] = "Banned"
+        
+        # Save the updated map list
+        save_maplist(map_list)
 
-    # Save the updated map list
-    save_maplist(map_list)
+        await interaction.response.send_message(f"{side} side of {map} has been banned. The opposite side ({opposite_side}) is also banned.")
+    else:
+        await interaction.response.send_message(f"{side} side of {map} was already banned.")
 
-    # Confirm the ban and show the updated image
-    await ctx.send(f"{side} side of {map} has been banned. The {opposite_side} side is also banned.")
-
-    # Update turn and call the match setup to generate and display the ban status image
-    match_turns[match_id]["current_turn"] = "team_b" if team_role == "team_a" else "team_a"
-    await match_setup(ctx, "Team A", "Team B", "Match Title", "Match Description", map, side, match_id, match_turns[match_id]["current_turn"], match_turns[match_id]["host"])
+# Register the slash commands
+@bot.event
+async def on_ready():
+    # Sync the commands with Discord
+    await bot.tree.sync()
+    print(f'Logged in as {bot.user}')
 
 # Start the bot with your token (use an environment variable for security)
 bot.run(os.getenv('DISCORD_TOKEN'))
