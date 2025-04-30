@@ -2,8 +2,7 @@ import discord
 import random
 import json
 from discord.ext import commands
-from discord_slash import SlashCommand, SlashContext
-from discord_slash.utils.manage_commands import create_option
+from discord_interactions import InteractionClient, OptionType, SlashCommand
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 import os
