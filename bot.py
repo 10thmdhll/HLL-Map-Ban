@@ -2,7 +2,6 @@ import discord
 import random
 import json
 from discord.ext import commands
-from discord_interactions import InteractionClient, OptionType, SlashCommand
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 import os
@@ -13,7 +12,6 @@ load_dotenv()
 
 # Initialize the bot with a command prefix
 bot = commands.Bot(command_prefix="!")
-slash = SlashCommand(bot, sync_commands=True)  # Setup slash command handler
 
 # Load team and region pairings from the teammap.json file
 def load_config():
@@ -207,30 +205,8 @@ async def match_setup(ctx, team_a_name, team_b_name, title, description, selecte
     await ctx.send(result_message)
 
 # /ban command: Allow users to ban a map and side, with team-specific permissions
-@slash.slash(
-    name="ban", 
-    description="Ban a map and side for the match",
-    options=[
-        create_option(
-            name="map",
-            description="Select the map to ban",
-            option_type=3,  # 3 is for STRING type
-            required=True,
-            choices=[create_choice(name=map["name"], value=map["name"]) for map in load_maplist()]  # Generate choices from the maplist
-        ),
-        create_option(
-            name="side",
-            description="Select the side to ban (Allied or Axis)",
-            option_type=3,  # 3 is for STRING type
-            required=True,
-            choices=[
-                create_choice(name="Allied", value="Allied"),
-                create_choice(name="Axis", value="Axis")
-            ]
-        )
-    ]
-)
-async def ban(ctx: SlashContext, map: str, side: str):
+@bot.slash_command(name="ban", description="Ban a map and side for the match")
+async def ban(ctx, map: str, side: str):
     match_id = ctx.channel.id  # Using the channel ID as match ID (for simplicity)
     team_role = "team_a" if match_turns.get(match_id, {}).get("current_turn") == "team_a" else "team_b"
 
