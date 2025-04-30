@@ -1,267 +1,165 @@
-import discord
-import random
+import os
 import json
+import random
+import uuid
+from typing import Literal
+
+import discord
+from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
-import os
-import uuid
 
 # Load environment variables (for Discord token)
 load_dotenv()
 
-# Define intents
+# Intents
 intents = discord.Intents.default()
-intents.message_content = True  # Allows the bot to read messages (needed for slash commands and other interactions)
+intents.message_content = True
 
-# Initialize the bot with a command prefix and intents
 bot = commands.Bot(command_prefix="/", intents=intents)
 
-# In-memory dictionary to hold match-specific ban states
-ongoing_bans = {}
+# In-memory match state keyed by channel.id
+ongoing_bans: dict[int, dict[str, list[str]]] = {}
+match_turns: dict[int, str] = {}  # "team_a" or "team_b"
 
-# Load team and region pairings from the teammap.json file
+# Load static configs
 def load_config():
     with open('teammap.json', 'r') as f:
-        config = json.load(f)
-    return config
+        return json.load(f)
 
-# Load map list from maplist.json file
 def load_maplist():
     with open('maplist.json', 'r') as f:
-        map_data = json.load(f)
-    return map_data['maps']
+        return json.load(f)['maps']
 
-# Save updated maplist.json after each ban (not required for match-specific tracking, but kept for future use)
-def save_maplist(maplist):
-    with open('maplist.json', 'w') as f:
-        json.dump({"maps": maplist}, f, indent=4)
-
-# Get the region for a specific team from the config
-def get_team_region(team_name, config):
-    return config["team_regions"].get(team_name, "Unknown Region")
-
-# Determine the map ban option (ExtraBan or DetermineHost) based on region pairing
-def determine_ban_option(team_a_region, team_b_region, config):
-    region_pairings = config["region_pairings"]
-
-    # Check if the region pairing exists in the config
-    if team_a_region in region_pairings and team_b_region in region_pairings[team_a_region]:
-        mapping = region_pairings[team_a_region][team_b_region]
-        if mapping == "ExtraBan":
-            return "extra ban"
-        elif mapping == "DetermineHost":
-            return "server host"
-    
-    # Default if no specific pairing found
-    return "server host"  # Default to "server host" if no "ExtraBan" mapping is found
-
-# Function to create the ban status image
-def create_ban_status_image(map_list, match_bans, host_team=None, final_assignments=None, final_map=None, current_turn=None):
-    # Define image dimensions and properties
-    width = 600
-    height = len(map_list) * 50 + 50  # Height based on the number of maps
-    image = Image.new('RGB', (width, height), (255, 255, 255))  # White background
-    draw = ImageDraw.Draw(image)
-
-    # Define font (use a default one if font not available)
+# Generate the ban status image
+def create_ban_status_image(
+    map_list: list[dict],
+    bans: dict[str, list[str]],
+    host_team: str|None=None,
+    final_map: str|None=None,
+    current_turn: str|None=None
+) -> str:
+    width, height = 600, len(map_list)*50 + 120
+    img = Image.new('RGB',(width,height),(255,255,255))
+    draw = ImageDraw.Draw(img)
     try:
-        font = ImageFont.truetype("arial.ttf", 20)
-    except IOError:
+        font = ImageFont.truetype('arial.ttf',20)
+    except:
         font = ImageFont.load_default()
 
-    # Draw headers
-    draw.text((20, 10), "Map Ban Status", fill="black", font=font)
-
-    # Draw each map and its ban status
-    y_offset = 50
-    for map_info in map_list:
-        map_name = map_info['name']
-        allied_ban = "Allied" in match_bans.get(map_name, [])
-        axis_ban = "Axis" in match_bans.get(map_name, [])
-
-        # Determine colors
-        if allied_ban and axis_ban:
-            bg_color = (255, 0, 0)  # Red background for fully banned maps
-            text_color = (0, 0, 0)  # Black text
-        elif allied_ban or axis_ban:
-            bg_color = (255, 0, 0)  # Red background for banned sides
-            text_color = (0, 0, 0)  # Black text
+    draw.text((20,10),'Map Ban Status',font=font,fill='black')
+    y = 50
+    for m in map_list:
+        name = m['name']
+        b = bans.get(name, [])
+        allied = 'Allied' in b
+        axis   = 'Axis' in b
+        if allied and axis:
+            bg = (255,0,0)
+        elif allied or axis:
+            bg = (255,0,0)
         else:
-            # Check for final map/side combination
-            if final_map and map_name == final_map:
-                bg_color = (0, 255, 0)  # Green background for final valid combinations
-                text_color = (0, 0, 0)  # Black text
-            else:
-                bg_color = (255, 255, 255)  # White background for available maps
-                text_color = (0, 0, 0)  # Black text
+            bg = (0,255,0) if final_map == name else (255,255,255)
+        draw.rectangle([20,y,width-20,y+40],fill=bg)
+        status = f"{name} | Allied: {'X' if allied else '✓'} / Axis: {'X' if axis else '✓'}"
+        draw.text((30,y+10),status,font=font,fill='black')
+        y += 50
 
-        # Draw the map row
-        draw.rectangle([20, y_offset, width - 20, y_offset + 40], fill=bg_color)
-        draw.text((30, y_offset + 10), f"{map_name} - Allied: {'Banned' if allied_ban else 'Available'} / Axis: {'Banned' if axis_ban else 'Available'}", fill=text_color, font=font)
-
-        y_offset += 50
-
-    # If a host team is set, mark them on the image
     if host_team:
-        draw.text((20, y_offset + 10), f"Host Team: {host_team}", fill="green", font=font)
-
-    # Display final assignments
-    if final_assignments:
-        draw.text((20, y_offset + 30), f"Final Assignments: {final_assignments['team_a']} (Allied) vs {final_assignments['team_b']} (Axis)", fill="green", font=font)
-
-    # If there is a final map, display it
-    if final_map:
-        draw.text((20, y_offset + 50), f"Final Map: {final_map}", fill="green", font=font)
-
-    # Display whose turn it is to ban
+        draw.text((20,y+10),f"Host Team: {host_team}",font=font,fill='green')
     if current_turn:
-        draw.text((20, y_offset + 70), f"Current Turn: {current_turn}'s turn to ban", fill="blue", font=font)
+        draw.text((20,y+40),f"Current turn: {current_turn}",font=font,fill='blue')
 
-    # Save the image
-    image_path = "ban_status.png"
-    image.save(image_path)
-    return image_path
+    path = 'ban_status.png'
+    img.save(path)
+    return path
 
-# Match setup logic to be triggered when a match is created
-async def match_setup(ctx, team_a_name, team_b_name, title, description, selected_map, side_choice, match_id, first_ban_team=None, host_team=None):
-    # Load config (region mappings)
-    config = load_config()
+# Autocomplete for maps
+async def map_autocomplete(interaction: discord.Interaction, current: str):
+    channel_id = interaction.channel_id
+    bans = ongoing_bans.get(channel_id, {})
+    choices = []
+    for m in load_maplist():
+        name = m['name']
+        if len(bans.get(name, [])) >= 2:
+            continue
+        if current.lower() in name.lower():
+            choices.append(app_commands.Choice(name=name, value=name))
+    return choices[:25]
 
-    # Load map list from maplist.json
-    map_list = load_maplist()
+# Helper: determine ban option
+def determine_ban_option(a: str, b: str, cfg: dict) -> str:
+    rp = cfg['region_pairings']
+    if a in rp and b in rp[a]:
+        return rp[a][b].lower().replace('determinehost','server host')
+    return "server host"
 
-    # Hardcode BansAndPredictionsEnabled as "yes"
-    bans_and_predictions_enabled = "yes"
-
-    # Initialize banned maps for this match if not already initialized
-    if match_id not in ongoing_bans:
-        ongoing_bans[match_id] = {map_info['name']: [] for map_info in map_list}
-
-    # If a side is banned, mark the corresponding side as banned for the map
-    ongoing_bans[match_id][selected_map].append(side_choice)
-
-    # Save the updated map list (if necessary)
-    save_maplist(map_list)
-
-    # Check if only one valid combination remains
-    valid_combinations = {}
-    for map_info in map_list:
-        if "Allied" not in ongoing_bans[match_id].get(map_info['name'], []) and "Axis" not in ongoing_bans[match_id].get(map_info['name'], []):
-            valid_combinations[map_info['name']] = None
-
-    # Determine final assignments if only one valid combination remains
-    final_assignments = None
-    final_map = None
-    if len(valid_combinations) == 1:
-        final_map = list(valid_combinations.keys())[0]
-        final_assignments = {
-            "team_a": "Allied",  # Team A gets Allied
-            "team_b": "Axis",    # Team B gets Axis
-        }
-
-    # Create the ban status image
-    image_path = create_ban_status_image(map_list, ongoing_bans[match_id], host_team, final_assignments, final_map, current_turn=match_turns[match_id].get("current_turn"))
-
-    # Get the regions for each team from the config
-    team_a_region = get_team_region(team_a_name, config)
-    team_b_region = get_team_region(team_b_name, config)
-
-    # Determine whether to apply extra ban or server host based on region pairing
-    ban_option = determine_ban_option(team_a_region, team_b_region, config)
-
-    # If no description is provided, default it to "No description provided"
-    if not description:
-        description = "No description provided"
-
-    # Notify teams of the region assignment and ban option
-    await ctx.send(f"**{title}** - {description}")
-    await ctx.send(f"{team_a_name} is assigned to {team_a_region}")
-    await ctx.send(f"{team_b_name} is assigned to {team_b_region}")
-    await ctx.send(f"Map ban option for this match: {ban_option}")
-    await ctx.send(f"Bans and predictions enabled: {bans_and_predictions_enabled}")
-
-    # Show the selected map and the side that was chosen for banning
-    await ctx.send(f"Selected map for banning: {selected_map} - Side chosen: {side_choice}")
-
-    # Send the generated image with the ban status
-    await ctx.send(file=discord.File(image_path))
-
-    # Determine coin flip result (heads or tails)
-    flip_result = random.choice(['heads', 'tails'])
-    result_message = f"Coin flip result: {flip_result}"
-
-    # Add the region info and ban option to the coin flip result
-    result_message += f"\n{team_a_name} ({team_a_region}) vs {team_b_name} ({team_b_region})"
-    result_message += f"\nMap ban option: {ban_option}"
-
-    await ctx.send(result_message)
-
-# /match_create command: Allows users to create a new match with dynamic role selection
+# /match_create
 @bot.tree.command(name="match_create", description="Create a new match")
-async def match_create(interaction: discord.Interaction, team_a_name: discord.Role, team_b_name: discord.Role, title: str, description: str = "No description provided"):
-    """Creates a new match between two teams."""
-    
-    # Get the team names and regions from Discord roles
-    team_a_name = team_a_name.name
-    team_b_name = team_b_name.name
-    
-    # Load config (region mappings)
-    config = load_config()
+async def match_create(
+    interaction: discord.Interaction,
+    team_a: discord.Role,
+    team_b: discord.Role,
+    title: str,
+    description: str = "No description provided"
+):
+    cfg = load_config()
+    a, b = team_a.name, team_b.name
+    ra = cfg['team_regions'].get(a, 'Unknown')
+    rb = cfg['team_regions'].get(b, 'Unknown')
+    ban_option = determine_ban_option(ra, rb, cfg)
 
-    # Get the regions of both teams
-    team_a_region = config["team_regions"].get(team_a_name, "Unknown Region")
-    team_b_region = config["team_regions"].get(team_b_name, "Unknown Region")
+    channel_id = interaction.channel_id
+    ongoing_bans[channel_id] = {m['name']: [] for m in load_maplist()}
+    match_turns[channel_id] = 'team_a'
 
-    # Generate a unique match ID (UUID or random string)
-    match_id = os.urandom(4).hex()
-
-    # Prepare the match info
-    match_info = f"Match Created!\n\n**Title**: {title}\n**Team A**: {team_a_name} (Region: {team_a_region})\n**Team B**: {team_b_name} (Region: {team_b_region})\n**Description**: {description}\n\nMatch ID: {match_id}"
-
-    # Send the match creation info to Discord
-    await interaction.response.send_message(match_info)
-
-# /ban_map command: Allow users to ban a map and side, with team-specific permissions
-@bot.tree.command(name="ban_map", description="Ban a map and side for the match")
-async def ban_map(interaction: discord.Interaction):
-    """Ban a side (Allied or Axis) of a specific map."""
-    
-    # Load map list from the config
-    map_list = load_maplist()
-    
-    # Prepare map options
-    available_maps = [map_info['name'] for map_info in map_list if "Allied" not in ongoing_bans.get(map_info['name'], []) and "Axis" not in ongoing_bans.get(map_info['name'], [])]
-
-    # Prepare the dropdown for map selection
-    map_select = discord.ui.Select(
-        placeholder="Select a map",
-        options=[discord.SelectOption(label=map_name) for map_name in available_maps]
+    # Generate and send initial image
+    img_path = create_ban_status_image(load_maplist(), ongoing_bans[channel_id], host_team=None)
+    content = (
+        f"**Match Created**\n"
+        f"Title: {title}\n"
+        f"Team A: {a} ({ra})\n"
+        f"Team B: {b} ({rb})\n"
+        f"Ban Option: {ban_option}\n"
+        f"Description: {description}"
     )
+    await interaction.response.send_message(content, file=discord.File(img_path))
 
-    # Prepare side options (Allied and Axis)
-    side_select = discord.ui.Select(
-        placeholder="Select a side (Allied/Axis)",
-        options=[
-            discord.SelectOption(label="Allied"),
-            discord.SelectOption(label="Axis")
-        ]
-    )
+# /ban_map
+@bot.tree.command(name="ban_map", description="Ban a map side")
+@app_commands.autocomplete(map=map_autocomplete)
+async def ban_map(
+    interaction: discord.Interaction,
+    map: str,
+    side: Literal["Allied", "Axis"]
+):
+    channel_id = interaction.channel_id
+    if channel_id not in ongoing_bans:
+        await interaction.response.send_message("No active match here. Use `/match_create` first.", ephemeral=True)
+        return
 
-    # Create the view with the selects
-    view = discord.ui.View()
-    view.add_item(map_select)
-    view.add_item(side_select)
+    bans = ongoing_bans[channel_id]
+    if side in bans.get(map, []):
+        await interaction.response.send_message(f"{side} of {map} already banned.", ephemeral=True)
+        return
 
-    # Send the message with the interactive components
-    await interaction.response.send_message("Please select a map and side to ban:", view=view)
+    # Ban both sides
+    other = "Axis" if side == "Allied" else "Allied"
+    bans[map].append(side)
+    bans[map].append(other)
 
-# Register the slash commands
+    # Rotate turn
+    turn = match_turns[channel_id]
+    match_turns[channel_id] = 'team_b' if turn == 'team_a' else 'team_a'
+
+    # Regenerate and send updated image
+    img_path = create_ban_status_image(load_maplist(), bans, current_turn=match_turns[channel_id])
+    await interaction.response.send_message(file=discord.File(img_path))
+
 @bot.event
 async def on_ready():
-    # Sync the commands with Discord
     await bot.tree.sync()
-    print(f'Logged in as {bot.user}')
+    print("Bot is ready as", bot.user)
 
-# Start the bot with your token (use an environment variable for security)
 bot.run(os.getenv('DISCORD_TOKEN'))
