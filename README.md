@@ -7,8 +7,10 @@ This bot manages a map banning system for team-based games like "Hell Let Loose"
 ## Setup
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.12 or higher
 - A Discord bot token
+- python3.12-venv
+
 
 ### Installation
 
