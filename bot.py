@@ -18,10 +18,10 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 STATE_FILE = "state.json"
 
-# In‐memory state
+# In-memory state
 ongoing_bans: dict[int, dict[str, dict[str, list[str]]]] = {}
 match_turns: dict[int, str] = {}                # "team_a" or "team_b"
-channel_teams: dict[int, Tuple[str,str]] = {}    # channel_id → (team_a_name, team_b_name)
+channel_teams: dict[int, Tuple[str,str]] = {}   # channel_id → (team_a_name, team_b_name)
 
 # ─── Persistence Helpers ────────────────────────────────────────────────────────
 
@@ -36,6 +36,7 @@ def load_state():
         save_state()
         return
 
+    # reconstruct bans
     raw = data.get("ongoing_bans", {})
     nested = all(
         isinstance(maps, dict) and
@@ -47,8 +48,11 @@ def load_state():
         save_state()
         return
     ongoing_bans = {int(ch): maps for ch, maps in raw.items()}
+
+    # reconstruct turns
     match_turns = {int(k): v for k, v in data.get("match_turns", {}).items()}
 
+    # reconstruct channel_teams
     raw_ct = data.get("channel_teams", {})
     channel_teams = {int(ch): tuple(vals) for ch, vals in raw_ct.items()}
 
@@ -78,7 +82,7 @@ def load_config():
 def load_maplist():
     return json.load(open("maplist.json"))["maps"]
 
-# ─── Ban‐Option & Image Generation ─────────────────────────────────────────────
+# ─── Ban-Option & Image Generation ────────────────────────────────────────────
 
 def determine_ban_option(a: str, b: str, cfg: dict) -> str:
     rp = cfg.get("region_pairings", {})
@@ -93,7 +97,6 @@ def create_ban_status_image(
     team_b_label: str,
     current_turn_label: str|None = None
 ) -> str:
-    # Column widths
     cols = [150, 300, 150]
     row_h = 30
     header_h = 40
@@ -108,30 +111,31 @@ def create_ban_status_image(
     except:
         font = ImageFont.load_default()
 
-    # --- Current Turn Banner ---
+    # Current-Turn Banner
     if current_turn_label:
         draw.rectangle([0, 0, width, banner_h], fill=(220,220,255))
         draw.text((width/2, banner_h/2),
                   f"Current Turn: {current_turn_label}",
                   font=font, anchor="mm", fill="black")
 
-    # --- Headers ---
-    xs = [0, cols[0], cols[0]+cols[1]]
+    # Headers
     labels = [team_a_label, "Maps", team_b_label]
-    for i, x in enumerate(xs):
-        draw.rectangle([x, banner_h, x+cols[i], banner_h+header_h], fill=(200,200,200))
-        draw.text((x + cols[i]/2, banner_h + header_h/2),
-                  labels[i], font=font, anchor="mm", fill="black")
+    x0 = 0
+    for w, label in zip(cols, labels):
+        draw.rectangle([x0, banner_h, x0+w, banner_h+header_h], fill=(200,200,200))
+        draw.text((x0 + w/2, banner_h + header_h/2),
+                  label, font=font, anchor="mm", fill="black")
+        x0 += w
 
-    # --- Rows ---
+    # Rows
     y = banner_h + header_h
     for m in map_list:
         name = m["name"]
-        tb = bans.get(name, {"team_a":[],"team_b":[]})
+        tb = bans.get(name, {"team_a":[], "team_b":[]})
 
         def side_for(lst):
             if "Allied" in lst and "Axis" not in lst: return "Axis"
-            if "Axis" in lst and "Allied" not in lst: return "Allies"
+            if "Axis"   in lst and "Allied" not in lst: return "Allies"
             return "Allies"
 
         a_side = side_for(tb["team_a"])
@@ -139,7 +143,7 @@ def create_ban_status_image(
 
         def cell_color(side, lst):
             if side in lst: return (255,100,100)
-            if len(lst) == 1 and side not in lst: return (180,255,180)
+            if len(lst)==1 and side not in lst: return (180,255,180)
             return (255,255,255)
 
         # Team A
@@ -175,7 +179,7 @@ async def map_autocomplete(interaction: discord.Interaction, current: str):
         if len(ongoing_bans[ch][name][team_key]) >= 2:
             continue
         if current.lower() in name.lower():
-            opts.append(app_commands.Choice(name=name,value=name))
+            opts.append(app_commands.Choice(name=name, value=name))
     return opts[:25]
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
@@ -194,7 +198,7 @@ async def match_create(
         for m in ongoing_bans[ch]
     ):
         await interaction.response.send_message(
-            "A match is already active here. Use `/match_delete` first.",
+            "❌ A match is already active here. Use `/match_delete` first.",
             ephemeral=True
         )
         return
@@ -202,18 +206,16 @@ async def match_create(
     cfg = load_config()
     maps = load_maplist()
     a, b = team_a.name, team_b.name
-    ra, rb = cfg["team_regions"].get(a,"Unknown"), cfg["team_regions"].get(b,"Unknown")
+    ra, rb = cfg["team_regions"].get(a, "Unknown"), cfg["team_regions"].get(b, "Unknown")
     ban_opt = determine_ban_option(ra, rb, cfg)
 
-    # Initialize channel state
-    ongoing_bans[ch]   = {m["name"]:{"team_a":[],"team_b":[]} for m in maps}
-    match_turns[ch]    = "team_a"
-    channel_teams[ch]  = (a, b)
+    ongoing_bans[ch]  = {m["name"]:{"team_a":[], "team_b":[]} for m in maps}
+    match_turns[ch]   = "team_a"
+    channel_teams[ch] = (a, b)
     save_state()
 
-    # Determine current-turn label
-    current_label = a if match_turns[ch]=="team_a" else b
-    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, current_turn_label=current_label)
+    current_label = a
+    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, current_label)
 
     content = (
         f"**Match Created**\n"
@@ -229,11 +231,17 @@ async def match_create(
 async def match_delete(interaction: discord.Interaction):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
-        await interaction.response.send_message("No active match to delete.", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ No active match to delete in this channel.",
+            ephemeral=True
+        )
         return
 
     cleanup_match(ch)
-    await interaction.response.send_message("Match deleted; you may `/match_create` again.", ephemeral=True)
+    await interaction.response.send_message(
+        "✅ Match successfully deleted. You may now `/match_create` again.",
+        ephemeral=True
+    )
 
 @bot.tree.command(name="ban_map", description="Ban a map side")
 @app_commands.autocomplete(map=map_autocomplete)
@@ -244,7 +252,10 @@ async def ban_map(
 ):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
-        await interaction.response.send_message("No match here. `/match_create` first.", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ No match here. Run `/match_create` first.",
+            ephemeral=True
+        )
         return
 
     team_key = match_turns[ch]
@@ -252,7 +263,10 @@ async def ban_map(
     tbans    = ongoing_bans[ch][map]
 
     if side in tbans[team_key]:
-        await interaction.response.send_message(f"{side} already banned by your team.", ephemeral=True)
+        await interaction.response.send_message(
+            f"❌ {side} already banned by your team.",
+            ephemeral=True
+        )
         return
     tbans[team_key].append(side)
     tbans[other_key].append("Axis" if side=="Allied" else "Allied")
@@ -263,22 +277,23 @@ async def ban_map(
     a_label, b_label = channel_teams.get(ch, ("Team A","Team B"))
     current_label = a_label if match_turns[ch]=="team_a" else b_label
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch],
-                                  a_label, b_label,
-                                  current_turn_label=current_label)
+                                  a_label, b_label, current_label)
     await interaction.response.send_message(file=discord.File(img))
 
 @bot.tree.command(name="show_bans", description="Show current bans")
 async def show_bans(interaction: discord.Interaction):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
-        await interaction.response.send_message("No match active here.", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ No match active here.", ephemeral=True
+        )
         return
     lines = []
     for m in load_maplist():
         tb = ongoing_bans[ch][m["name"]]
         a_bans = ", ".join(tb["team_a"]) or "None"
         b_bans = ", ".join(tb["team_b"]) or "None"
-        lines.append(f"**{m['name']}**\nA: {a_bans}\nB: {b_bans}")
+        lines.append(f"**{m['name']}**\nA bans: {a_bans}\nB bans: {b_bans}")
     await interaction.response.send_message("\n\n".join(lines), ephemeral=True)
 
 # ─── Startup ─────────────────────────────────────────────────────────────────
