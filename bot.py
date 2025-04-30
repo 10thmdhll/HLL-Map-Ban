@@ -220,4 +220,34 @@ async def ban_map(
         return
     ongoing_bans[ch][team_key][map].append(side)
 
-    # auto
+    # auto‐ban opposite side for other team
+    opp = "Axis" if side == "Allied" else "Allied"
+    ongoing_bans[ch][other_key][map].append(opp)
+
+    # rotate turn
+    match_turns[ch] = other_key
+    save_state()
+
+    img = create_ban_status_image(load_maplist(), ongoing_bans[ch], current_turn=match_turns[ch])
+    await interaction.response.send_message(file=discord.File(img))
+
+@bot.tree.command(name="show_bans", description="Show current bans")
+async def show_bans(interaction: discord.Interaction):
+    ch = interaction.channel_id
+    if ch not in ongoing_bans:
+        await interaction.response.send_message("No match active here.", ephemeral=True)
+        return
+    lines = []
+    for m in load_maplist():
+        ta = ", ".join(ongoing_bans[ch]["team_a"][m["name"]]) or "None"
+        tb = ", ".join(ongoing_bans[ch]["team_b"][m["name"]]) or "None"
+        lines.append(f"**{m['name']}**\n • A bans: {ta}\n • B bans: {tb}")
+    await interaction.response.send_message("\n\n".join(lines), ephemeral=True)
+
+@bot.event
+async def on_ready():
+    load_state()
+    await bot.tree.sync()
+    print("Bot ready as", bot.user)
+
+bot.run(os.getenv("DISCORD_TOKEN"))
