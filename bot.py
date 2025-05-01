@@ -288,6 +288,18 @@ async def side_autocomplete(
     return [app_commands.Choice(name=s, value=s)
             for s in ("Allied", "Axis") if current.lower() in s.lower()][:25]
             
+async def cleanup_match(ch: int):
+    for d in (
+        ongoing_bans, match_turns, channel_teams,
+        channel_messages, channel_flip, channel_decision, channel_mode
+    ):
+        d.pop(ch, None)
+    save_state()
+    try:
+        os.remove(CONFIG["output_image"])
+    except FileNotFoundError:
+        pass
+        
 # ─── Slash Commands ─────────────────────────────────────────────────────────────
 @bot.tree.command(
     name="match_create",
