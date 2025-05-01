@@ -1,7 +1,7 @@
 import os
 import json
 import random
-from typing import Tuple
+from typing import Literal, Tuple, List
 
 import discord
 from discord import app_commands
@@ -17,12 +17,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 STATE_FILE = "state.json"
 
-# ─── In-Memory State (persisted across restarts) ───────────────────────────────
-ongoing_bans: dict[int, dict[str, dict[str, list[str]]]] = {}
+# ─── In-Memory State (persisted) ────────────────────────────────────────────────
+ongoing_bans: dict[int, dict[str, dict[str, List[str]]]] = {}
 match_turns: dict[int, str] = {}                # "team_a" or "team_b"
 channel_teams: dict[int, Tuple[str, str]] = {}  # channel_id → (team_a_name, team_b_name)
 
-# ─── Persistence Helpers ────────────────────────────────────────────────────────
+# ─── Persistence Helpers ───────────────────────────────────────────────────────
 def load_state():
     global ongoing_bans, match_turns, channel_teams
     if not os.path.isfile(STATE_FILE):
@@ -34,7 +34,6 @@ def load_state():
         return
 
     raw = data.get("ongoing_bans", {})
-    # check new structure
     nested = all(
         isinstance(maps, dict) and
         all(isinstance(v, dict) and "manual" in v and "auto" in v for v in maps.values())
@@ -63,11 +62,11 @@ def cleanup_match(ch: int):
     except FileNotFoundError:
         pass
 
-# ─── Config & Maplist Loaders ───────────────────────────────────────────────────
-def load_config():
+# ─── Config & Maplist ─────────────────────────────────────────────────────────
+def load_config() -> dict:
     return json.load(open("teammap.json"))
 
-def load_maplist():
+def load_maplist() -> List[dict]:
     return json.load(open("maplist.json"))["maps"]
 
 # ─── Region Pairing & Image Generation ─────────────────────────────────────────
@@ -78,8 +77,8 @@ def determine_ban_option(a: str, b: str, cfg: dict) -> str:
     return "server host"
 
 def create_ban_status_image(
-    map_list: list[dict],
-    bans: dict[str, dict[str, list[str]]],
+    map_list: List[dict],
+    bans: dict[str, dict[str, List[str]]],
     team_a_label: str,
     team_b_label: str,
     current_turn_label: str | None = None
@@ -115,17 +114,17 @@ def create_ban_status_image(
     # Current Turn Banner
     y = 0
     if current_turn_label:
-        draw.rectangle([0, y, total_w, y+banner_h], fill=(220,220,255), outline="black")
+        draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
         draw.text((total_w//2, y+banner_h//2),
                   f"Current Turn: {current_turn_label}", font=font, anchor="mm", fill="black")
     y += banner_h
 
     # Header Row 1
-    draw.rectangle([0, y, 2*sub_w, y+header1_h], fill=(200,200,200), outline="black")
+    draw.rectangle([0,y,2*sub_w,y+header1_h], fill=(200,200,200), outline="black")
     draw.text((sub_w, y+header1_h//2), team_a_label, font=font, anchor="mm", fill="black")
-    draw.rectangle([2*sub_w, y, 2*sub_w+map_w, y+header1_h], fill=(200,200,200), outline="black")
+    draw.rectangle([2*sub_w,y,2*sub_w+map_w,y+header1_h], fill=(200,200,200), outline="black")
     draw.text((2*sub_w+map_w//2, y+header1_h//2), "Maps", font=font, anchor="mm", fill="black")
-    draw.rectangle([2*sub_w+map_w, y, total_w, y+header1_h], fill=(200,200,200), outline="black")
+    draw.rectangle([2*sub_w+map_w,y,total_w,y+header1_h], fill=(200,200,200), outline="black")
     draw.text((2*sub_w+map_w+sub_w, y+header1_h//2), team_b_label, font=font, anchor="mm", fill="black")
     y += header1_h
 
@@ -133,7 +132,7 @@ def create_ban_status_image(
     labels = ["Allied","Axis","","Allied","Axis"]
     x = 0
     for w, lab in zip(cols, labels):
-        draw.rectangle([x, y, x+w, y+header2_h], fill=(220,220,220), outline="black")
+        draw.rectangle([x,y,x+w,y+header2_h], fill=(220,220,220), outline="black")
         if lab:
             draw.text((x+w//2, y+header2_h//2), lab, font=font, anchor="mm", fill="black")
         x += w
@@ -149,8 +148,7 @@ def create_ban_status_image(
         x = 0
         # Team A Allied/Axis
         for side in ("Allied","Axis"):
-            is_final = (final_combo == (name, "team_a", side))
-            if is_final:
+            if final_combo == (name, "team_a", side):
                 c = (180,255,180)
             elif side in tb["team_a"]["manual"]:
                 c = (255,0,0)
@@ -158,19 +156,18 @@ def create_ban_status_image(
                 c = (255,165,0)
             else:
                 c = (255,255,255)
-            draw.rectangle([x, y, x+sub_w, y+row_h], fill=c, outline="black")
+            draw.rectangle([x,y,x+sub_w,y+row_h], fill=c, outline="black")
             draw.text((x+sub_w//2, y+row_h//2), side, font=font, anchor="mm", fill="black")
             x += sub_w
 
         # Map name
-        draw.rectangle([x, y, x+map_w, y+row_h], fill=(240,240,240), outline="black")
+        draw.rectangle([x,y,x+map_w,y+row_h], fill=(240,240,240), outline="black")
         draw.text((x+map_w//2, y+row_h//2), name, font=font, anchor="mm", fill="black")
         x += map_w
 
         # Team B Allied/Axis
         for side in ("Allied","Axis"):
-            is_final = (final_combo == (name, "team_b", side))
-            if is_final:
+            if final_combo == (name, "team_b", side):
                 c = (180,255,180)
             elif side in tb["team_b"]["manual"]:
                 c = (255,0,0)
@@ -178,7 +175,7 @@ def create_ban_status_image(
                 c = (255,165,0)
             else:
                 c = (255,255,255)
-            draw.rectangle([x, y, x+sub_w, y+row_h], fill=c, outline="black")
+            draw.rectangle([x,y,x+sub_w,y+row_h], fill=c, outline="black")
             draw.text((x+sub_w//2, y+row_h//2), side, font=font, anchor="mm", fill="black")
             x += sub_w
 
@@ -188,37 +185,38 @@ def create_ban_status_image(
     img.save(path)
     return path
 
-# ─── Autocomplete for map and side ─────────────────────────────────────────────
+# ─── Autocomplete for map based on availability ────────────────────────────────
 async def map_autocomplete(interaction: discord.Interaction, current: str):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return []
     team = match_turns[ch]
-    opts = []
+    choices = []
     for m in load_maplist():
         name = m["name"]
-        used = (ongoing_bans[ch][name][team]["manual"] +
-                ongoing_bans[ch][name][team]["auto"])
-        if len(used) >= 2:
+        tb = ongoing_bans[ch][name][team]
+        # skip if both sides banned
+        if len(tb["manual"]) + len(tb["auto"]) >= 2:
             continue
         if current.lower() in name.lower():
-            opts.append(app_commands.Choice(name=name, value=name))
-    return opts[:25]
+            choices.append(app_commands.Choice(name=name, value=name))
+    return choices[:25]
 
+# ─── Autocomplete for side based on selected map ──────────────────────────────
 async def side_autocomplete(interaction: discord.Interaction, current: str):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return []
     selected_map = interaction.namespace.map
     team = match_turns[ch]
-    tb = ongoing_bans[ch][selected_map]
-    opts = []
+    tb = ongoing_bans[ch][selected_map][team]
+    choices = []
     for side in ("Allied","Axis"):
-        if side in tb[team]["manual"] or side in tb[team]["auto"]:
+        if side in tb["manual"] or side in tb["auto"]:
             continue
         if current.lower() in side.lower():
-            opts.append(app_commands.Choice(name=side, value=side))
-    return opts[:25]
+            choices.append(app_commands.Choice(name=side, value=side))
+    return choices[:25]
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
 @bot.tree.command(name="match_create", description="Create a new match")
@@ -230,7 +228,9 @@ async def match_create(
     description: str="No description provided"
 ):
     ch = interaction.channel_id
-    if ch in ongoing_bans and any(ongoing_bans[ch][m]["team_a"]["manual"] for m in ongoing_bans[ch]):
+    if ch in ongoing_bans and any(
+        ongoing_bans[ch][m]["team_a"]["manual"] for m in ongoing_bans[ch]
+    ):
         await interaction.response.send_message(
             "❌ A match is already active here. Use `/match_delete` first.",
             ephemeral=True
@@ -249,7 +249,7 @@ async def match_create(
             "team_b": {"manual": [], "auto": []}
         } for m in maps
     }
-    match_turns[ch] = "team_a"
+    match_turns[ch]   = "team_a"
     channel_teams[ch] = (a, b)
     save_state()
 
@@ -287,7 +287,7 @@ async def ban_map(
         )
         return
 
-    team_key = match_turns[ch]
+    team_key  = match_turns[ch]
     other_key = "team_b" if team_key=="team_a" else "team_a"
     tb = ongoing_bans[ch][map]
 
@@ -300,9 +300,10 @@ async def ban_map(
 
     a_label, b_label = channel_teams.get(ch, ("Team A","Team B"))
     current_label = a_label if match_turns[ch]=="team_a" else b_label
-    img = create_ban_status_image(load_maplist(), ongoing_bans[ch], a_label, b_label, current_label)
+    img = create_ban_status_image(load_maplist(), ongoing_bans[ch],
+                                  a_label, b_label, current_label)
 
-    # announce if final combination
+    # announce final if reached
     combos = [
         (n,t,s)
         for n,tbs in ongoing_bans[ch].items()
@@ -312,9 +313,9 @@ async def ban_map(
     ]
     if len(combos)==1:
         name, team, side = combos[0]
-        team_label = channel_teams[ch][0] if team=="team_a" else channel_teams[ch][1]
+        label = channel_teams[ch][0] if team=="team_a" else channel_teams[ch][1]
         await interaction.response.send_message(
-            f"🏁 Ban complete! Remaining: {team_label} → {name} ({side})",
+            f"🏁 Ban complete! Remaining: {label} → {name} ({side})",
             file=discord.File(img)
         )
     else:
@@ -334,7 +335,9 @@ async def show_bans(interaction: discord.Interaction):
         mb = ", ".join(tb["team_b"]["manual"]) or "None"
         ab = ", ".join(tb["team_b"]["auto"]) or "None"
         lines.append(
-            f"**{m['name']}**\nA manual: {ma}\nA auto: {aa}\nB manual: {mb}\nB auto: {ab}"
+            f"**{m['name']}**\n"
+            f"A manual: {ma}\nA auto: {aa}\n"
+            f"B manual: {mb}\nB auto: {ab}"
         )
     await interaction.response.send_message("\n\n".join(lines), ephemeral=True)
 
