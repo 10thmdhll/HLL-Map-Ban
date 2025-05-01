@@ -239,21 +239,21 @@ def create_ban_status_image(
     return CONFIG["output_image"]
 
 # ─── Messaging Helper ─────────────────────────────────────────────────────────
-async def update_status_message(ch_id: int, content: Optional[str], img_path: str) -> None:
-    chan = bot.get_channel(ch_id)
-    if not chan:
+async def update_status_message(ch: int, content: Optional[str], img: str) -> None:
+    channel = bot.get_channel(ch)
+    if not channel:
         return
-    file = discord.File(img_path)
-    msg_id = channel_messages.get(ch_id)
+    file = discord.File(img)
+    msg_id = channel_messages.get(ch)
     if msg_id:
         try:
-            msg = await chan.fetch_message(msg_id)
+            msg = await channel.fetch_message(msg_id)
             await msg.edit(content=content, attachments=[file])
             return
         except discord.NotFound:
             pass
-    msg = await chan.send(content=content, file=file)
-    channel_messages[ch_id] = msg.id
+    msg = await channel.send(content=content, file=file)
+    channel_messages[ch] = msg.id
     save_state()
 
 async def delete_later(msg: discord.Message, delay: float) -> None:
@@ -263,7 +263,7 @@ async def delete_later(msg: discord.Message, delay: float) -> None:
     except:
         pass
 
-# ─── Bot Initialization ────────────────────────────────────────────────────────
+# ─── Bot Setup ─────────────────────────────────────────────────────────────────
 load_dotenv()
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
 bot.intents.message_content = True
@@ -271,7 +271,8 @@ bot.intents.message_content = True
 @bot.event
 async def on_ready() -> None:
     load_state()
-    await bot.tree.sync(guild=discord.Object(id=1366830976369557654))
+    guild = discord.Object(id=1366830976369557654)
+    await bot.tree.sync(guild=guild)
     print("Bot ready; active matches:", list(ongoing_bans.keys()))
 
 # ─── Autocomplete Handlers ─────────────────────────────────────────────────────
@@ -289,7 +290,7 @@ async def side_autocomplete(
 ) -> List[app_commands.Choice[str]]:
     return [app_commands.Choice(name=s, value=s)
             for s in ("Allied", "Axis") if current.lower() in s.lower()][:25]
-
+            
 # ─── Slash Commands ─────────────────────────────────────────────────────────────
 @bot.tree.command(
     name="match_create",
@@ -346,80 +347,34 @@ async def match_create(
 )
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
+@bot.tree.command(
+    name="ban_map",
+    description="Ban a map for a given side",
+    guild=discord.Object(id=1366830976369557654)
+)
+@app_commands.describe(map_name="Map to ban", side="Allied or Axis")
+@app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
 async def ban_map(
     interaction: discord.Interaction,
     map_name: str,
     side: str
 ) -> None:
-    """Ban a map via interactive autocomplete for map_name and side."""
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return await interaction.followup.send("❌ No active match.", ephemeral=True)
-
+    tb = ongoing_bans[ch].get(map_name)
+    if tb is None:
+        return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
     tk = match_turns[ch]
-    tb = ongoing_bans[ch][map_name]
-    # Record ban
     tb[tk]["manual"].append(side)
-    other = "team_b" if tk=="team_a" else "team_a"
-    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
-    match_turns[ch] = other
-
-    # Persist on completion
+    match_turns[ch] = "team_b" if tk=="team_a" else "team_a"
     if is_ban_complete(ch):
         save_state()
-
-    img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], *channel_teams[ch],
-        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
-    )
-    await update_status_message(ch, None, img)
-    return await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
-    """Ban a map via interactive autocomplete for map_name and side."""
-    await interaction.response.defer()
-    ch = interaction.channel_id
-    if ch not in ongoing_bans:
-        return await interaction.followup.send("❌ No active match.", ephemeral=True)
-
-    tk = match_turns[ch]
-    tb = ongoing_bans[ch][map_name]
-    # Record ban
-    tb[tk]["manual"].append(side)
-    other = "team_b" if tk=="team_a" else "team_a"
-    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
-    match_turns[ch] = other
-
-    # Persist on completion
-    if is_ban_complete(ch):
-        save_state()
-
-    img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], *channel_teams[ch],
-        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
-    )
-    await update_status_message(ch, None, img)
-    return await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
-    await interaction.response.defer()
-    ch = interaction.channel_id
-    if ch not in ongoing_bans:
-        return await interaction.followup.send("❌ No active match.", ephemeral=True)
-
-    tk = match_turns[ch]
-    tb = ongoing_bans[ch][map_name]
-    # Record ban
-    tb[tk]["manual"].append(side)
-    other = "team_b" if tk=="team_a" else "team_a"
-    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
-    match_turns[ch] = other
-
-    # Persist on completion
-    if is_ban_complete(ch):
-        save_state()
-
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch])
     await update_status_message(ch, None, img)
-    return await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
-
+    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    
 @bot.tree.command(
     name="match_time",
     description="Set match date/time",
