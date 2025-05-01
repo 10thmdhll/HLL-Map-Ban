@@ -424,15 +424,22 @@ async def match_create(
     ra   = cfg.get("team_regions", {}).get(a, "Unknown")
     rb   = cfg.get("team_regions", {}).get(b, "Unknown")
     mode = determine_ban_option(ra, rb, cfg)
-    winner = random.choice([a, b])
+    # Perform coin flip: select role then internal key
+    winner_role = random.choice([a, b])
+    winner_key = 'team_a' if winner_role == a else 'team_b'
+    winner = winner_key
 
     # Initialize state
     channel_teams[ch]   = (a, b)
     channel_mode[ch]    = mode
-    channel_flip[ch]    = winner
+    channel_flip[ch] = winner  # store internal key ('team_a'/'team_b')
     channel_decision[ch]= None
     # Use coin flip winner to determine first ban; for ExtraBan keep default turn order
-    match_turns[ch]     = winner 
+    # Determine first ban based on mode
+    if mode == "ExtraBan":
+        match_turns[ch] = 'team_a'
+    else:
+        match_turns[ch] = winner_key 
     if mode!="ExtraBan":
         match_turns[ch] = b
     
