@@ -679,7 +679,7 @@ async def match_time_cmd(
         load_maplist(), ongoing_bans[ch], a_lbl, b_lbl,
         channel_mode[ch], channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
         channel_decision[ch], None,
-        match_times.[ch]
+        match_times.get(ch)
     )
     await update_status_message(ch, f"⏱️ Match time set: {time}", img)
     await interaction.followup.send("✅ Match time updated on the image.", ephemeral=True)
