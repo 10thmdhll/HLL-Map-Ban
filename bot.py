@@ -60,7 +60,6 @@ def load_state():
     try:
         data = json.load(open(STATE_FILE))
     except json.JSONDecodeError:
-        save_state()
         return
     ongoing_bans     = {int(k):v for k,v in data.get("ongoing_bans",{}).items()}
     match_turns      = {int(k):v for k,v in data.get("match_turns",{}).items()}
@@ -292,8 +291,13 @@ async def delete_later(msg: discord.Message, delay: float):
     except:
         pass
 
+@bot.event
+async def on_ready():
+    load_state()
+    await bot.tree.sync()
+    print("Bot ready; active matches:", list(ongoing_bans.keys()))
+    
 # ─── Autocomplete ──────────────────────────────────────────────────────────────
-# Remove lambda-based autocompletes and use explicit handlers to catch errors
 @bot.tree.command(name="ban_map", description="Ban a map side")
 @app_commands.describe(map_name="The map to ban", side="Which side")
 @app_commands.autocomplete(map_name="map_autocomplete", side="side_autocomplete")
@@ -302,9 +306,9 @@ async def ban_map(
     map_name: str,
     side: str
 ):
-    load_state()
     await interaction.response.defer()
     ch = interaction.channel_id
+    
     if ch not in ongoing_bans:
         await interaction.followup.send("❌ No active match here.", ephemeral=True)
         return
@@ -360,7 +364,6 @@ async def ban_map(
     tb[tk]["manual"].append(side)
     tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
-    save_state()
 
     combos_post = [
         (m,t,s)
@@ -392,6 +395,7 @@ async def ban_map(
     await update_status_message(ch, content, img)
 
     if is_complete:
+        save_state()
         poll = await interaction.channel.send(
             f"📊 **Who will win the match?**\n"
             f"🅰️ {channel_teams[ch][0]}\n"
@@ -656,10 +660,10 @@ async def match_time_cmd(
     interaction: discord.Interaction,
     time: str
 ):
-    load_state()
+    await interaction.response.defer(ephemeral=True)
     ch = interaction.channel_id
     if ch not in ongoing_bans or not is_ban_complete(ch):
-        return await interaction.response.send_message("❌ Ban phase not complete.", ephemeral=True)
+        return await interaction.followup.send("❌ Ban phase not complete.", ephemeral=True)
     # Parse and store
     try:
         dt = parser.isoparse(time)
@@ -668,17 +672,17 @@ async def match_time_cmd(
         match_times[ch] = dt_utc.isoformat()
         save_state()
     except Exception as e:
-        return await interaction.response.send_message(f"❌ Invalid datetime: {e}", ephemeral=True)
+        return await interaction.followup.send(f"❌ Invalid datetime: {e}", ephemeral=True)
     # Update image
     a_lbl, b_lbl = channel_teams[ch]
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], a_lbl, b_lbl,
         channel_mode[ch], channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
         channel_decision[ch], None,
-        match_times.get(ch)
+        match_times.[ch]
     )
     await update_status_message(ch, f"⏱️ Match time set: {time}", img)
-    await interaction.response.send_message("✅ Match time updated on the image.", ephemeral=True)
+    await interaction.followup.send("✅ Match time updated on the image.", ephemeral=True)
 
 
 @bot.tree.error
@@ -687,11 +691,5 @@ async def on_app_command_error(interaction: discord.Interaction, error: Exceptio
     if isinstance(error, discord.errors.NotFound):
         return
     raise error
-
-@bot.event
-async def on_ready():
-    load_state()
-    await bot.tree.sync()
-    print("Bot ready; active matches:", list(ongoing_bans.keys()))
 
 bot.run(os.getenv("DISCORD_TOKEN"))
