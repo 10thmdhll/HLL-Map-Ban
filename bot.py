@@ -100,14 +100,18 @@ def is_ban_complete(ch: int) -> bool:
     return len(combos) == 2 and combos[0][0] == combos[1][0]
 
 # ─── Image Generation (omitted for brevity) ────────────────────────────────────
+# ─── Image Generation (omitted for brevity) ────────────────────────────────────
 def create_ban_status_image(
     maps: List[dict],
-    bans: dict[str, dict[str, list[str]]],
+    bans: dict[str, dict[str, List[str]]],
     team_a: str, team_b: str,
-    mode: str, flip_winner: str,
+    mode: str, flip_winner: Optional[str],
     decision_choice: Optional[str], current_turn: Optional[str],
-    match_time_iso: Optional[str] = None
+    match_time_iso: Optional[str] = None,
+    final: bool = False
 ) -> str:
+    """Generates ban status image, highlighting final remaining combo if final=True."""
+    from PIL import Image
     row_fs, hdr_fs = CONFIG["row_font_size"], CONFIG["header_font_size"]
     pad_x = int(hdr_fs * CONFIG["pad_x_factor"])
     pad_y = int(hdr_fs * CONFIG["pad_y_factor"])
@@ -118,10 +122,10 @@ def create_ban_status_image(
         CONFIG["optimize_png"]
     )
     out_path = CONFIG["output_image"]
-    font_paths = CONFIG["font_paths"]
 
+    # load fonts
     row_font = hdr_font = None
-    for fp in font_paths:
+    for fp in CONFIG["font_paths"]:
         try:
             row_font = ImageFont.truetype(fp, row_fs)
             hdr_font = ImageFont.truetype(fp, hdr_fs)
@@ -134,6 +138,44 @@ def create_ban_status_image(
     def measure(txt: str, fnt) -> Tuple[int,int]:
         b = fnt.getbbox(txt)
         return b[2]-b[0], b[3]-b[1]
+
+    # determine final combo if needed
+    final_map = final_side1 = final_side2 = None
+    if final and current_turn is None:
+        # use is_ban_complete logic to find remaining map and sides
+        combos = [
+            (m, t, s)
+            for m, tb in bans.items()
+            for t in ("team_a","team_b")
+            for s in ("Allied","Axis")
+            if s not in tb[t]["manual"] and s not in tb[t]["auto"]
+        ]
+        if len(combos)==2 and combos[0][0]==combos[1][0]:
+            final_map = combos[0][0]
+            final_side1 = combos[0][2]  # side for team from combos order
+            final_side2 = combos[1][2]
+
+    # build banner lines, adjust if final
+    if final and final_map:
+        banner1 = f"{team_a} = {final_side1}   |   {team_b} = {final_side2}"
+        banner2 = "Final choice locked."  
+    else:
+        fw = flip_winner or "TBD"
+        if mode == "ExtraBan":
+            first_lbl, host_field = fw, "Middle ground rules in effect."
+        else:
+            if decision_choice is None:
+                first_lbl, host_field = "TBD", f"{fw} chooses host"
+            elif decision_choice == "ban":
+                first_lbl = fw
+                other = team_b if fw==team_a else team_a
+                host_field = f"Host: {other}"
+            else:
+                other = team_b if fw==team_a else team_a
+                first_lbl = other
+                host_field = f"Host: {fw}"
+        banner1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
+        banner2 = f"Current Turn: {current_turn or 'TBD'}"
 
     side_sz = [measure(s, row_font) for s in ("Allied","Axis")]
     max_sw, max_sh = max(w for w,h in side_sz), max(h for w,h in side_sz)
