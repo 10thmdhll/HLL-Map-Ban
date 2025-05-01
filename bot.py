@@ -9,6 +9,8 @@ from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
+from dateutil import parser
+import pytz
 
 # ─── Configuration ───────────────────────────────────────────────────────────────
 CONFIG = {
@@ -16,6 +18,7 @@ CONFIG = {
     "teammap_file":     "teammap.json",
     "maplist_file":     "maplist.json",
     "output_image":     "ban_status.png",
+    "user_timezone":    "America/New_York",
     "max_inline_width": 800,
     "quantize_colors":  64,
     "compress_level":   9,
@@ -44,12 +47,13 @@ channel_messages:  dict[int, int]                            = {}
 channel_flip:      dict[int, str]                            = {}
 channel_decision:  dict[int, Optional[str]]                  = {}
 channel_mode:      dict[int, str]                            = {}
+match_times:       dict[int, str]                            = {}
 
 STATE_FILE = CONFIG["state_file"]
 
 # ─── Persistence Helpers ────────────────────────────────────────────────────────
 def load_state():
-    global ongoing_bans, match_turns, channel_teams, channel_messages
+    global ongoing_bans, match_turns, match_times, channel_teams, channel_messages
     global channel_flip, channel_decision, channel_mode
     if not os.path.isfile(STATE_FILE):
         return
@@ -60,6 +64,7 @@ def load_state():
         return
     ongoing_bans     = {int(k):v for k,v in data.get("ongoing_bans",{}).items()}
     match_turns      = {int(k):v for k,v in data.get("match_turns",{}).items()}
+    match_times      = {int(k):v for k,v in data.get("match_times",{}).items()}
     channel_teams    = {int(k):tuple(v) for k,v in data.get("channel_teams",{}).items()}
     channel_messages = {int(k):v for k,v in data.get("channel_messages",{}).items()}
     channel_flip     = {int(k):v for k,v in data.get("channel_flip",{}).items()}
@@ -71,6 +76,7 @@ def save_state():
         json.dump({
             "ongoing_bans":     {str(k):v for k,v in ongoing_bans.items()},
             "match_turns":      {str(k):v for k,v in match_turns.items()},
+            "match_times":      {str(k):v for k,v in match_times.items()},
             "channel_teams":    {str(k):list(v) for k,v in channel_teams.items()},
             "channel_messages": {str(k):v for k,v in channel_messages.items()},
             "channel_flip":     {str(k):v for k,v in channel_flip.items()},
@@ -80,7 +86,7 @@ def save_state():
 
 async def cleanup_match(ch: int):
     for d in (
-        ongoing_bans, match_turns, channel_teams,
+        ongoing_bans, match_turns, match_times, channel_teams,
         channel_messages, channel_flip, channel_decision, channel_mode
     ):
         d.pop(ch, None)
@@ -106,8 +112,11 @@ def create_ban_status_image(
     mode: str,
     flip_winner: Optional[str],
     decision_choice: Optional[str],
-    current_turn: Optional[str]
+    current_turn: Optional[str],
+    match_time: Optional[str] = None
 ) -> str:
+    from datetime import datetime
+    import pytz
     row_fs, hdr_fs = CONFIG["row_font_size"], CONFIG["header_font_size"]
     pad_x = int(hdr_fs * CONFIG["pad_x_factor"])
     pad_y = int(hdr_fs * CONFIG["pad_y_factor"])
@@ -157,6 +166,16 @@ def create_ban_status_image(
 
     line1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
     line2 = f"Current Turn: {current_turn or 'TBD'}"
+    # Add match time line if provided
+    if match_time:
+        try:
+            dt = parser.isoparse(match_time)
+            dt_local = dt.astimezone(tz)
+            formatted = dt_local.strftime('%Y-%m-%d %H:%M %Z')
+            lines.append(f"Match Time: {formatted}")
+        except:
+            lines.append(f"Match Time: {match_time}")
+            
     b1w, b1h = measure(line1, hdr_font)
     b2w, b2h = measure(line2, hdr_font)
 
@@ -238,6 +257,17 @@ def create_ban_status_image(
     img.save(out_path, optimize=opt, compress_level=cl)
     return out_path
 
+# ─── Helper to check ban completion ─────────────────────────────────────────────
+def is_ban_complete(ch: int) -> bool:
+    combos = [
+        (m,t,s)
+        for m,tb in ongoing_bans.get(ch,{}).items()
+        for t in ("team_a","team_b")
+        for s in ("Allied","Axis")
+        if s not in tb[t]["manual"] and s not in tb[t]["auto"]
+    ]
+    return len(combos)==2 and combos[0][0]==combos[1][0]
+    
 # ─── Message Helper ─────────────────────────────────────────────────────────────
 async def update_status_message(ch_id: int, content: Optional[str], img_path: str):
     chan = bot.get_channel(ch_id)
@@ -508,6 +538,37 @@ async def match_delete(interaction: discord.Interaction):
         return await interaction.response.send_message("❌ No active match.", ephemeral=True)
     await cleanup_match(ch)
     await interaction.response.send_message("✅ Deleted.", ephemeral=True)
+
+@bot.tree.command(name="match_time", description="Set the scheduled match time")
+@app_commands.describe(time="Datetime in ISO 8601 format, including timezone")
+async def match_time_cmd(
+    interaction: discord.Interaction,
+    time: str
+):
+    load_state()
+    ch = interaction.channel_id
+    if ch not in ongoing_bans or not is_ban_complete(ch):
+        return await interaction.response.send_message("❌ Ban phase not complete.", ephemeral=True)
+    # Parse and store
+    try:
+        dt = parser.isoparse(time)
+        # normalize to UTC for storage
+        dt_utc = dt.astimezone(pytz.utc)
+        match_times[ch] = dt_utc.isoformat()
+        save_state()
+    except Exception as e:
+        return await interaction.response.send_message(f"❌ Invalid datetime: {e}", ephemeral=True)
+    # Update image
+    a_lbl, b_lbl = channel_teams[ch]
+    img = create_ban_status_image(
+        load_maplist(), ongoing_bans[ch], a_lbl, b_lbl,
+        channel_mode[ch], channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
+        channel_decision[ch], None,
+        match_times.get(ch)
+    )
+    await update_status_message(ch, f"⏱️ Match time set: {time}", img)
+    await interaction.response.send_message("✅ Match time updated on the image.", ephemeral=True)
+
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: Exception):
