@@ -482,11 +482,8 @@ async def ban_map(
     else:
         conf = await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
         asyncio.create_task(delete_later(conf, 5.0))
-        
-# ─── Autocomplete handlers for ban_map (already attached to the real ban_map above)
-# No duplicate ban_map command stub here
 
-# ─── Next slash commands definition (match_time)
+# ─── Autocomplete handlers for ban_map (already attached to the real ban_map above)
 async def match_time_cmd(
     interaction: discord.Interaction,
     time: str
@@ -514,8 +511,6 @@ async def match_time_cmd(
     )
     await update_status_message(ch, f"⏱️ Match time set: {time}", img)
     await interaction.followup.send("✅ Match time updated on the image.", ephemeral=True)
-
-
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: Exception):
     # Ignore "Unknown interaction" from late autocomplete responses
