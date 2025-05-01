@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 STATE_FILE = "state.json"
 
-# ─── In-Memory State ────────────────────────────────────────────────────────────
+# ─── In‐Memory State ────────────────────────────────────────────────────────────
 ongoing_bans: dict[int, dict[str, dict[str, List[str]]]] = {}
 match_turns:    dict[int, str]               = {}
 channel_teams:  dict[int, Tuple[str,str]]    = {}
@@ -72,7 +72,7 @@ def load_maplist() -> List[dict]: return json.load(open("maplist.json"))["maps"]
 def determine_ban_option(a:str,b:str,cfg:dict)->str:
     return cfg.get("region_pairings",{}).get(a,{}).get(b,"ExtraBan")
 
-# ─── Image Generation w/ Auto-Fit Cells ─────────────────────────────────────────
+# ─── Image Generation (map in the exact middle) ─────────────────────────────────
 def create_ban_status_image(
     map_list: List[dict],
     bans: dict[str, dict[str, List[str]]],
@@ -111,12 +111,12 @@ def create_ban_status_image(
 
     # banner text
     flip_lbl = flip_winner or "TBD"
-    if pairing_mode=="ExtraBan":
+    if pairing_mode == "ExtraBan":
         first_lbl, host_field = flip_lbl, "Middle ground rules in effect."
     else:
         if decision_choice is None:
             first_lbl, host_field = "TBD", f"{flip_lbl} chooses host"
-        elif decision_choice=="ban":
+        elif decision_choice == "ban":
             first_lbl = flip_lbl
             other     = team_b_label if flip_lbl==team_a_label else team_a_label
             host_field = f"Host: {other}"
@@ -151,17 +151,17 @@ def create_ban_status_image(
 
     # Banner
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
-    draw.text((total_w//2,y+banner_h1//2), line1, font=hdr_font, anchor="mm", fill="black")
-    draw.text((total_w//2,y+banner_h1+banner_h2//2), line2, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2,y+banner_h1//2),         line1, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2,y+banner_h1+banner_h2//2),line2, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
     # Header row 1: Team A | Maps | Team B
-    draw.rectangle([0,y,2*side_w,y+h1],           fill=(200,200,200), outline="black")
-    draw.text((side_w,y+h1//2),     team_a_label, font=hdr_font, anchor="mm", fill="black")
-    draw.rectangle([2*side_w,y,2*side_w+map_w,y+h1], fill=(200,200,200), outline="black")
-    draw.text((2*side_w+map_w//2,y+h1//2),"Maps", font=hdr_font, anchor="mm", fill="black")
-    draw.rectangle([2*side_w+map_w,y,total_w,y+h1], fill=(200,200,200), outline="black")
-    draw.text((2*side_w+map_w+side_w,y+h1//2),     team_b_label, font=hdr_font, anchor="mm", fill="black")
+    draw.rectangle([0,y,2*side_w,y+h1],             fill=(200,200,200), outline="black")
+    draw.text((side_w,    y+h1//2), team_a_label,  font=hdr_font, anchor="mm", fill="black")
+    draw.rectangle([2*side_w,y,2*side_w+map_w,y+h1],fill=(200,200,200), outline="black")
+    draw.text((2*side_w+map_w//2,y+h1//2), "Maps",  font=hdr_font, anchor="mm", fill="black")
+    draw.rectangle([2*side_w+map_w,y,total_w,y+h1],fill=(200,200,200), outline="black")
+    draw.text((2*side_w+map_w+side_w,y+h1//2),      team_b_label,  font=hdr_font, anchor="mm", fill="black")
     y += h1
 
     # Header row 2: Allied/Axis labels
@@ -180,26 +180,39 @@ def create_ban_status_image(
         name = m["name"]
         tb   = bans[name]
         x = 0
-        for team_key in ("team_a","team_b"):
-            for side in ("Allied","Axis"):
-                if side in tb[team_key]["manual"]:
-                    c=(255,0,0)
-                elif side in tb[team_key]["auto"]:
-                    c=(255,165,0)
-                else:
-                    c=(255,255,255)
-                draw.rectangle([x,y,x+side_w,y+row_h], fill=c, outline="black")
-                draw.text((x+side_w//2,y+row_h//2), side, font=row_font, anchor="mm", fill="black")
-                x += side_w
+        # 1) Team A sides
+        for side in ("Allied","Axis"):
+            if side in tb["team_a"]["manual"]:
+                c = (255,0,0)
+            elif side in tb["team_a"]["auto"]:
+                c = (255,165,0)
+            else:
+                c = (255,255,255)
+            draw.rectangle([x,y,x+side_w,y+row_h], fill=c, outline="black")
+            draw.text((x+side_w//2,y+row_h//2), side, font=row_font, anchor="mm", fill="black")
+            x += side_w
+        # 2) Map cell in the middle
         draw.rectangle([x,y,x+map_w,y+row_h], fill=(240,240,240), outline="black")
         draw.text((x+map_w//2,y+row_h//2), name, font=row_font, anchor="mm", fill="black")
+        x += map_w
+        # 3) Team B sides
+        for side in ("Allied","Axis"):
+            if side in tb["team_b"]["manual"]:
+                c = (255,0,0)
+            elif side in tb["team_b"]["auto"]:
+                c = (255,165,0)
+            else:
+                c = (255,255,255)
+            draw.rectangle([x,y,x+side_w,y+row_h], fill=c, outline="black")
+            draw.text((x+side_w//2,y+row_h//2), side, font=row_font, anchor="mm", fill="black")
+            x += side_w
         y += row_h
 
     path = "ban_status.png"
     img.save(path)
     return path
 
-# ─── Message-Editing Helper ─────────────────────────────────────────────────────
+# ─── Message‐Editing Helper ─────────────────────────────────────────────────────
 async def update_status_message(channel_id:int, content:Optional[str], image_path:str):
     chan = bot.get_channel(channel_id)
     if not chan: return
@@ -246,7 +259,7 @@ async def side_autocomplete(interaction:discord.Interaction, current:str):
     return opts[:25]
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
-@bot.tree.command(name="match_create", description="Create a new match")
+@bot.tree.command(name="match_create",description="Create a new match")
 async def match_create(
     interaction:discord.Interaction,
     team_a:discord.Role,
@@ -296,7 +309,7 @@ async def match_create(
     save_state()
 
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
-@bot.tree.command(name="ban_map", description="Ban a map side")
+@bot.tree.command(name="ban_map",description="Ban a map side")
 async def ban_map(
     interaction:discord.Interaction,
     map_name:str,
