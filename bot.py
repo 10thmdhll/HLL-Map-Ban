@@ -173,7 +173,7 @@ async def ban_map(
     await update_status_message(ch, f"✅ {side} banned {map_name}.", img)
 
 # /match_create
-@bot.tree.command(name="match_create", description="Create a new match")
+@bot.tree.command(name="match_create", description="Create a new match",guild=discord.Object(id=1366830976369557654))
 async def match_create(
     interaction: discord.Interaction,
     team_a: discord.Role,
