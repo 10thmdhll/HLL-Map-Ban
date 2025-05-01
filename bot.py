@@ -417,7 +417,7 @@ async def match_create(
     ra   = cfg.get("team_regions", {}).get(a, "Unknown")
     rb   = cfg.get("team_regions", {}).get(b, "Unknown")
     mode = determine_ban_option(ra, rb, cfg)
-    winner = random.choice([a, b]) if mode!="ExtraBan" else None
+    winner = random.choice([a, b])
 
     # Initialize state
     channel_teams[ch]   = (a, b)
