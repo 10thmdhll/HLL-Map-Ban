@@ -615,26 +615,28 @@ async def map_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
+    # Return up to 30 matching map names; Discord will handle sending them
     try:
         choices = [app_commands.Choice(name=m["name"], value=m["name"])
                    for m in load_maplist()
-                   if current.lower() in m["name"].lower()][:25]
-        await interaction.response.autocomplete(choices)
-    except discord.errors.NotFound:
-        pass
+                   if current.lower() in m["name"].lower()]
+        return choices[:30]
+    except Exception:
+        return []
 
 @ban_map.autocomplete("side")
 async def side_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
+    # Return up to 30 matching sides; Discord will handle sending them
     try:
         choices = [app_commands.Choice(name=s, value=s)
                    for s in ("Allied","Axis")
-                   if current.lower() in s.lower()][:25]
-        await interaction.response.autocomplete(choices)
-    except discord.errors.NotFound:
-        pass
+                   if current.lower() in s.lower()]
+        return choices[:30]
+    except Exception:
+        return []
 
 @bot.tree.command(name="match_decide", description="Winner chooses host or first ban")
 async def match_decide(
