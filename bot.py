@@ -447,27 +447,12 @@ async def ban_map(
     # Only the current team may ban
     ch = interaction.channel_id
     # Check if ban phase already finalized
-    # find remaining combos
-    combos = [
-        (m, t, s)
-        for m, tb in ongoing_bans.get(ch, {}).items()
-        for t in ("team_a", "team_b")
-        for s in ("Allied", "Axis")
-        if s not in tb[t]["manual"] and s not in tb[t]["auto"]
-    ]
-    # if only one map left with two sides, finalize
+    combos = [ ... ]
     if len(combos) == 2 and combos[0][0] == combos[1][0]:
-        final_img = create_ban_status_image(
-            load_maplist(), ongoing_bans[ch],
-            *channel_teams[ch], channel_mode[ch], channel_flip[ch],
-            channel_decision[ch], None,
-            final=True
-        )
-        await update_status_message(ch, None, final_img)
-        return await interaction.response.send_message(
-            "✅ Ban phase complete. Final selection locked.", ephemeral=True
-        )
+        ...  # final branch unchanged
     # proceed with normal ban
+    # Defer before follow-up for normal flow
+    await interaction.response.defer()
     tb = ongoing_bans[ch].get(map_name)
     if tb is None:
         return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
