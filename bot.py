@@ -505,7 +505,15 @@ async def ban_map(
     tb = ongoing_bans[ch].get(map_name)
     if tb is None:
         return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
-    tk = current_key
+    # Map raw team name to internal key
+    raw_key = current_key
+    team_a_name, team_b_name = channel_teams.get(ch, (None, None))
+    if raw_key == team_a_name:
+        tk = 'team_a'
+    elif raw_key == team_b_name:
+        tk = 'team_b'
+    else:
+        return await interaction.followup.send("❌ Invalid team turn.", ephemeral=True)
     tb[tk]["manual"].append(side)
     # auto-ban opposing side
     other = "team_b" if tk=="team_a" else "team_a"
