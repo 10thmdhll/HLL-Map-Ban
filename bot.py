@@ -85,8 +85,8 @@ def create_ban_status_image(
     decision_choice: Optional[str],
     current_turn: Optional[str]
 ) -> str:
-    # 2× larger fonts for maximum legibility
-    row_fs, hdr_fs = 56, 80
+    # 3× larger fonts for maximum legibility
+    row_fs, hdr_fs = 168, 240
     try:
         row_font = ImageFont.truetype("arialbd.ttf", row_fs)
         hdr_font = ImageFont.truetype("arialbd.ttf", hdr_fs)
@@ -103,9 +103,9 @@ def create_ban_status_image(
     h2  = hdr_fs + 12
     row_h = row_fs + 12
 
-    # Widened to 1600px, map column 600px
+    # widened canvas
     total_w, map_w = 1600, 600
-    sub_w = (total_w - map_w) // 4
+    sub_w = (total_w - map_w)//4
     cols  = [sub_w, sub_w, map_w, sub_w, sub_w]
     height = banner_h + h1 + h2 + len(map_list)*row_h + 10
 
@@ -143,14 +143,12 @@ def create_ban_status_image(
     draw = ImageDraw.Draw(img)
     y = 0
 
-    # draw banner background
+    # banner background
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
     # line1
-    draw.text((total_w//2, y + banner_h1//2),
-              line1, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y + banner_h1//2), line1, font=hdr_font, anchor="mm", fill="black")
     # line2
-    draw.text((total_w//2, y + banner_h1 + banner_h2//2),
-              line2, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y + banner_h1 + banner_h2//2), line2, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
     # header row 1
@@ -352,7 +350,6 @@ async def ban_map(
             "✅ Already complete.", ephemeral=True
         )
 
-    # apply ban
     other = "team_b" if tk=="team_a" else "team_a"
     tb = ongoing_bans[ch][map_name]
     tb[tk]["manual"].append(side)
@@ -420,7 +417,8 @@ async def match_decide(
     )
     await update_status_message(ch,None,img)
     await interaction.response.send_message(
-        f"✅ Chose **{'First Ban' if choice=='ban' else 'Host'}**; first ban: **{a_lbl if match_turns[ch]=='team_a' else b_lbl}**.",
+        f"✅ Chose **{'First Ban' if choice=='ban' else 'Host'}**; first ban: "
+        f"**{a_lbl if match_turns[ch]=='team_a' else b_lbl}**.",
         ephemeral=True
     )
 
