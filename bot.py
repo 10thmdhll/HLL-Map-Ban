@@ -494,11 +494,12 @@ async def ban_map(
             f"✅ Ban phase complete. Final: {final_map} → Team 1:{final_side1} / Team 2:{final_side2}", ephemeral=False
         )
     # Only the current team may ban
+    # current_key holds the winning team name (role)
     current_key = match_turns.get(ch)
     if not current_key:
         return await interaction.response.send_message("❌ No match in progress.", ephemeral=True)
-    expected_role = channel_teams[ch][0] if current_key=="team_a" else channel_teams[ch][1]
-    if expected_role not in {r.name for r in interaction.user.roles}:
+    # enforce turn by comparing to user's roles
+    if current_key not in {r.name for r in interaction.user.roles}:
         return await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
     # Proceed with normal ban
     await interaction.response.defer()
