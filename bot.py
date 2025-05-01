@@ -176,7 +176,11 @@ def create_ban_status_image(
                 host_field = f"Host: {fw}"
         banner1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
         banner2 = f"Current Turn: {current_turn or 'TBD'}"
-
+    
+    # Show the team name instead of key
+    current_team_name = team_a if current_turn == "team_a" else team_b if current_turn == "team_b" else "TBD"
+    banner2 = f"Current Turn: {current_team_name}"
+    
     side_sz = [measure(s, row_font) for s in ("Allied","Axis")]
     max_sw, max_sh = max(w for w,h in side_sz), max(h for w,h in side_sz)
     map_sz = [measure(m["name"], row_font) for m in maps] + [measure("Maps", hdr_font)]
@@ -440,6 +444,15 @@ async def ban_map(
     map_name: str,
     side: str
 ) -> None:
+    # Only the current team may ban
+    ch = interaction.channel_id
+    current_key = match_turns.get(ch)
+    if not current_key:
+        return await interaction.response.send_message("❌ No match in progress.", ephemeral=True)
+    # Determine expected role name
+    expected_role = channel_teams[ch][0] if current_key=="team_a" else channel_teams[ch][1]
+    if expected_role not in {r.name for r in interaction.user.roles}:
+        return await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch not in ongoing_bans:
