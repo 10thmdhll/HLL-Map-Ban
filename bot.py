@@ -291,9 +291,16 @@ async def map_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
-    matches = [m["name"] for m in json.load(open(CONFIG["maplist_file"]))["maps"]
-               if current.lower() in m["name"].lower()]
-    return [app_commands.Choice(name=m, value=m) for m in matches[:25]]
+    """Fetch map names from the JSON-backed loader for autocomplete."""
+    try:
+        # use central loader to ensure consistent data
+        maps = load_maplist()
+        choices = [app_commands.Choice(name=m["name"], value=m["name"])
+                   for m in maps
+                   if current.lower() in m["name"].lower()]
+        return choices[:25]
+    except Exception:
+        return [](name=m, value=m) for m in matches[:25]]
 
 async def side_autocomplete(
     interaction: discord.Interaction,
@@ -430,7 +437,8 @@ async def match_create(
         return
     await interaction.response.defer()
 
-    cfg, maps = load_teammap(), load_maplist()
+    cfg = load_teammap()
+    maps = load_maplist()
     a, b = team_a.name, team_b.name
     ra, rb = cfg["team_regions"].get(a, "Unknown"), cfg["team_regions"].get(b, "Unknown")
     mode = determine_ban_option(ra, rb, cfg)
