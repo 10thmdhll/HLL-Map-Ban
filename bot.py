@@ -300,7 +300,7 @@ async def map_autocomplete(
                    if current.lower() in m["name"].lower()]
         return choices[:25]
     except Exception:
-        return [](name=m, value=m) for m in matches[:25]]
+        return [](name=m, value=m) for m in matches[:25]
 
 async def side_autocomplete(
     interaction: discord.Interaction,
