@@ -303,7 +303,7 @@ async def side_autocomplete(
     return [app_commands.Choice(name=s, value=s) for s in sides[:25]]
 
 # ─── /ban_map Command ───────────────────────────────────────────────────────────
-@bot.tree.command(name="ban_map", description="Ban a map for a given side")
+@bot.tree.command(name="ban_map", description="Ban a map for a given side",guild=discord.Object(id=1366830976369557654))
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
 async def ban_map(
@@ -415,7 +415,7 @@ async def ban_map(
         asyncio.create_task(delete_later(conf, 5.0))
 
 # ─── /match_create Command ───────────────────────────────────────────────────────
-@bot.tree.command(name="match_create", description="Create a new match")
+@bot.tree.command(name="match_create", description="Create a new match",guild=discord.Object(id=1366830976369557654))
 async def match_create(
     interaction: discord.Interaction,
     team_a: discord.Role,
@@ -463,7 +463,7 @@ async def match_create(
     save_state()
     
 # ─── /match_time Command ───────────────────────────────────────────────────────
-@bot.tree.command(name="match_time", description="Set match date/time", guild=discord.Object(id=1366830976369557654))
+@bot.tree.command(name="match_time", description="Set match date/time",guild=discord.Object(id=1366830976369557654))
 @app_commands.describe(time="ISO8601 datetime with timezone")
 async def match_time_cmd(
     interaction: discord.Interaction,
@@ -486,7 +486,7 @@ async def match_time_cmd(
     await update_status_message(ch, f"⏱️ Match set: {dt_local.strftime('%Y-%m-%d %H:%M %Z')}", img)
 
 # ─── /match_decide Command ───────────────────────────────────────────────────────
-@bot.tree.command(name="match_decide", description="Winner chooses host or first ban")
+@bot.tree.command(name="match_decide", description="Winner chooses host or first ban",guild=discord.Object(id=1366830976369557654))
 async def match_decide(
     interaction: discord.Interaction,
     choice: Literal["ban","host"]
@@ -522,7 +522,7 @@ async def match_decide(
     )
     
 # ─── /match_delete Command ───────────────────────────────────────────────────────
-@bot.tree.command(name="match_delete", description="Delete the current match")
+@bot.tree.command(name="match_delete", description="Delete the current match",guild=discord.Object(id=1366830976369557654))
 async def match_delete(interaction: discord.Interaction):
     load_state()
     ch = interaction.channel_id
