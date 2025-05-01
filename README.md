@@ -42,7 +42,7 @@ A Discord bot that automates competitive map‐ban sequences for Hell Let Loose 
 `pip install -r requirements.txt`
 
 Create a .env file:
-`cp default.env .env
+`cp default.env .env`
 
 Edit new .env file with discord bot token:
 `DISCORD_TOKEN=your_bot_token_here`
@@ -74,9 +74,9 @@ teammap.json setup
 Team Regions: Should follow the "Team Name": "Reagion" format
 Region Pairings: Region vs region settings for "DetermineHost" or "ExtraBan"
 
-{
+`{
   "team_regions": {
-    "Esprit de Corps" : "NA",
+	"Esprit de Corps" : "NA",
 	"MS" : "EU",
 	"Climbers" : "CN"
 }
@@ -117,11 +117,11 @@ Region Pairings: Region vs region settings for "DetermineHost" or "ExtraBan"
 	  "OCE": "ExtraBan"
     }
   }
-}
+}`
 
 maplist.json
 Should follow: "Map Name" JSON format.  
-{
+`{
   "maps": [
     {
       "name": "Carentan – Day",
@@ -138,7 +138,7 @@ Should follow: "Map Name" JSON format.
       }
     }
 	]
-}
+}`
 
 Usage
 Start the bot (this syncs slash commands automatically):
