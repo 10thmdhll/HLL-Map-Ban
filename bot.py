@@ -451,7 +451,7 @@ async def ban_map(
     tb[tk]["manual"].append(side)
     tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
-    save_state()
+    #save_state()
 
     combos_post = [
         (m,t,s)
