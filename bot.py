@@ -448,6 +448,10 @@ async def ban_map(
     ch = interaction.channel_id
     # Check if ban phase already finalized
     combos = [ ... ]
+    
+    print(len(combos)
+    print(combos)
+    
     if len(combos) == 2 and combos[0][0] == combos[1][0]:
         ...  # final branch unchanged
     # proceed with normal ban
