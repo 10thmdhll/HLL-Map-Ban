@@ -567,9 +567,6 @@ async def on_ready():
     synced = await bot.tree.sync(guild=guild)
     print(f"Synced {len(synced)} commands to guild {guild.id}: {[c.name for c in synced]}")
     # ensure match_time exists; fallback to global sync if missing
-    if not any(c.name=="match_time" for c in synced):
-        global_synced = await bot.tree.sync()
-        print(f"match_time not in guild sync; registered global commands: {[c.name for c in global_synced]}") {guild.id}:")
     for cmd in synced:
         print("  •", cmd.name)
     print("Bot ready.")
