@@ -216,7 +216,7 @@ def create_ban_status_image(
     MAX_WIDTH = 800
     if img.width > MAX_WIDTH:
         ratio = MAX_WIDTH / img.width
-        img = img.resize((MAX_WIDTH, int(img.height * ratio)), Image.ANTIALIAS)
+        img = img.resize((MAX_WIDTH, int(img.height * ratio)), Image.Resampling.LANCZOS)
     # 2) Quantize & optimize
     img = img.quantize(colors=64, method=Image.FASTOCTREE)
     path = "ban_status.png"
