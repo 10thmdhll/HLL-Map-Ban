@@ -277,9 +277,32 @@ async def map_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
+    """Only suggest maps that still have ban slots remaining."""
+    ch = interaction.channel_id
     maps = load_maplist()
-    return [app_commands.Choice(name=m["name"], value=m["name"])
-            for m in maps if current.lower() in m["name"].lower()][:25]
+    choices: List[app_commands.Choice[str]] = []
+    for m in maps:
+        name = m["name"]
+        # filter by input
+        if current.lower() not in name.lower():
+            continue
+        tb = ongoing_bans.get(ch, {}).get(name)
+        # if no bans yet, map is available
+        if tb is None:
+            choices.append(app_commands.Choice(name=name, value=name))
+            continue
+        # check if any ban slot remains (either team hasn't banned both sides)
+        open_slot = False
+        for team_key in ("team_a", "team_b"):
+            for side in ("Allied", "Axis"):
+                if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
+                    open_slot = True
+                    break
+            if open_slot:
+                break
+        if open_slot:
+            choices.append(app_commands.Choice(name=name, value=name))
+    return choices[:25]
 
 async def side_autocomplete(
     interaction: discord.Interaction,
