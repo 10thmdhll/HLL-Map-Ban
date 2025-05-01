@@ -295,12 +295,9 @@ async def map_autocomplete(
     try:
         # use central loader to ensure consistent data
         maps = load_maplist()
-        choices = [app_commands.Choice(name=m["name"], value=m["name"])
-                   for m in maps
-                   if current.lower() in m["name"].lower()]
-        return choices[:25]
-    except Exception:
-        return [](name=m, value=m) for m in matches[:25]
+        return [app_commands.Choice(name=m["name"], value=m["name"])
+        for m in maps if current.lower() in m["name"].lower()][:25]
+
 
 async def side_autocomplete(
     interaction: discord.Interaction,
