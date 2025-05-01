@@ -449,7 +449,7 @@ async def ban_map(
     # Check if ban phase already finalized
     combos = [ ... ]
     
-    print(len(combos)
+    print(len(combos))
     print(combos)
     
     if len(combos) == 2 and combos[0][0] == combos[1][0]:
