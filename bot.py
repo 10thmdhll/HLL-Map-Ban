@@ -407,6 +407,10 @@ async def ban_map(
         return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
     tk = match_turns[ch]
     tb[tk]["manual"].append(side)
+    # auto-ban the opposing side for the other team
+    other = "team_b" if tk=="team_a" else "team_a"
+    opposite = "Axis" if side=="Allied" else "Allied"
+    tb[other]["auto"].append(opposite)
     match_turns[ch] = "team_b" if tk=="team_a" else "team_a"
     if is_ban_complete(ch):
         save_state()
