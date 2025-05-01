@@ -27,7 +27,7 @@ channel_flip: dict[int, str]               = {}
 channel_decision: dict[int, Optional[str]] = {}
 channel_mode: dict[int, str]               = {}
 
-# ─── Persistence ────────────────────────────────────────────────────────────────
+# ─── Persistence Helpers ────────────────────────────────────────────────────────
 def load_state():
     global ongoing_bans, match_turns, channel_teams, channel_messages
     global channel_flip, channel_decision, channel_mode
@@ -66,11 +66,11 @@ async def cleanup_match(ch:int):
     try: os.remove("ban_status.png")
     except: pass
 
-# ─── Config & Maps ──────────────────────────────────────────────────────────────
+# ─── Config & Maplist ───────────────────────────────────────────────────────────
 def load_config()  -> dict: return json.load(open("teammap.json"))
 def load_maplist() -> List[dict]: return json.load(open("maplist.json"))["maps"]
 
-def determine_ban_option(a:str,b:str,cfg:dict)->str:
+def determine_ban_option(a:str, b:str, cfg:dict) -> str:
     return cfg.get("region_pairings",{}).get(a,{}).get(b,"ExtraBan")
 
 # ─── Image Generation w/ Auto-Fit Cells ─────────────────────────────────────────
@@ -99,18 +99,21 @@ def create_ban_status_image(
         row_font = ImageFont.load_default()
         hdr_font = ImageFont.load_default()
 
-    # measure text sizes
-    side_texts = ["Allied","Axis"]
-    max_side_w = max(row_font.getsize(t)[0] for t in side_texts)
-    max_side_h = max(row_font.getsize(t)[1] for t in side_texts)
-    map_names  = [m["name"] for m in map_list]
-    max_map_w  = max(row_font.getsize(n)[0] for n in map_names + ["Maps"])
-    max_map_h  = max(row_font.getsize(n)[1] for n in map_names + ["Maps"])
+    def measure(font: ImageFont.FreeTypeFont, text: str) -> Tuple[int,int]:
+        bbox = font.getbbox(text)
+        return bbox[2]-bbox[0], bbox[3]-bbox[1]
 
-    # header sized
-    team_a_w, team_a_h = hdr_font.getsize(team_a_label)
-    team_b_w, team_b_h = hdr_font.getsize(team_b_label)
-    maps_w,  maps_h    = hdr_font.getsize("Maps")
+    # measure sides
+    side_sizes = [measure(row_font, s) for s in ("Allied","Axis")]
+    max_side_w, max_side_h = max(w for w,h in side_sizes), max(h for w,h in side_sizes)
+    # measure maps
+    map_sizes = [measure(row_font, m["name"]) for m in map_list] + [measure(hdr_font, "Maps")]
+    max_map_w, max_map_h = max(w for w,h in map_sizes), max(h for w,h in map_sizes)
+
+    # measure headers
+    ta_w, ta_h = measure(hdr_font, team_a_label)
+    tb_w, tb_h = measure(hdr_font, team_b_label)
+    maps_w, maps_h = measure(hdr_font, "Maps")
 
     # banner lines
     flip_lbl = flip_winner or "TBD"
@@ -129,43 +132,38 @@ def create_ban_status_image(
             host_field = f"Host: {flip_lbl}"
     line1 = f"Flip Winner: {flip_lbl}   |   First Ban: {first_lbl}   |   {host_field}"
     line2 = f"Current Turn: {current_turn or 'TBD'}"
-    b1_w, b1_h = hdr_font.getsize(line1)
-    b2_w, b2_h = hdr_font.getsize(line2)
+    b1_w, b1_h = measure(hdr_font, line1)
+    b2_w, b2_h = measure(hdr_font, line2)
 
-    # padding
     pad_x = hdr_fs//2
     pad_y = hdr_fs//4
 
-    # cell dims
-    side_w = max(max_side_w, hdr_font.getsize("Allied")[0], hdr_font.getsize("Axis")[0]) + pad_x
+    side_w = max(max_side_w, hdr_font.getbbox("Allied")[2]-hdr_font.getbbox("Allied")[0]) + pad_x
     map_w  = max(max_map_w, maps_w) + pad_x*2
     row_h  = max(max_side_h, max_map_h) + pad_y*2
     h1     = hdr_fs + pad_y
     h2     = hdr_fs + pad_y
 
-    # banner height
     banner_h1 = b1_h + pad_y*2
     banner_h2 = b2_h + pad_y*2
     banner_h  = banner_h1 + banner_h2
 
-    # table width must fit banner
     total_w = side_w*4 + map_w
     total_w = max(total_w, b1_w + pad_x*2, b2_w + pad_x*2)
     map_w    = total_w - side_w*4
 
-    # start rendering
     height = banner_h + h1 + h2 + len(map_list)*row_h + pad_y
     img = Image.new("RGB",(total_w, height),(240,240,240))
     draw = ImageDraw.Draw(img)
     y = 0
 
-    # banner
+    # Banner
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
     draw.text((total_w//2, y+banner_h1//2), line1, font=hdr_font, anchor="mm", fill="black")
     draw.text((total_w//2, y+banner_h1+banner_h2//2), line2, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
-    # header row1
+    # Header row 1
     draw.rectangle([0,y,2*side_w,y+h1], fill=(200,200,200), outline="black")
     draw.text((side_w, y+h1//2), team_a_label, font=hdr_font, anchor="mm", fill="black")
     draw.rectangle([2*side_w,y,2*side_w+map_w,y+h1], fill=(200,200,200), outline="black")
@@ -174,7 +172,7 @@ def create_ban_status_image(
     draw.text((2*side_w+map_w+side_w, y+h1//2), team_b_label, font=hdr_font, anchor="mm", fill="black")
     y += h1
 
-    # header row2
+    # Header row 2
     labels = ["Allied","Axis","","Allied","Axis"]
     x = 0
     for w, lab in zip([side_w, side_w, map_w, side_w, side_w], labels):
@@ -184,14 +182,15 @@ def create_ban_status_image(
         x += w
     y += h2
 
-    # map rows
+    # Rows
     for m in map_list:
         name = m["name"]
         tb   = bans.get(name, {"team_a":{"manual":[],"auto":[]}, "team_b":{"manual":[],"auto":[]}})
         x = 0
         for tk in ("team_a","team_b"):
             for side in ("Allied","Axis"):
-                if final_combo and (name,tk,side) in final_combo:
+                if (len([1 for combo in bans if side not in bans[combo][tk]["manual"]+bans[combo][tk]["auto"]])==2
+                    and m["name"]==combo):
                     c = (180,255,180)
                 elif side in tb[tk]["manual"]:
                     c = (255,0,0)
@@ -202,7 +201,7 @@ def create_ban_status_image(
                 draw.rectangle([x,y,x+side_w,y+row_h], fill=c, outline="black")
                 draw.text((x+side_w//2, y+row_h//2), side, font=row_font, anchor="mm", fill="black")
                 x += side_w
-        # map name cell
+        # map cell
         draw.rectangle([x,y,x+map_w,y+row_h], fill=(240,240,240), outline="black")
         draw.text((x+map_w//2, y+row_h//2), name, font=row_font, anchor="mm", fill="black")
         y += row_h
@@ -211,25 +210,24 @@ def create_ban_status_image(
     img.save(path)
     return path
 
-# ─── Message Update ─────────────────────────────────────────────────────────────
+# ─── Message Helper ─────────────────────────────────────────────────────────────
 async def update_status_message(channel_id:int, content:Optional[str], image_path:str):
-    chan = bot.get_channel(channel_id)
-    if not chan:
-        return
+    ch = bot.get_channel(channel_id)
+    if not ch: return
     msg_id = channel_messages.get(channel_id)
     file   = discord.File(image_path)
     if msg_id:
         try:
-            msg = await chan.fetch_message(msg_id)
+            msg = await ch.fetch_message(msg_id)
             await msg.edit(content=content, attachments=[file])
             return
         except discord.NotFound:
             pass
-    msg = await chan.send(content=content, file=file)
+    msg = await ch.send(content=content, file=file)
     channel_messages[channel_id] = msg.id
     save_state()
 
-# ─── Auto-Delete Helper ─────────────────────────────────────────────────────────
+# ─── Auto-Delete ───────────────────────────────────────────────────────────────
 async def delete_later(msg:discord.Message, delay:float):
     await asyncio.sleep(delay)
     try: await msg.delete()
@@ -238,35 +236,28 @@ async def delete_later(msg:discord.Message, delay:float):
 # ─── Autocomplete ──────────────────────────────────────────────────────────────
 async def map_autocomplete(interaction:discord.Interaction, current:str):
     ch = interaction.channel_id
-    if ch not in ongoing_bans:
-        return []
-    team = match_turns.get(ch)
-    if not team:
-        return []
-    opts = []
-    for m in load_maplist():
-        tb = ongoing_bans[ch][m["name"]][team]
-        if len(tb["manual"])+len(tb["auto"])<2 and current.lower() in m["name"].lower():
-            opts.append(app_commands.Choice(name=m["name"], value=m["name"]))
+    if ch not in ongoing_bans: return []
+    team = match_turns.get(ch); opts=[]
+    if team:
+        for m in load_maplist():
+            tb = ongoing_bans[ch][m["name"]][team]
+            if len(tb["manual"])+len(tb["auto"])<2 and current.lower() in m["name"].lower():
+                opts.append(app_commands.Choice(name=m["name"], value=m["name"]))
     return opts[:25]
 
 async def side_autocomplete(interaction:discord.Interaction, current:str):
     ch = interaction.channel_id
-    if ch not in ongoing_bans:
-        return []
+    if ch not in ongoing_bans: return []
     sel = interaction.namespace.map_name
-    team = match_turns.get(ch)
-    if not team or sel not in ongoing_bans[ch]:
-        return []
-    opts = []
-    tb = ongoing_bans[ch][sel][team]
-    for s in ("Allied","Axis"):
-        if s not in tb["manual"] and s not in tb["auto"] and current.lower() in s.lower():
-            opts.append(app_commands.Choice(name=s, value=s))
+    team = match_turns.get(ch); opts=[]
+    if team and sel in ongoing_bans[ch]:
+        tb = ongoing_bans[ch][sel][team]
+        for s in ("Allied","Axis"):
+            if s not in tb["manual"] and s not in tb["auto"] and current.lower() in s.lower():
+                opts.append(app_commands.Choice(name=s, value=s))
     return opts[:25]
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
-
 @bot.tree.command(name="match_create", description="Create a new match")
 async def match_create(
     interaction:discord.Interaction,
@@ -277,9 +268,7 @@ async def match_create(
 ):
     ch = interaction.channel_id
     if ch in ongoing_bans:
-        return await interaction.response.send_message(
-            "❌ Match already active here. Use `/match_delete` first.", ephemeral=True
-        )
+        return await interaction.response.send_message("❌ Match active; delete first.", ephemeral=True)
 
     cfg   = load_config()
     maps  = load_maplist()
@@ -336,7 +325,6 @@ async def ban_map(
     if role_name not in [r.name for r in interaction.user.roles]:
         return await interaction.followup.send("❌ It’s not your turn.", ephemeral=True)
 
-    # pre-ban final check
     combos_pre = [
         (m,t,s)
         for m,tb in ongoing_bans[ch].items()
@@ -345,14 +333,11 @@ async def ban_map(
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
     if len(combos_pre)==2 and combos_pre[0][0]==combos_pre[1][0]:
-        img = create_ban_status_image(
-            load_maplist(), ongoing_bans[ch],
-            *channel_teams[ch],
-            channel_mode[ch],
-            channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
-            channel_decision[ch],
-            None
-        )
+        img = create_ban_status_image(load_maplist(), ongoing_bans[ch],
+                                      *channel_teams[ch],
+                                      channel_mode[ch],
+                                      channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
+                                      channel_decision[ch], None)
         m,t1,s1 = combos_pre[0]; _,t2,s2 = combos_pre[1]
         tm1 = channel_teams[ch][0] if t1=="team_a" else channel_teams[ch][1]
         tm2 = channel_teams[ch][0] if t2=="team_a" else channel_teams[ch][1]
@@ -377,14 +362,11 @@ async def ban_map(
     cur_lbl = None if len(combos_post)==2 and combos_post[0][0]==combos_post[1][0] else (
         channel_teams[ch][0] if match_turns[ch]=="team_a" else channel_teams[ch][1]
     )
-    img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch],
-        *channel_teams[ch],
-        channel_mode[ch],
-        channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
-        channel_decision[ch],
-        cur_lbl
-    )
+    img = create_ban_status_image(load_maplist(), ongoing_bans[ch],
+                                  *channel_teams[ch],
+                                  channel_mode[ch],
+                                  channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
+                                  channel_decision[ch], cur_lbl)
 
     if len(combos_post)==2 and combos_post[0][0]==combos_post[1][0]:
         m,t1,s1 = combos_post[0]; _,t2,s2 = combos_post[1]
@@ -418,14 +400,12 @@ async def match_decide(
     save_state()
 
     a_lbl,b_lbl = channel_teams[ch]
-    img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch],
-        a_lbl, b_lbl,
-        channel_mode[ch],
-        a_lbl if winner=="team_a" else b_lbl,
-        choice,
-        a_lbl if match_turns[ch]=="team_a" else b_lbl
-    )
+    img = create_ban_status_image(load_maplist(), ongoing_bans[ch],
+                                  a_lbl, b_lbl,
+                                  channel_mode[ch],
+                                  a_lbl if winner=="team_a" else b_lbl,
+                                  choice,
+                                  a_lbl if match_turns[ch]=="team_a" else b_lbl)
     await update_status_message(ch, None, img)
     await interaction.response.send_message(
         f"✅ Chose **{'First Ban' if choice=='ban' else 'Host'}**; first ban: "
