@@ -499,51 +499,6 @@ async def ban_map(
     )
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
-    asyncio.create_task(delete_later(msg, 10))(
-    interaction: discord.Interaction,
-    map_name: str,
-    side: str
-) -> None:
-    # Only the current team may ban
-    ch = interaction.channel_id
-    # Check if ban phase already finalized
-    combos = [ ... ]
-    if len(combos) == 2 and combos[0][0] == combos[1][0]:
-        ...  # final branch unchanged
-    # proceed with normal ban
-    # Defer before follow-up for normal flow
-    await interaction.response.defer()
-    tb = ongoing_bans[ch].get(map_name)
-    if tb is None:
-        return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
-    ...
-    tb = ongoing_bans[ch].get(map_name)
-    if tb is None:
-        return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
-    tk = match_turns[ch]
-    tb[tk]["manual"].append(side)
-    # auto-ban the opposing side for the other team
-    other = "team_b" if tk=="team_a" else "team_a"
-    opposite = "Axis" if side=="Allied" else "Allied"
-    tb[other]["auto"].append(opposite)
-    match_turns[ch] = "team_b" if tk=="team_a" else "team_a"
-
-    # Persist if just completed
-    combos_after = [
-        (m, t, s)
-        for m, tb2 in ongoing_bans[ch].items()
-        for t in ("team_a","team_b")
-        for s in ("Allied","Axis")
-        if s not in tb2[t]["manual"] and s not in tb2[t]["auto"]
-    ]
-    if len(combos_after) == 2 and combos_after[0][0] == combos_after[1][0]:
-        save_state()
-    img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch])
-    await update_status_message(ch, None, img)
-    # send confirmation and auto-delete it shortly
-    msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
-    asyncio.create_task(delete_later(msg, 10))
-    # schedule deletion of the confirmation message after 10 seconds
     asyncio.create_task(delete_later(msg, 10))
     
 @bot.tree.command(
