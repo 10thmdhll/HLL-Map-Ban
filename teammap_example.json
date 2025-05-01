@@ -1,0 +1,63 @@
+{
+  "team_regions": {
+    "Esprit de Corps" : "NA",
+	"MS" : "EU",
+	"Climbers" : "CN",
+	"Fallschirmjager" : "CN",
+	"BOTN" : "NA",
+	"Vanguarda" : "SA",
+	"La Compania Maldita" : "EU",
+	"Ocelots" : "OCE",
+	"BAIN" : "SA",
+	"3AC" : "NA",
+	"MIB" : "SA",
+	"Ronin" : "SA",
+	"The Lucky Strikes" : "NA",
+	"Legion Condor" : "SA",
+	"PATHFINDERS" : "NA",
+	"Syndicate" : "NA",
+	"GLOW" : "NA",
+	"Helios" : "NA",
+	"BEE DIVISION" : "EU",
+	"Chimera" : "OCE",
+	"TOG" : "NA",
+	"CHAD" : "NA"
+  },
+  "region_pairings": {
+    "NA": {
+      "NA": "ExtraBan",
+	  "SA": "ExtraBan",
+	  "EU": "DetermineHost",
+	  "CN": "ExtraBan",
+	  "OCE": "ExtraBan"
+    },
+    "SA": {
+      "NA": "ExtraBan",
+	  "SA": "ExtraBan",
+	  "EU": "ExtraBan",
+	  "CN": "ExtraBan",
+	  "OCE": "ExtraBan"
+    },
+	"EU": {
+      "NA": "DetermineHost",
+	  "SA": "ExtraBan",
+	  "EU": "ExtraBan",
+	  "CN": "ExtraBan",
+	  "OCE": "ExtraBan"
+    },
+	"CN": {
+      "NA": "ExtraBan",
+	  "SA": "ExtraBan",
+	  "EU": "ExtraBan",
+	  "CN": "ExtraBan",
+	  "OCE": "ExtraBan"
+    },
+	"OCE": {
+      "NA": "ExtraBan",
+	  "SA": "ExtraBan",
+	  "EU": "ExtraBan",
+	  "CN": "ExtraBan",
+	  "OCE": "ExtraBan"
+    }
+  }
+}
