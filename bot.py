@@ -302,8 +302,108 @@ async def ban_map(
     map_name: str,
     side: str
 ):
-    # ... original ban_map body unchanged ...
+    load_state()
+    await interaction.response.defer()
+    ch = interaction.channel_id
+    if ch not in ongoing_bans:
+        await interaction.followup.send("❌ No active match here.", ephemeral=True)
+        return
+    if channel_mode[ch] == "DetermineHost" and channel_decision[ch] is None:
+        await interaction.followup.send("❌ Waiting for host decision.", ephemeral=True)
+        return
 
+    tk = match_turns[ch]
+    if not tk:
+        await interaction.followup.send("❌ Turn order not set.", ephemeral=True)
+        return
+    role = channel_teams[ch][0] if tk == "team_a" else channel_teams[ch][1]
+    if role not in [r.name for r in interaction.user.roles]:
+        await interaction.followup.send("❌ Not your turn.", ephemeral=True)
+        return
+
+    combos_pre = [
+        (m,t,s)
+        for m,tb in ongoing_bans[ch].items()
+        for t in ("team_a","team_b")
+        for s in ("Allied","Axis")
+        if s not in tb[t]["manual"] and s not in tb[t]["auto"]
+    ]
+    if len(combos_pre) == 2 and combos_pre[0][0] == combos_pre[1][0]:
+        img = create_ban_status_image(
+            load_maplist(), ongoing_bans[ch],
+            *channel_teams[ch],
+            channel_mode[ch],
+            channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
+            channel_decision[ch], None
+        )
+        content = (
+            f"🏁 Ban complete!\n"
+            f"- Map: {combos_pre[0][0]}\n"
+            f"- {channel_teams[ch][0] if combos_pre[0][1]=='team_a' else channel_teams[ch][1]} = {combos_pre[0][2]}\n"
+            f"- {channel_teams[ch][0] if combos_pre[1][1]=='team_a' else channel_teams[ch][1]} = {combos_pre[1][2]}"
+        )
+        await update_status_message(ch, content, img)
+
+        poll = await interaction.channel.send(
+            f"📊 **Who will win the match?**\n"
+            f"🅰️ {channel_teams[ch][0]}\n"
+            f"🅱️ {channel_teams[ch][1]}"
+        )
+        await poll.add_reaction("🅰️")
+        await poll.add_reaction("🅱️")
+
+        await interaction.followup.send("✅ Ban already complete and poll posted.", ephemeral=True)
+        return
+
+    other = "team_b" if tk=="team_a" else "team_a"
+    tb = ongoing_bans[ch][map_name]
+    tb[tk]["manual"].append(side)
+    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
+    match_turns[ch] = other
+    save_state()
+
+    combos_post = [
+        (m,t,s)
+        for m,tb in ongoing_bans[ch].items()
+        for t in ("team_a","team_b")
+        for s in ("Allied","Axis")
+        if s not in tb[t]["manual"] and s not in tb[t]["auto"]
+    ]
+    is_complete = len(combos_post)==2 and combos_post[0][0]==combos_post[1][0]
+
+    content = None
+    if is_complete:
+        content = (
+            f"🏁 Ban complete!\n"
+            f"- Map: {combos_post[0][0]}\n"
+            f"- {channel_teams[ch][0] if combos_post[0][1]=='team_a' else channel_teams[ch][1]} = {combos_post[0][2]}\n"
+            f"- {channel_teams[ch][0] if combos_post[1][1]=='team_a' else channel_teams[ch][1]} = {combos_post[1][2]}"
+        )
+    cur_lbl = None if is_complete else (
+        channel_teams[ch][0] if match_turns[ch]=="team_a" else channel_teams[ch][1]
+    )
+    img = create_ban_status_image(
+        load_maplist(), ongoing_bans[ch],
+        channel_teams[ch][0], channel_teams[ch][1],
+        channel_mode[ch],
+        channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
+        channel_decision[ch], cur_lbl
+    )
+    await update_status_message(ch, content, img)
+
+    if is_complete:
+        poll = await interaction.channel.send(
+            f"📊 **Who will win the match?**\n"
+            f"🅰️ {channel_teams[ch][0]}\n"
+            f"🅱️ {channel_teams[ch][1]}"
+        )
+        await poll.add_reaction("🅰️")
+        await poll.add_reaction("🅱️")
+        await interaction.followup.send("✅ Ban complete and poll posted.", ephemeral=True)
+    else:
+        conf = await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
+        asyncio.create_task(delete_later(conf, 5.0))
+        
 @ban_map.autocomplete("map_name")
 async def map_autocomplete(
     interaction: discord.Interaction,
