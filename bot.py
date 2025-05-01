@@ -157,7 +157,7 @@ def create_ban_status_image(
     draw.rectangle([2*side_w,y,2*side_w+map_w,y+h1],fill=(200,200,200), outline="black")
     draw.text((2*side_w+map_w//2,y+h1//2),"Maps",   font=hdr_font, anchor="mm", fill="black")
     draw.rectangle([2*side_w+map_w,y,total_w,y+h1], fill=(200,200,200), outline="black")
-    draw.text((2*side_w+map_w+side_w,y+h1//2), team_b_label, font=hdr_font, anchor="mm", fill="black")
+    draw.text((2*side_w+map_w+side_w,y+h1//2),      team_b_label,  font=hdr_font, anchor="mm", fill="black")
     y += h1
 
     # Header row 2: Allied/Axis
@@ -196,25 +196,27 @@ def create_ban_status_image(
         y += row_h
 
     path = "ban_status.png"
-    # ← PNG optimization + max compression:
+    # Quantize and optimize PNG
+    img = img.quantize(colors=64, method=Image.FASTOCTREE)
     img.save(path, optimize=True, compress_level=9)
+
     return path
 
 # ─── Message Editing Helper ─────────────────────────────────────────────────────
 async def update_status_message(channel_id:int, content:Optional[str], image_path:str):
     load_state()
-    ch = bot.get_channel(channel_id)
-    if not ch: return
+    chan = bot.get_channel(channel_id)
+    if not chan: return
     msg_id = channel_messages.get(channel_id)
     file   = discord.File(image_path)
     if msg_id:
         try:
-            m = await ch.fetch_message(msg_id)
+            m = await chan.fetch_message(msg_id)
             await m.edit(content=content, attachments=[file])
             return
         except discord.NotFound:
             pass
-    m = await ch.send(content=content, file=file)
+    m = await chan.send(content=content, file=file)
     channel_messages[channel_id] = m.id
     save_state()
 
@@ -246,7 +248,7 @@ async def side_autocomplete(interaction:discord.Interaction, current:str):
         tb = ongoing_bans[ch][sel][team]
         for s in ("Allied","Axis"):
             if s not in tb["manual"] and s not in tb["auto"] and current.lower() in s.lower():
-                opts.append(app_commands.Choice(name=s, value=s))
+                opts.append(app_commands.Choice(name=s,value=s))
     return opts[:25]
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
@@ -288,7 +290,9 @@ async def match_create(
     flip_lbl = a if winner=="team_a" else b
     cur_lbl  = a if first_turn=="team_a" else (b if first_turn=="team_b" else None)
     img = create_ban_status_image(maps, ongoing_bans[ch],
-                                  a,b,mode,flip_lbl,channel_decision[ch],cur_lbl)
+                                  a, b,
+                                  mode, flip_lbl,
+                                  channel_decision[ch], cur_lbl)
 
     follow = await interaction.followup.send(
         f"**Match Created**\nTitle: {title}\n"
