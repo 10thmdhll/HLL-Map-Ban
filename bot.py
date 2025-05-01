@@ -450,7 +450,8 @@ async def ban_map(
     combos = [ ... ]
     
     print(len(combos))
-    print(combos)
+    print(combos[0][1])
+    print(combos[11[0])
     
     if len(combos) == 2 and combos[0][0] == combos[1][0]:
         ...  # final branch unchanged
