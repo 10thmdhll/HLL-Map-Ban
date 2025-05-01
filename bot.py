@@ -543,7 +543,7 @@ async def ban_map(
     # send confirmation and auto-delete it shortly
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
-# schedule deletion of the confirmation message after 10 seconds
+    # schedule deletion of the confirmation message after 10 seconds
     asyncio.create_task(delete_later(msg, 10))
     
 @bot.tree.command(
