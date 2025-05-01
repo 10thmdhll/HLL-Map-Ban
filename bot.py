@@ -503,6 +503,7 @@ async def ban_map(
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
+    save_state()
     
 @bot.tree.command(
     name="match_time",
