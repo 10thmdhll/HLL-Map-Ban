@@ -483,22 +483,21 @@ async def ban_map(
         conf = await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
         asyncio.create_task(delete_later(conf, 5.0))
         
-# ─── /ban_map Command Definition (ensure this is before autocomplete handlers)
+# ─── Autocomplete handlers for ban_map (placed after real ban_map definition above)
 @bot.tree.command(name="ban_map", description="Ban a map side")
+@app_commands.describe(map_name="The map to ban", side="Which side")
 async def ban_map(
     interaction: discord.Interaction,
     map_name: str,
     side: str
 ):
-    # ... existing ban_map body ...
+    # ... existing ban_map logic ...
 
-# ─── Autocomplete handlers for ban_map (must come after command definition)
 @ban_map.autocomplete("map_name")
 async def map_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
-    # Return up to 30 matching map names
     try:
         choices = [app_commands.Choice(name=m["name"], value=m["name"])
                    for m in load_maplist()
@@ -512,7 +511,6 @@ async def side_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
-    # Return up to 30 matching sides
     try:
         choices = [app_commands.Choice(name=s, value=s)
                    for s in ("Allied","Axis")
