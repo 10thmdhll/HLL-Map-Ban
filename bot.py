@@ -445,7 +445,7 @@ async def ban_map(
     side: str
 ) -> None:
     ch = interaction.channel_id
-    # Determine remaining ban options
+            # Determine remaining ban options
     remaining = [
         (m, t, s)
         for m, tb in ongoing_bans.get(ch, {}).items()
@@ -453,8 +453,11 @@ async def ban_map(
         for s in ("Allied", "Axis")
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
-    # If only one map remains with two sides, finalize
+    # If only one map remains with exactly two sides, finalize immediately
     if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
+        final_map = remaining[0][0]
+        final_side1 = remaining[0][2]
+        final_side2 = remaining[1][2]
         final_img = create_ban_status_image(
             load_maplist(), ongoing_bans[ch],
             *channel_teams[ch], channel_mode[ch], channel_flip[ch],
@@ -463,7 +466,7 @@ async def ban_map(
         )
         await update_status_message(ch, None, final_img)
         return await interaction.response.send_message(
-            "✅ Ban phase complete. Final selection locked.", ephemeral=True
+            f"✅ Ban phase complete. Final: {final_map} → {final_side1}/{final_side2}", ephemeral=True
         )
     # Only the current team may ban
     current_key = match_turns.get(ch)
