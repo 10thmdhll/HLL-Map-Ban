@@ -1,0 +1,258 @@
+{
+  "ongoing_bans": {
+    "1367534088180863006": {
+      "Carentan \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Driel \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "El Alamein \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Elsenborn \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Foy \u2013 Night": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Hill 400 \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Hurtgen \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Kharkov \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Kursk \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Mortain \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Omaha Beach \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "PHL \u2013 Night": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Remagen \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "SMDM \u2013 Day": {
+        "team_a": {
+          "manual": [],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": []
+        }
+      },
+      "SME \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      },
+      "Stalingrad \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      },
+      "Tobruk \u2013 Day": {
+        "team_a": {
+          "manual": [
+			"Allied"
+			],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": [
+			"Axis"]
+        }
+      },
+      "Utah \u2013 Day": {
+        "team_a": {
+          "manual": [],
+          "auto": []
+        },
+        "team_b": {
+          "manual": [],
+          "auto": []
+        }
+      }
+    }
+  },
+  "match_turns": {
+    "1367534088180863006": "team_a"
+  },
+  "match_times": {},
+  "channel_teams": {
+    "1367534088180863006": [
+      "3AC",
+      "BAIN"
+    ]
+  },
+  "channel_messages": {
+    "1367534088180863006": 1367633435979550911
+  },
+  "channel_flip": {
+    "1367534088180863006": null
+  },
+  "channel_decision": {
+    "1367534088180863006": null
+  },
+  "channel_mode": {
+    "1367534088180863006": "ExtraBan"
+  }
+}

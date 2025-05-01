@@ -466,7 +466,7 @@ async def ban_map(
         )
         await update_status_message(ch, None, final_img)
         return await interaction.response.send_message(
-            f"✅ Ban phase complete. Final: {final_map} → {final_side1}/{final_side2}", ephemeral=True
+            f"✅ Ban phase complete. Final: {final_map} → Team 1:{final_side1} / Team 2:{final_side2}", ephemeral=False
         )
     # Only the current team may ban
     current_key = match_turns.get(ch)
@@ -503,7 +503,6 @@ async def ban_map(
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
-    save_state()
     
 @bot.tree.command(
     name="match_time",
