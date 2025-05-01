@@ -64,7 +64,27 @@ def save_state() -> None:
     with open(STATE_FILE, "w") as f:
         json.dump(payload, f, indent=2)
 
-# ─── Helpers: Ban Logic ─────────────────────────────────────────────────────────
+# ─── Helpers: Config Loaders & Ban Logic ─────────────────────────────────────────
+
+def load_teammap() -> dict:
+    """Load team-region mappings from JSON."""
+    return json.load(open(CONFIG["teammap_file"]))
+
+
+def load_maplist() -> List[dict]:
+    """Load the list of maps from JSON."""
+    data = json.load(open(CONFIG["maplist_file"]))
+    # Expecting top-level key "maps"
+    return data.get("maps", [])
+
+
+def determine_ban_option(a_region: str, b_region: str, cfg: dict) -> str:
+    """Determine initial ban mode based on region pairings."""
+    # Example: cfg["team_regions"] or cfg["region_pairings"] may be used
+    return cfg.get("region_pairings", {}).get(a_region, {}).get(b_region, cfg.get("default_mode", "ExtraBan"))
+
+
+def is_ban_complete(ch: int) -> bool:
 def is_ban_complete(ch: int) -> bool:
     combos = [
         (m, t, s)
