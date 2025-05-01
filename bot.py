@@ -348,16 +348,40 @@ async def match_create(
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
 async def ban_map(
     interaction: discord.Interaction,
-    map_name: str,
-    side: str
+    map_name: str = app_commands.Option(
+        ..., description="Map to ban", autocomplete=map_autocomplete),
+    side: str     = app_commands.Option(
+        ..., description="Allied or Axis", autocomplete=side_autocomplete)
 ) -> None:
+    """Ban a map via interactive autocomplete for map_name and side."""
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return await interaction.followup.send("❌ No active match.", ephemeral=True)
-    if channel_mode[ch] == "DetermineHost" and channel_decision[ch] is None:
-        return await interaction.followup.send("❌ Waiting for host decision.", ephemeral=True)
-        
+
+    tk = match_turns[ch]
+    tb = ongoing_bans[ch][map_name]
+    # Record ban
+    tb[tk]["manual"].append(side)
+    other = "team_b" if tk=="team_a" else "team_a"
+    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
+    match_turns[ch] = other
+
+    # Persist on completion
+    if is_ban_complete(ch):
+        save_state()
+
+    img = create_ban_status_image(
+        load_maplist(), ongoing_bans[ch], *channel_teams[ch],
+        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
+    )
+    await update_status_message(ch, None, img)
+    return await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    await interaction.response.defer()
+    ch = interaction.channel_id
+    if ch not in ongoing_bans:
+        return await interaction.followup.send("❌ No active match.", ephemeral=True)
+
     tk = match_turns[ch]
     tb = ongoing_bans[ch][map_name]
     # Record ban
@@ -373,7 +397,7 @@ async def ban_map(
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch])
     await update_status_message(ch, None, img)
     return await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
-
+    
 @bot.tree.command(
     name="match_time",
     description="Set match date/time",
