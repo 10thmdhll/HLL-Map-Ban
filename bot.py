@@ -366,7 +366,6 @@ async def side_autocomplete(
         return []
     tb = ongoing_bans[ch].get(sel_map, {})
     raw_turn = match_turns.get(ch)
-    # Map raw_turn (team name) to key 'team_a'/'team_b'
     team_a_name, team_b_name = channel_teams.get(ch, (None, None))
     if raw_turn == team_a_name:
         team_key = 'team_a'
@@ -377,11 +376,6 @@ async def side_autocomplete(
     if not tb or team_key not in tb:
         return []
     choices: List[app_commands.Choice[str]] = []
-    for side in ("Allied", "Axis"):
-        if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
-            if current.lower() in side.lower():
-                choices.append(app_commands.Choice(name=side, value=side))
-    return choices[:25][app_commands.Choice[str]] = []
     for side in ("Allied", "Axis"):
         if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
             if current.lower() in side.lower():
