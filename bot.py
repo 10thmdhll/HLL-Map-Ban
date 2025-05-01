@@ -347,13 +347,6 @@ async def match_create(
 )
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
-@bot.tree.command(
-    name="ban_map",
-    description="Ban a map for a given side",
-    guild=discord.Object(id=1366830976369557654)
-)
-@app_commands.describe(map_name="Map to ban", side="Allied or Axis")
-@app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
 async def ban_map(
     interaction: discord.Interaction,
     map_name: str,
