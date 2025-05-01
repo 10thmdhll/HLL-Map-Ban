@@ -444,15 +444,70 @@ async def ban_map(
     map_name: str,
     side: str
 ) -> None:
+    ch = interaction.channel_id
+    # Determine remaining ban options
+    remaining = [
+        (m, t, s)
+        for m, tb in ongoing_bans.get(ch, {}).items()
+        for t in ("team_a", "team_b")
+        for s in ("Allied", "Axis")
+        if s not in tb[t]["manual"] and s not in tb[t]["auto"]
+    ]
+    # If only one map remains with two sides, finalize
+    if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
+        final_img = create_ban_status_image(
+            load_maplist(), ongoing_bans[ch],
+            *channel_teams[ch], channel_mode[ch], channel_flip[ch],
+            channel_decision[ch], None,
+            final=True
+        )
+        await update_status_message(ch, None, final_img)
+        return await interaction.response.send_message(
+            "✅ Ban phase complete. Final selection locked.", ephemeral=True
+        )
+    # Only the current team may ban
+    current_key = match_turns.get(ch)
+    if not current_key:
+        return await interaction.response.send_message("❌ No match in progress.", ephemeral=True)
+    expected_role = channel_teams[ch][0] if current_key=="team_a" else channel_teams[ch][1]
+    if expected_role not in {r.name for r in interaction.user.roles}:
+        return await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
+    # Proceed with normal ban
+    await interaction.response.defer()
+    tb = ongoing_bans[ch].get(map_name)
+    if tb is None:
+        return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
+    tk = current_key
+    tb[tk]["manual"].append(side)
+    # auto-ban opposing side
+    other = "team_b" if tk=="team_a" else "team_a"
+    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
+    match_turns[ch] = other
+    # Persist if now final
+    remaining_after = [
+        (m, t, s)
+        for m, tb2 in ongoing_bans[ch].items()
+        for t in ("team_a","team_b")
+        for s in ("Allied","Axis")
+        if s not in tb2[t]["manual"] and s not in tb2[t]["auto"]
+    ]
+    if len(remaining_after) == 2 and remaining_after[0][0] == remaining_after[1][0]:
+        save_state()
+    img = create_ban_status_image(
+        load_maplist(), ongoing_bans[ch], *channel_teams[ch],
+        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
+    )
+    await update_status_message(ch, None, img)
+    msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
+    asyncio.create_task(delete_later(msg, 10))(
+    interaction: discord.Interaction,
+    map_name: str,
+    side: str
+) -> None:
     # Only the current team may ban
     ch = interaction.channel_id
     # Check if ban phase already finalized
     combos = [ ... ]
-    
-    print(len(combos))
-    print(combos[0][1])
-    print(combos[1][0])
-    
     if len(combos) == 2 and combos[0][0] == combos[1][0]:
         ...  # final branch unchanged
     # proceed with normal ban
@@ -461,9 +516,12 @@ async def ban_map(
     tb = ongoing_bans[ch].get(map_name)
     if tb is None:
         return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
+    ...
+    tb = ongoing_bans[ch].get(map_name)
+    if tb is None:
+        return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
     tk = match_turns[ch]
     tb[tk]["manual"].append(side)
-    
     # auto-ban the opposing side for the other team
     other = "team_b" if tk=="team_a" else "team_a"
     opposite = "Axis" if side=="Allied" else "Allied"
@@ -482,12 +540,10 @@ async def ban_map(
         save_state()
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch])
     await update_status_message(ch, None, img)
-    
     # send confirmation and auto-delete it shortly
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
-    
-    # schedule deletion of the confirmation message after 10 seconds
+# schedule deletion of the confirmation message after 10 seconds
     asyncio.create_task(delete_later(msg, 10))
     
 @bot.tree.command(
