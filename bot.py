@@ -172,6 +172,54 @@ async def ban_map(
     )
     await update_status_message(ch, f"✅ {side} banned {map_name}.", img)
 
+# /match_create
+@bot.tree.command(name="match_create", description="Create a new match")
+async def match_create(
+    interaction: discord.Interaction,
+    team_a: discord.Role,
+    team_b: discord.Role,
+    title: str,
+    description: str = "No description provided"
+):
+    load_state()
+    ch = interaction.channel_id
+    if ch in ongoing_bans:
+        await interaction.response.send_message("❌ Match already active here.", ephemeral=True)
+        return
+    await interaction.response.defer()
+
+    cfg, maps = load_teammap(), load_maplist()
+    a, b = team_a.name, team_b.name
+    ra, rb = cfg["team_regions"].get(a, "Unknown"), cfg["team_regions"].get(b, "Unknown")
+    mode = determine_ban_option(ra, rb, cfg)
+
+    winner = random.choice(["team_a", "team_b"])
+    channel_flip[ch]     = winner
+    channel_mode[ch]     = mode
+    channel_decision[ch] = "ban" if mode == "ExtraBan" else None
+    first_turn           = winner if mode == "ExtraBan" else None
+
+    ongoing_bans[ch] = {
+        m["name"]: {"team_a": {"manual": [], "auto": []},
+                    "team_b": {"manual": [], "auto": []}}
+        for m in maps
+    }
+    match_turns[ch]  = first_turn
+    channel_teams[ch] = (a, b)
+    save_state()
+
+    flip_lbl = a if winner == "team_a" else b
+    cur_lbl  = a if first_turn == "team_a" else (b if first_turn == "team_b" else None)
+    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, flip_lbl, channel_decision[ch], cur_lbl)
+
+    follow = await interaction.followup.send(
+        f"**Match Created**\nTitle: {title}\n"
+        f"Team A: {a} ({ra})\nTeam B: {b} ({rb})\nMode: {mode}\n{description}",
+        file=discord.File(img)
+    )
+    channel_messages[ch] = follow.id
+    save_state()
+    
 # ─── /match_time Command ───────────────────────────────────────────────────────
 @bot.tree.command(name="match_time", description="Set match date/time", guild=discord.Object(id=1366830976369557654))
 @app_commands.describe(time="ISO8601 datetime with timezone")
