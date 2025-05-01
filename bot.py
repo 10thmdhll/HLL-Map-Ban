@@ -120,7 +120,8 @@ bot.intents.message_content = True
 @bot.event
 async def on_ready() -> None:
     load_state()             # one-time load
-    await bot.tree.sync()    # register commands
+    # Sync only to our test guild for instant registration
+    await bot.tree.sync(guild=discord.Object(id=1366830976369557654))    # register commands
     print("Bot ready; active matches:", list(ongoing_bans.keys()))
 
 # ─── Autocomplete Handlers for ban_map ─────────────────────────────────────────
@@ -140,7 +141,7 @@ async def side_autocomplete(
     return [app_commands.Choice(name=s, value=s) for s in sides[:25]]
 
 # ─── /ban_map Command ───────────────────────────────────────────────────────────
-@bot.tree.command(name="ban_map", description="Ban a map for a given side")
+@bot.tree.command(name="ban_map", description="Ban a map for a given side", guild=discord.Object(id=1366830976369557654))
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
 async def ban_map(
@@ -172,7 +173,7 @@ async def ban_map(
     await update_status_message(ch, f"✅ {side} banned {map_name}.", img)
 
 # ─── /match_time Command ───────────────────────────────────────────────────────
-@bot.tree.command(name="match_time", description="Set match date/time")
+@bot.tree.command(name="match_time", description="Set match date/time", guild=discord.Object(id=1366830976369557654))
 @app_commands.describe(time="ISO8601 datetime with timezone")
 async def match_time_cmd(
     interaction: discord.Interaction,
