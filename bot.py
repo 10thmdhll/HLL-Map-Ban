@@ -444,10 +444,13 @@ async def on_app_command_error(
 
 # ─── Ready & Sync ─────────────────────────────────────────────────────────────
 @bot.event
-async def on_ready() -> None:
+async def on_ready():
     load_state()
     guild = discord.Object(id=1366830976369557654)
-    await bot.tree.sync(guild=guild)
-    print(f"Synced commands to guild {guild.id}; bot ready.")
+    synced = await bot.tree.sync(guild=guild)
+    print(f"Synced {len(synced)} commands to guild {guild.id}:")
+    for cmd in synced:
+        print("  •", cmd.name)
+    print("Bot ready.")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
