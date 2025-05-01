@@ -293,37 +293,45 @@ async def delete_later(msg: discord.Message, delay: float):
         pass
 
 # ─── Autocomplete ──────────────────────────────────────────────────────────────
-@app_commands.autocomplete(map_name=lambda i, cur: [
-    app_commands.Choice(name=m["name"], value=m["name"])
-    for m in load_maplist()
-    if i.channel_id in ongoing_bans
-    and (match_turns.get(i.channel_id) in ongoing_bans[i.channel_id])
-    and cur.lower() in m["name"].lower()
-][:25])
-async def map_autocomplete(interaction: discord.Interaction, current: str):
+# Remove lambda-based autocompletes and use explicit handlers to catch errors
+@bot.tree.command(name="ban_map", description="Ban a map side")
+@app_commands.describe(map_name="The map to ban", side="Which side")
+@app_commands.autocomplete(map_name="map_autocomplete", side="side_autocomplete")
+async def ban_map(
+    interaction: discord.Interaction,
+    map_name: str,
+    side: str
+):
+    # ... original ban_map body unchanged ...
+
+@ban_map.autocomplete("map_name")
+async def map_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
     # purely in-memory lookup; no load_state()
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return []
-    team = match_turns.get(ch)
-    if not team:
-        return []
-    choices = []
-    for m in load_maplist():
-        tb = ongoing_bans[ch][m["name"]][team]
-        if len(tb["manual"]) + len(tb["auto"]) < 2 and current.lower() in m["name"].lower():
-            choices.append(app_commands.Choice(name=m["name"], value=m["name"]))
-    return choices[:25]
+    try:
+        choices = []
+        team = match_turns.get(ch)
+        if team:
+            for m in load_maplist():
+                tb = ongoing_bans[ch][m["name"]][team]
+                if len(tb["manual"]) + len(tb["auto"]) < 2 and current.lower() in m["name"].lower():
+                    choices.append(app_commands.Choice(name=m["name"], value=m["name"]))
+        # respond with autocomplete
+        await interaction.response.autocomplete(choices[:25])
+    except discord.errors.NotFound:
+        # ignore stale-interaction errors
+        return
 
-@app_commands.autocomplete(side=lambda i, cur: [
-    app_commands.Choice(name=s, value=s)
-    for s in ("Allied","Axis")
-    if i.channel_id in ongoing_bans
-    and (match_turns.get(i.channel_id) in ongoing_bans[i.channel_id])
-    and s.lower().startswith(cur.lower())
-][:25])
-async def side_autocomplete(interaction: discord.Interaction, current: str):
-    # purely in-memory lookup; no load_state()
+@ban_map.autocomplete("side")
+async def side_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return []
@@ -331,12 +339,15 @@ async def side_autocomplete(interaction: discord.Interaction, current: str):
     team = match_turns.get(ch)
     if not team or sel not in ongoing_bans[ch]:
         return []
-    choices = []
-    tb = ongoing_bans[ch][sel][team]
-    for s in ("Allied","Axis"):
-        if s not in tb["manual"] and s not in tb["auto"] and current.lower() in s.lower():
-            choices.append(app_commands.Choice(name=s, value=s))
-    return choices[:25]
+    try:
+        choices = []
+        tb = ongoing_bans[ch][sel][team]
+        for s in ("Allied","Axis"):
+            if s not in tb["manual"] and s not in tb["auto"] and current.lower() in s.lower():
+                choices.append(app_commands.Choice(name=s, value=s))
+        await interaction.response.autocomplete(choices[:25])
+    except discord.errors.NotFound:
+        return
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
 @bot.tree.command(name="match_create", description="Create a new match")
