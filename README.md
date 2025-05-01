@@ -35,11 +35,11 @@ A Discord bot that automates competitive map‐ban sequences for Hell Let Loose 
 
 ## Installation
 
-`git clone https://github.com/your-org/HLL-Map-Ban.git`
-`cd HLL-Map-Ban`
-`python3 -m venv venv`
-`source venv/bin/activate`
-`pip install -r requirements.txt`
+```git clone (https://github.com/10thmdhll/HLL-Map-Ban)```
+```cd HLL-Map-Ban```
+```python3 -m venv venv```
+```source venv/bin/activate```
+```pip install -r requirements.txt```
 
 Create a .env file:
 `cp default.env .env`
