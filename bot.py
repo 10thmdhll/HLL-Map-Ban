@@ -272,13 +272,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 bot.intents.message_content = True
 
-@bot.event
-async def on_ready() -> None:
-    load_state()
-    guild = discord.Object(id=1366830976369557654)
-    await bot.tree.sync(guild=guild)
-    print("Bot ready; active matches:", list(ongoing_bans.keys()))
-
 # ─── Autocomplete Handlers ─────────────────────────────────────────────────────
 async def map_autocomplete(
     interaction: discord.Interaction,
@@ -449,4 +442,11 @@ async def on_app_command_error(
         return
     raise error
 
+@bot.event
+async def on_ready() -> None:
+    load_state()
+    guild = discord.Object(id=1366830976369557654)
+    await bot.tree.sync(guild=guild)
+    print("Bot ready; active matches:", list(ongoing_bans.keys()))
+    
 bot.run(os.getenv("DISCORD_TOKEN"))
