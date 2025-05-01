@@ -483,13 +483,22 @@ async def ban_map(
         conf = await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
         asyncio.create_task(delete_later(conf, 5.0))
         
-# Attach per-option autocomplete handlers
+# ─── /ban_map Command Definition (ensure this is before autocomplete handlers)
+@bot.tree.command(name="ban_map", description="Ban a map side")
+async def ban_map(
+    interaction: discord.Interaction,
+    map_name: str,
+    side: str
+):
+    # ... existing ban_map body ...
+
+# ─── Autocomplete handlers for ban_map (must come after command definition)
 @ban_map.autocomplete("map_name")
 async def map_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
-    # Return up to 30 matching map names; Discord will handle sending them
+    # Return up to 30 matching map names
     try:
         choices = [app_commands.Choice(name=m["name"], value=m["name"])
                    for m in load_maplist()
@@ -503,7 +512,7 @@ async def side_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
-    # Return up to 30 matching sides; Discord will handle sending them
+    # Return up to 30 matching sides
     try:
         choices = [app_commands.Choice(name=s, value=s)
                    for s in ("Allied","Axis")
@@ -512,51 +521,7 @@ async def side_autocomplete(
     except Exception:
         return []
 
-@bot.tree.command(name="match_decide", description="Winner chooses host or first ban")
-async def match_decide(
-    interaction: discord.Interaction,
-    choice: Literal["ban","host"]
-):
-    load_state()
-    ch = interaction.channel_id
-    if ch not in ongoing_bans or channel_flip[ch] is None:
-        return await interaction.response.send_message("❌ No decision.", ephemeral=True)
-    if channel_decision[ch] is not None:
-        return await interaction.response.send_message("❌ Already decided.", ephemeral=True)
-    winner = channel_flip[ch]
-    wl = channel_teams[ch][0] if winner=="team_a" else channel_teams[ch][1]
-    if wl not in [r.name for r in interaction.user.roles]:
-        return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)
-
-    channel_decision[ch] = choice
-    match_turns[ch]      = winner if choice=="ban" else ("team_b" if winner=="team_a" else "team_a")
-    save_state()
-
-    a_lbl,b_lbl = channel_teams[ch]
-    img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch],
-        a_lbl, b_lbl,
-        channel_mode[ch],
-        a_lbl if winner=="team_a" else b_lbl,
-        choice,
-        a_lbl if match_turns[ch]=="team_a" else b_lbl
-    )
-    await update_status_message(ch, None, img)
-    await interaction.response.send_message(
-        f"✅ Chose **{'First Ban' if choice=='ban' else 'Host'}**; first ban: **{a_lbl if match_turns[ch]=='team_a' else b_lbl}**.",
-        ephemeral=True
-    )
-
-@bot.tree.command(name="match_delete", description="Delete the current match")
-async def match_delete(interaction: discord.Interaction):
-    load_state()
-    ch = interaction.channel_id
-    if ch not in ongoing_bans:
-        return await interaction.response.send_message("❌ No active match.", ephemeral=True)
-    await cleanup_match(ch)
-    await interaction.response.send_message("✅ Deleted.", ephemeral=True)
-
-@bot.tree.command(name="match_time", description="Set the scheduled match time")
+# ─── Next slash commands definition (match_decide etc.)(name="match_time", description="Set the scheduled match time")
 @app_commands.describe(time="Datetime in ISO 8601 format, including timezone")
 async def match_time_cmd(
     interaction: discord.Interaction,
