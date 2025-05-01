@@ -265,7 +265,11 @@ async def delete_later(msg: discord.Message, delay: float) -> None:
 
 # ─── Bot Setup ─────────────────────────────────────────────────────────────────
 load_dotenv()
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
+# Enable necessary intents for slash commands and message content
+intents = discord.Intents.default()
+intents.guilds = True
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 bot.intents.message_content = True
 
 @bot.event
