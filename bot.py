@@ -99,8 +99,6 @@ def is_ban_complete(ch: int) -> bool:
     ]
     return len(combos) == 2 and combos[0][0] == combos[1][0]
 
-# ─── Image Generation (omitted for brevity) ────────────────────────────────────
-# ─── Image Generation (omitted for brevity) ────────────────────────────────────
 def create_ban_status_image(
     maps: List[dict],
     bans: dict[str, dict[str, List[str]]],
@@ -156,27 +154,33 @@ def create_ban_status_image(
             final_side2 = combos[1][2]
 
     # build banner lines, adjust if final
+    # Map flip_winner key to actual team name
+    fw_key = flip_winner or None
+    fw_name = team_a if fw_key=="team_a" else team_b if fw_key=="team_b" else "TBD"
     if final and final_map:
         banner1 = f"{team_a} = {final_side1}   |   {team_b} = {final_side2}"
         banner2 = "Final choice locked."  
     else:
-        fw = flip_winner or "TBD"
         if mode == "ExtraBan":
-            first_lbl, host_field = fw, "Middle ground rules in effect."
+            first_lbl = fw_name
+            host_field = "Middle ground rules in effect."
         else:
             if decision_choice is None:
-                first_lbl, host_field = "TBD", f"{fw} chooses host"
+                first_lbl = "TBD"
+                host_field = f"{fw_name} chooses host"
             elif decision_choice == "ban":
-                first_lbl = fw
-                other = team_b if fw==team_a else team_a
+                first_lbl = fw_name
+                other = team_b if fw_key=="team_a" else team_a
                 host_field = f"Host: {other}"
             else:
-                other = team_b if fw==team_a else team_a
+                other = team_b if fw_key=="team_a" else team_a
                 first_lbl = other
-                host_field = f"Host: {fw}"
-        banner1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
-        banner2 = f"Current Turn: {current_turn or 'TBD'}"
-    
+                host_field = f"Host: {fw_name}"
+        banner1 = f"Flip Winner: {fw_name}   |   First Ban: {first_lbl}   |   {host_field}"
+        # determine current team name for display
+        current_team_name = team_a if current_turn == "team_a" else team_b if current_turn == "team_b" else "TBD"
+        banner2 = f"Current Turn: {current_team_name}"
+        
     # Show the team name instead of key
     current_team_name = team_a if current_turn == "team_a" else team_b if current_turn == "team_b" else "TBD"
     banner2 = f"Current Turn: {current_team_name}"
