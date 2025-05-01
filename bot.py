@@ -483,44 +483,10 @@ async def ban_map(
         conf = await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
         asyncio.create_task(delete_later(conf, 5.0))
         
-# ─── Autocomplete handlers for ban_map (placed after real ban_map definition above)
-@bot.tree.command(name="ban_map", description="Ban a map side")
-@app_commands.describe(map_name="The map to ban", side="Which side")
-async def ban_map(
-    interaction: discord.Interaction,
-    map_name: str,
-    side: str
-):
-    # ... existing ban_map logic ...
+# ─── Autocomplete handlers for ban_map (already attached to the real ban_map above)
+# No duplicate ban_map command stub here
 
-@ban_map.autocomplete("map_name")
-async def map_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-) -> List[app_commands.Choice[str]]:
-    try:
-        choices = [app_commands.Choice(name=m["name"], value=m["name"])
-                   for m in load_maplist()
-                   if current.lower() in m["name"].lower()]
-        return choices[:30]
-    except Exception:
-        return []
-
-@ban_map.autocomplete("side")
-async def side_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-) -> List[app_commands.Choice[str]]:
-    try:
-        choices = [app_commands.Choice(name=s, value=s)
-                   for s in ("Allied","Axis")
-                   if current.lower() in s.lower()]
-        return choices[:30]
-    except Exception:
-        return []
-
-# ─── Next slash commands definition (match_decide etc.)(name="match_time", description="Set the scheduled match time")
-@app_commands.describe(time="Datetime in ISO 8601 format, including timezone")
+# ─── Next slash commands definition (match_time)
 async def match_time_cmd(
     interaction: discord.Interaction,
     time: str
