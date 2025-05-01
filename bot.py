@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 STATE_FILE = "state.json"
 
-# ─── In‐Memory State ────────────────────────────────────────────────────────────
+# ─── In-Memory State (populated from disk) ───────────────────────────────────────
 ongoing_bans: dict[int, dict[str, dict[str, List[str]]]] = {}
 match_turns:    dict[int, str]               = {}
 channel_teams:  dict[int, Tuple[str,str]]    = {}
@@ -31,7 +31,8 @@ channel_mode:   dict[int, str]               = {}
 def load_state():
     global ongoing_bans, match_turns, channel_teams, channel_messages
     global channel_flip, channel_decision, channel_mode
-    if not os.path.isfile(STATE_FILE): return
+    if not os.path.isfile(STATE_FILE):
+        return
     try:
         data = json.load(open(STATE_FILE))
     except json.JSONDecodeError:
@@ -46,7 +47,7 @@ def load_state():
     channel_mode     = {int(k):v for k,v in data.get("channel_mode",{}).items()}
 
 def save_state():
-    with open(STATE_FILE,"w") as f:
+    with open(STATE_FILE, "w") as f:
         json.dump({
             "ongoing_bans":     {str(k):v for k,v in ongoing_bans.items()},
             "match_turns":      {str(k):v for k,v in match_turns.items()},
@@ -57,22 +58,24 @@ def save_state():
             "channel_mode":     {str(k):v for k,v in channel_mode.items()},
         }, f, indent=2)
 
-async def cleanup_match(ch:int):
+async def cleanup_match(ch: int):
     for d in (ongoing_bans, match_turns, channel_teams,
               channel_messages, channel_flip, channel_decision, channel_mode):
         d.pop(ch, None)
     save_state()
-    try: os.remove("ban_status.png")
-    except: pass
+    try:
+        os.remove("ban_status.png")
+    except FileNotFoundError:
+        pass
 
 # ─── Config & Maplist ───────────────────────────────────────────────────────────
 def load_config()  -> dict: return json.load(open("teammap.json"))
 def load_maplist() -> List[dict]: return json.load(open("maplist.json"))["maps"]
 
-def determine_ban_option(a:str,b:str,cfg:dict)->str:
-    return cfg.get("region_pairings",{}).get(a,{}).get(b,"ExtraBan")
+def determine_ban_option(a: str, b: str, cfg: dict) -> str:
+    return cfg.get("region_pairings", {}).get(a, {}).get(b, "ExtraBan")
 
-# ─── Image Generation (map in the exact middle) ─────────────────────────────────
+# ─── Image Generation w/ Auto-Fit & Extra Padding ───────────────────────────────
 def create_ban_status_image(
     map_list: List[dict],
     bans: dict[str, dict[str, List[str]]],
@@ -83,9 +86,12 @@ def create_ban_status_image(
     decision_choice: Optional[str],
     current_turn: Optional[str]
 ) -> str:
-    # 3× fonts
     row_fs, hdr_fs = 168, 240
-    font_paths = ["arialbd.ttf","DejaVuSans-Bold.ttf","/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
+    font_paths = [
+        "arialbd.ttf",
+        "DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    ]
     row_font = hdr_font = None
     for p in font_paths:
         try:
@@ -100,16 +106,15 @@ def create_ban_status_image(
 
     def measure(fnt, txt):
         b = fnt.getbbox(txt)
-        return b[2]-b[0], b[3]-b[1]
+        return b[2] - b[0], b[3] - b[1]
 
-    # measure side labels
-    side_sizes = [measure(row_font, s) for s in ("Allied","Axis")]
+    # Measure sizes
+    side_sizes = [measure(row_font, s) for s in ("Allied", "Axis")]
     max_side_w, max_side_h = max(w for w,h in side_sizes), max(h for w,h in side_sizes)
-    # measure map names + header
-    map_sizes = [measure(row_font,m["name"]) for m in map_list] + [measure(hdr_font,"Maps")]
+    map_sizes  = [measure(row_font, m["name"]) for m in map_list] + [measure(hdr_font, "Maps")]
     max_map_w, max_map_h = max(w for w,h in map_sizes), max(h for w,h in map_sizes)
 
-    # banner text
+    # Banner text
     flip_lbl = flip_winner or "TBD"
     if pairing_mode == "ExtraBan":
         first_lbl, host_field = flip_lbl, "Middle ground rules in effect."
@@ -118,22 +123,23 @@ def create_ban_status_image(
             first_lbl, host_field = "TBD", f"{flip_lbl} chooses host"
         elif decision_choice == "ban":
             first_lbl = flip_lbl
-            other     = team_b_label if flip_lbl==team_a_label else team_a_label
+            other = team_b_label if flip_lbl == team_a_label else team_a_label
             host_field = f"Host: {other}"
         else:
-            other     = team_b_label if flip_lbl==team_a_label else team_a_label
+            other = team_b_label if flip_lbl == team_a_label else team_a_label
             first_lbl = other
             host_field = f"Host: {flip_lbl}"
     line1 = f"Flip Winner: {flip_lbl}   |   First Ban: {first_lbl}   |   {host_field}"
     line2 = f"Current Turn: {current_turn or 'TBD'}"
-    b1_w,b1_h = measure(hdr_font, line1)
-    b2_w,b2_h = measure(hdr_font, line2)
+    b1_w, b1_h = measure(hdr_font, line1)
+    b2_w, b2_h = measure(hdr_font, line2)
 
     pad_x, pad_y = hdr_fs//2, hdr_fs//4
 
-    side_w = max(max_side_w, measure(hdr_font,"Allied")[0]) + pad_x
-    map_w  = max(max_map_w, measure(hdr_font,"Maps")[0]) + pad_x*2
-    row_h  = max(max_side_h, max_map_h) + pad_y*2
+    # Double-pad the Allied/Axis columns
+    side_w = max(max_side_w, measure(hdr_font, "Allied")[0]) + pad_x * 2
+    map_w  = max(max_map_w, measure(hdr_font, "Maps")[0]) + pad_x * 2
+    row_h  = max(max_side_h, max_map_h) + pad_y * 2
     h1     = hdr_fs + pad_y
     h2     = hdr_fs + pad_y
     banner_h1 = b1_h + pad_y*2
@@ -145,23 +151,23 @@ def create_ban_status_image(
     map_w    = total_w - side_w*4
     height   = banner_h + h1 + h2 + len(map_list)*row_h + pad_y
 
-    img  = Image.new("RGB",(total_w,height),(240,240,240))
+    img  = Image.new("RGB", (total_w, height), (240,240,240))
     draw = ImageDraw.Draw(img)
     y = 0
 
     # Banner
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
-    draw.text((total_w//2,y+banner_h1//2),         line1, font=hdr_font, anchor="mm", fill="black")
-    draw.text((total_w//2,y+banner_h1+banner_h2//2),line2, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y+banner_h1//2),          line1, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y+banner_h1+banner_h2//2), line2, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
     # Header row 1: Team A | Maps | Team B
-    draw.rectangle([0,y,2*side_w,y+h1],             fill=(200,200,200), outline="black")
-    draw.text((side_w,    y+h1//2), team_a_label,  font=hdr_font, anchor="mm", fill="black")
-    draw.rectangle([2*side_w,y,2*side_w+map_w,y+h1],fill=(200,200,200), outline="black")
-    draw.text((2*side_w+map_w//2,y+h1//2), "Maps",  font=hdr_font, anchor="mm", fill="black")
-    draw.rectangle([2*side_w+map_w,y,total_w,y+h1],fill=(200,200,200), outline="black")
-    draw.text((2*side_w+map_w+side_w,y+h1//2),      team_b_label,  font=hdr_font, anchor="mm", fill="black")
+    draw.rectangle([0,y,2*side_w,y+h1], fill=(200,200,200), outline="black")
+    draw.text((side_w, y+h1//2),             team_a_label, font=hdr_font, anchor="mm", fill="black")
+    draw.rectangle([2*side_w,y,2*side_w+map_w,y+h1], fill=(200,200,200), outline="black")
+    draw.text((2*side_w+map_w//2, y+h1//2),  "Maps",      font=hdr_font, anchor="mm", fill="black")
+    draw.rectangle([2*side_w+map_w,y,total_w,y+h1], fill=(200,200,200), outline="black")
+    draw.text((2*side_w+map_w+side_w, y+h1//2), team_b_label, font=hdr_font, anchor="mm", fill="black")
     y += h1
 
     # Header row 2: Allied/Axis labels
@@ -171,7 +177,7 @@ def create_ban_status_image(
     for w, lab in zip(widths, labels):
         draw.rectangle([x,y,x+w,y+h2], fill=(220,220,220), outline="black")
         if lab:
-            draw.text((x+w//2,y+h2//2), lab, font=hdr_font, anchor="mm", fill="black")
+            draw.text((x+w//2, y+h2//2), lab, font=hdr_font, anchor="mm", fill="black")
         x += w
     y += h2
 
@@ -180,7 +186,8 @@ def create_ban_status_image(
         name = m["name"]
         tb   = bans[name]
         x = 0
-        # 1) Team A sides
+
+        # Team A sides
         for side in ("Allied","Axis"):
             if side in tb["team_a"]["manual"]:
                 c = (255,0,0)
@@ -189,13 +196,15 @@ def create_ban_status_image(
             else:
                 c = (255,255,255)
             draw.rectangle([x,y,x+side_w,y+row_h], fill=c, outline="black")
-            draw.text((x+side_w//2,y+row_h//2), side, font=row_font, anchor="mm", fill="black")
+            draw.text((x+side_w//2, y+row_h//2), side, font=row_font, anchor="mm", fill="black")
             x += side_w
-        # 2) Map cell in the middle
+
+        # Map cell (middle)
         draw.rectangle([x,y,x+map_w,y+row_h], fill=(240,240,240), outline="black")
-        draw.text((x+map_w//2,y+row_h//2), name, font=row_font, anchor="mm", fill="black")
+        draw.text((x+map_w//2, y+row_h//2), name, font=row_font, anchor="mm", fill="black")
         x += map_w
-        # 3) Team B sides
+
+        # Team B sides
         for side in ("Allied","Axis"):
             if side in tb["team_b"]["manual"]:
                 c = (255,0,0)
@@ -204,16 +213,18 @@ def create_ban_status_image(
             else:
                 c = (255,255,255)
             draw.rectangle([x,y,x+side_w,y+row_h], fill=c, outline="black")
-            draw.text((x+side_w//2,y+row_h//2), side, font=row_font, anchor="mm", fill="black")
+            draw.text((x+side_w//2, y+row_h//2), side, font=row_font, anchor="mm", fill="black")
             x += side_w
+
         y += row_h
 
     path = "ban_status.png"
     img.save(path)
     return path
 
-# ─── Message‐Editing Helper ─────────────────────────────────────────────────────
+# ─── Message-Editing Helper ─────────────────────────────────────────────────────
 async def update_status_message(channel_id:int, content:Optional[str], image_path:str):
+    load_state()
     chan = bot.get_channel(channel_id)
     if not chan: return
     msg_id = channel_messages.get(channel_id)
@@ -231,11 +242,14 @@ async def update_status_message(channel_id:int, content:Optional[str], image_pat
 
 async def delete_later(msg:discord.Message, delay:float):
     await asyncio.sleep(delay)
-    try: await msg.delete()
-    except: pass
+    try:
+        await msg.delete()
+    except:
+        pass
 
 # ─── Autocomplete ──────────────────────────────────────────────────────────────
 async def map_autocomplete(interaction:discord.Interaction, current:str):
+    load_state()
     ch = interaction.channel_id
     if ch not in ongoing_bans: return []
     team = match_turns.get(ch); opts=[]
@@ -247,6 +261,7 @@ async def map_autocomplete(interaction:discord.Interaction, current:str):
     return opts[:25]
 
 async def side_autocomplete(interaction:discord.Interaction, current:str):
+    load_state()
     ch = interaction.channel_id
     if ch not in ongoing_bans: return []
     sel = interaction.namespace.map_name
@@ -259,7 +274,8 @@ async def side_autocomplete(interaction:discord.Interaction, current:str):
     return opts[:25]
 
 # ─── Slash Commands ────────────────────────────────────────────────────────────
-@bot.tree.command(name="match_create",description="Create a new match")
+
+@bot.tree.command(name="match_create", description="Create a new match")
 async def match_create(
     interaction:discord.Interaction,
     team_a:discord.Role,
@@ -267,12 +283,12 @@ async def match_create(
     title:str,
     description:str="No description provided"
 ):
+    load_state()
     ch = interaction.channel_id
     if ch in ongoing_bans:
         await interaction.response.defer(ephemeral=True)
         return await interaction.followup.send("❌ Match active here; delete first.", ephemeral=True)
 
-    # give ourselves more time
     await interaction.response.defer()
 
     cfg, maps = load_config(), load_maplist()
@@ -309,12 +325,13 @@ async def match_create(
     save_state()
 
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
-@bot.tree.command(name="ban_map",description="Ban a map side")
+@bot.tree.command(name="ban_map", description="Ban a map side")
 async def ban_map(
     interaction:discord.Interaction,
     map_name:str,
     side:str
 ):
+    load_state()
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch not in ongoing_bans:
@@ -393,6 +410,7 @@ async def match_decide(
     interaction:discord.Interaction,
     choice:Literal["ban","host"]
 ):
+    load_state()
     ch = interaction.channel_id
     if ch not in ongoing_bans or channel_flip[ch] is None:
         return await interaction.response.send_message("❌ No decision.", ephemeral=True)
@@ -425,6 +443,7 @@ async def match_decide(
 
 @bot.tree.command(name="match_delete", description="Delete the current match")
 async def match_delete(interaction:discord.Interaction):
+    load_state()
     ch = interaction.channel_id
     if ch not in ongoing_bans:
         return await interaction.response.send_message("❌ No active match.", ephemeral=True)
