@@ -501,33 +501,6 @@ async def match_create(
     channel_messages[ch] = follow.id
     save_state()
 
-@app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
-
-async def map_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-) -> List[app_commands.Choice[str]]:
-    try:
-        choices = []
-        for m in load_maplist():
-            name = m["name"]
-            if current.lower() in name.lower():
-                choices.append(app_commands.Choice(name=name, value=name))
-        return choices[:25]
-    except Exception:
-        return []
-
-async def side_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-) -> List[app_commands.Choice[str]]:
-    try:
-        return [app_commands.Choice(name=s, value=s)
-                for s in ("Allied","Axis")
-                if current.lower() in s.lower()][:25]
-    except Exception:
-        return []
-        
 @bot.tree.command(name="ban_map", description="Ban a map side")
 async def ban_map(
     interaction: discord.Interaction,
@@ -621,7 +594,7 @@ async def ban_map(
         channel_teams[ch][0] if channel_flip[ch]=="team_a" else channel_teams[ch][1],
         channel_decision[ch], cur_lbl
     )
-    await update_status_message(ch, content, img)
+    await update_status_message(ch, content, img)   
 
     if is_complete:
         poll = await interaction.channel.send(
@@ -635,6 +608,33 @@ async def ban_map(
     else:
         conf = await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
         asyncio.create_task(delete_later(conf, 5.0))
+        
+# Attach per-option autocomplete handlers
+@ban_map.autocomplete("map_name")
+async def map_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[app_commands.Choice[str]]:
+    try:
+        choices = [app_commands.Choice(name=m["name"], value=m["name"])
+                   for m in load_maplist()
+                   if current.lower() in m["name"].lower()][:25]
+        await interaction.response.autocomplete(choices)
+    except discord.errors.NotFound:
+        pass
+
+@ban_map.autocomplete("side")
+async def side_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[app_commands.Choice[str]]:
+    try:
+        choices = [app_commands.Choice(name=s, value=s)
+                   for s in ("Allied","Axis")
+                   if current.lower() in s.lower()][:25]
+        await interaction.response.autocomplete(choices)
+    except discord.errors.NotFound:
+        pass
 
 @bot.tree.command(name="match_decide", description="Winner chooses host or first ban")
 async def match_decide(
