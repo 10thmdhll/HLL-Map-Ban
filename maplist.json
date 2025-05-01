@@ -35,6 +35,13 @@
         "Axis": "Available"
       }
     },
+	    {
+      "name": "Hill 400 – Day",
+      "options": {
+        "Allied": "Available",
+        "Axis": "Available"
+      }
+    },
     {
       "name": "Hurtgen – Day",
       "options": {
