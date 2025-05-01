@@ -416,7 +416,10 @@ async def ban_map(
         save_state()
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch])
     await update_status_message(ch, None, img)
-    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    # send confirmation and auto-delete it shortly
+    msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
+    # schedule deletion of the confirmation message after 10 seconds
+    asyncio.create_task(delete_later(msg, 10))
     
 @bot.tree.command(
     name="match_time",
