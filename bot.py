@@ -109,14 +109,16 @@ def create_ban_status_image(
     img = Image.new("RGB",(total_w,height),(240,240,240))
     draw = ImageDraw.Draw(img)
     y = 0
-    # banner
+    # Banner
     if current_turn_label:
         draw.rectangle([0,y,total_w,y+banner_h],fill=(220,220,255),outline="black")
-        draw.text((total_w//2, y+banner_h//2),
-                  f"Current Turn: {current_turn_label}",
-                  font=font,anchor="mm",fill="black")
+        draw.text(
+            (total_w//2, y+banner_h//2),
+            f"Current Turn: {current_turn_label}",
+            font=font,anchor="mm",fill="black"
+        )
     y += banner_h
-    # header1
+    # Header row 1
     draw.rectangle([0,y,2*sub_w,y+h1],fill=(200,200,200),outline="black")
     draw.text((sub_w,y+h1//2),team_a_label,font=font,anchor="mm",fill="black")
     draw.rectangle([2*sub_w,y,2*sub_w+map_w,y+h1],fill=(200,200,200),outline="black")
@@ -124,23 +126,23 @@ def create_ban_status_image(
     draw.rectangle([2*sub_w+map_w,y,total_w,y+h1],fill=(200,200,200),outline="black")
     draw.text((2*sub_w+map_w+sub_w,y+h1//2),team_b_label,font=font,anchor="mm",fill="black")
     y += h1
-    # header2
+    # Header row 2
     labels = ["Allied","Axis","","Allied","Axis"]
-    x=0
+    x = 0
     for w,l in zip(cols,labels):
         draw.rectangle([x,y,x+w,y+h2],fill=(220,220,220),outline="black")
-        if l: draw.text((x+w//2,y+h2//2),l,font=font,anchor="mm",fill="black")
+        if l:
+            draw.text((x+w//2,y+h2//2),l,font=font,anchor="mm",fill="black")
         x += w
     y += h2
-    # rows
+    # Rows
     for m in map_list:
-        name = m["name"]
-        tb = bans.get(name,{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
-        x = 0
-        # A allied/axis
+        name=m["name"]
+        tb=bans.get(name,{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
+        x=0
         for team_key in ("team_a","team_b"):
             for side in ("Allied","Axis"):
-                is_final = final_combo and (name, team_key, side) in final_combo
+                is_final = final_combo and (name,team_key,side) in final_combo
                 if is_final:  c=(180,255,180)
                 elif side in tb[team_key]["manual"]: c=(255,0,0)
                 elif side in tb[team_key]["auto"]:   c=(255,165,0)
@@ -176,7 +178,6 @@ async def update_status_message(
             return
         except discord.NotFound:
             pass
-    # fallback: send new
     msg = await channel.send(content=content, file=file)
     channel_messages[channel_id] = msg.id
     save_state()
@@ -222,20 +223,23 @@ async def match_create(
             "❌ A match is already active here. Use `/match_delete` first.",
             ephemeral=True
         )
-    cfg = load_config(); maps = load_maplist()
+
+    cfg  = load_config()
+    maps = load_maplist()
     a, b = team_a.name, team_b.name
     ra, rb = cfg["team_regions"].get(a,"Unknown"), cfg["team_regions"].get(b,"Unknown")
     ban_opt = determine_ban_option(ra, rb, cfg)
+
     ongoing_bans[ch] = {
         m["name"]: {"team_a":{"manual":[],"auto":[]}, "team_b":{"manual":[],"auto":[]}}
         for m in maps
     }
-    match_turns[ch] = "team_a"
+    match_turns[ch]   = "team_a"
     channel_teams[ch] = (a, b)
     save_state()
 
     current = a
-    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, current)
+    img     = create_ban_status_image(maps, ongoing_bans[ch], a, b, current)
     await interaction.response.send_message(
         f"**Match Created**\nTitle: {title}\nTeam A: {a} ({ra})\nTeam B: {b} ({rb})\nBan Option: {ban_opt}\n{description}",
         file=discord.File(img)
@@ -251,23 +255,28 @@ async def ban_map(
     map_name: str,
     side: str
 ):
+    # 1) Acknowledge immediately
+    await interaction.response.defer()
+
     ch = interaction.channel_id
     if ch not in ongoing_bans:
-        return await interaction.response.send_message(
-            "❌ No match here. Run `/match_create` first.", ephemeral=True
+        return await interaction.followup.send(
+            "❌ No match here. Run `/match_create` first.",
+            ephemeral=True
         )
-    # pre-ban check for final
-    combos = [
+
+    # pre-ban final check
+    combos_pre = [
         (n,t,s)
         for n,tb in ongoing_bans[ch].items()
         for t in ("team_a","team_b")
         for s in ("Allied","Axis")
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
-    if len(combos)==2 and combos[0][0]==combos[1][0]:
+    if len(combos_pre)==2 and combos_pre[0][0]==combos_pre[1][0]:
         a_label, b_label = channel_teams[ch]
-        img = create_ban_status_image(load_maplist(), ongoing_bans[ch], a_label, b_label, None)
-        m, t1, s1 = combos[0]; _, t2, s2 = combos[1]
+        img  = create_ban_status_image(load_maplist(), ongoing_bans[ch], a_label, b_label, None)
+        m, t1, s1 = combos_pre[0]; _, t2, s2 = combos_pre[1]
         team1 = a_label if t1=="team_a" else b_label
         team2 = a_label if t2=="team_a" else b_label
         content = (
@@ -276,7 +285,8 @@ async def ban_map(
             f"- {team1} = {s1}\n"
             f"- {team2} = {s2}"
         )
-        return await update_status_message(ch, content, img)
+        await update_status_message(ch, content, img)
+        return await interaction.followup.send("✅ Ban phase already complete.", ephemeral=True)
 
     # apply ban
     tk = match_turns[ch]
@@ -288,8 +298,8 @@ async def ban_map(
     match_turns[ch] = ok
     save_state()
 
-    # post-ban final check
-    combos = [
+    # post-ban check
+    combos_post = [
         (n,t,s)
         for n,tb in ongoing_bans[ch].items()
         for t in ("team_a","team_b")
@@ -297,11 +307,16 @@ async def ban_map(
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
     a_label, b_label = channel_teams[ch]
-    current = a_label if match_turns[ch]=="team_a" else b_label
+    if len(combos_post)==2 and combos_post[0][0]==combos_post[1][0]:
+        current = None
+    else:
+        current = a_label if match_turns[ch]=="team_a" else b_label
+
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], a_label, b_label, current)
 
-    if len(combos)==2 and combos[0][0]==combos[1][0]:
-        m, t1, s1 = combos[0]; _, t2, s2 = combos[1]
+    # determine final content
+    if len(combos_post)==2 and combos_post[0][0]==combos_post[1][0]:
+        m, t1, s1 = combos_post[0]; _, t2, s2 = combos_post[1]
         team1 = a_label if t1=="team_a" else b_label
         team2 = a_label if t2=="team_a" else b_label
         content = (
@@ -313,15 +328,17 @@ async def ban_map(
     else:
         content = None
 
+    # 2) Update the status image in-place
     await update_status_message(ch, content, img)
+
+    # 3) Send ephemeral confirmation
+    await interaction.followup.send("✅ Your ban has been recorded.", ephemeral=True)
 
 @bot.tree.command(name="match_delete", description="Delete the current match")
 async def match_delete(interaction: discord.Interaction):
     ch = interaction.channel_id
     if ch not in ongoing_bans:
-        return await interaction.response.send_message(
-            "❌ No active match to delete here.", ephemeral=True
-        )
+        return await interaction.response.send_message("❌ No active match to delete.", ephemeral=True)
     await cleanup_match(ch)
     await interaction.response.send_message("✅ Match deleted.", ephemeral=True)
 
