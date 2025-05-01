@@ -502,6 +502,32 @@ async def match_create(
     save_state()
 
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
+
+async def map_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[app_commands.Choice[str]]:
+    try:
+        choices = []
+        for m in load_maplist():
+            name = m["name"]
+            if current.lower() in name.lower():
+                choices.append(app_commands.Choice(name=name, value=name))
+        return choices[:25]
+    except Exception:
+        return []
+
+async def side_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[app_commands.Choice[str]]:
+    try:
+        return [app_commands.Choice(name=s, value=s)
+                for s in ("Allied","Axis")
+                if current.lower() in s.lower()][:25]
+    except Exception:
+        return []
+        
 @bot.tree.command(name="ban_map", description="Ban a map side")
 async def ban_map(
     interaction: discord.Interaction,
