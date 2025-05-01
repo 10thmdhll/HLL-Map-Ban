@@ -108,7 +108,6 @@ def create_ban_status_image(
     decision_choice: Optional[str],
     current_turn: Optional[str]
 ) -> str:
-    # config
     row_fs       = CONFIG["row_font_size"]
     hdr_fs       = CONFIG["header_font_size"]
     pad_x        = int(hdr_fs * CONFIG["pad_x_factor"])
@@ -137,13 +136,11 @@ def create_ban_status_image(
         b = fnt.getbbox(txt)
         return b[2]-b[0], b[3]-b[1]
 
-    # measure sides/maps
     side_sz = [measure(s, row_font) for s in ("Allied","Axis")]
     max_sw, max_sh = max(w for w,h in side_sz), max(h for w,h in side_sz)
     map_sz = [measure(m["name"], row_font) for m in maps] + [measure("Maps", hdr_font)]
     max_mw, max_mh = max(w for w,h in map_sz), max(h for w,h in map_sz)
 
-    # banner text
     fw = flip_winner or "TBD"
     if mode == "ExtraBan":
         first_lbl, host_field = fw, "Middle ground rules in effect."
@@ -164,7 +161,6 @@ def create_ban_status_image(
     b1w,b1h = measure(line1, hdr_font)
     b2w,b2h = measure(line2, hdr_font)
 
-    # compute widths
     base_sw = max(max_sw, measure("Allied", hdr_font)[0]) + pad_x*2
     ta_w,_  = measure(team_a, hdr_font)
     tb_w,_  = measure(team_b, hdr_font)
@@ -334,7 +330,7 @@ async def match_create(
     img = create_ban_status_image(maps, ongoing_bans[ch], a,b,mode,flip_lbl,channel_decision[ch],cur_lbl)
 
     follow = await interaction.followup.send(
-        f"**Match Created**\nTitle: {title}\nTeam A: {a} ({ra})\nTeam B: {b} ({rb})\nMode: {mode}\n{description}",
+        f"**Match Created**\nTitle: {title}\nTeam A: {a} ({�ra})\nTeam B: {b} ({�rb})\nMode: {mode}\n{description}",
         file=discord.File(img)
     )
     channel_messages[ch] = follow.id
@@ -369,8 +365,8 @@ async def ban_map(
         for s in ("Allied","Axis")
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
-    # If already complete
     if len(combos_pre)==2 and combos_pre[0][0]==combos_pre[1][0]:
+        # ban complete: generate image + poll
         img = create_ban_status_image(
             load_maplist(), ongoing_bans[ch],
             *channel_teams[ch],
@@ -385,13 +381,15 @@ async def ban_map(
             f"- {channel_teams[ch][0] if combos_pre[1][1]=='team_a' else channel_teams[ch][1]} = {combos_pre[1][2]}"
         )
         await update_status_message(ch, content, img)
-        # create poll
+        # create community poll
         chan = bot.get_channel(ch)
         poll = await chan.send(
-            f"📊 **Who do you think will win the match?** {channel_teams[ch][0]} vs {channel_teams[ch][1]}"
+            f"📊 **Who do you think will win the match?**\n"
+            f"1️⃣ {channel_teams[ch][0]}\n"
+            f"2️⃣ {channel_teams[ch][1]}"
         )
-        await poll.add_reaction("🅰️")
-        await poll.add_reaction("🅱️")
+        await poll.add_reaction("1️⃣")
+        await poll.add_reaction("2️⃣")
         return await interaction.followup.send("✅ Ban complete and poll created.", ephemeral=True)
 
     # apply ban
@@ -409,7 +407,6 @@ async def ban_map(
         for s in ("Allied","Axis")
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
-    # check for completion
     is_complete = len(combos_post)==2 and combos_post[0][0]==combos_post[1][0]
     content = None
     if is_complete:
@@ -420,10 +417,9 @@ async def ban_map(
             f"- {channel_teams[ch][0] if combos_post[1][1]=='team_a' else channel_teams[ch][1]} = {combos_post[1][2]}"
         )
 
-    cur_lbl = None
-    if not is_complete:
-        cur_lbl = channel_teams[ch][0] if match_turns[ch]=="team_a" else channel_teams[ch][1]
-
+    cur_lbl = None if is_complete else (
+        channel_teams[ch][0] if match_turns[ch]=="team_a" else channel_teams[ch][1]
+    )
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch],
         channel_teams[ch][0], channel_teams[ch][1],
@@ -434,13 +430,15 @@ async def ban_map(
     await update_status_message(ch, content, img)
 
     if is_complete:
-        # create poll
+        # create community poll
         chan = bot.get_channel(ch)
         poll = await chan.send(
-            f"📊 **Who do you think will win the match?** {channel_teams[ch][0]} vs {channel_teams[ch][1]}"
+            f"📊 **Who do you think will win the match?**\n"
+            f"1️⃣ {channel_teams[ch][0]}\n"
+            f"2️⃣ {channel_teams[ch][1]}"
         )
-        await poll.add_reaction("🅰️")
-        await poll.add_reaction("🅱️")
+        await poll.add_reaction("1️⃣")
+        await poll.add_reaction("2️⃣")
         return await interaction.followup.send("✅ Ban complete and poll created.", ephemeral=True)
     else:
         conf = await interaction.followup.send("✅ Your ban has been recorded.")
