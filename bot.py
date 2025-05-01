@@ -308,7 +308,23 @@ async def side_autocomplete(
     interaction: discord.Interaction,
     current: str
 ) -> List[app_commands.Choice[str]]:
-    return [app_commands.Choice(name=s, value=s)
+    """Only suggest sides still available for the selected map and turn."""
+    ch = interaction.channel_id
+    # get selected map from autocomplete namespace
+    sel_map = getattr(interaction.namespace, 'map_name', None)
+    if not sel_map or ch not in ongoing_bans:
+        return []
+    tb = ongoing_bans[ch].get(sel_map, {})
+    team_key = match_turns.get(ch)
+    if not tb or not team_key:
+        return []
+    choices: List[app_commands.Choice[str]] = []
+    # allow only sides not yet banned by the current team
+    for side in ("Allied", "Axis"):
+        if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
+            if current.lower() in side.lower():
+                choices.append(app_commands.Choice(name=side, value=side))
+    return choices[:25](name=s, value=s)
             for s in ("Allied", "Axis") if current.lower() in s.lower()][:25]
             
 async def cleanup_match(ch: int):
