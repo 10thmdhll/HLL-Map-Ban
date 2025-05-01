@@ -442,11 +442,12 @@ async def on_app_command_error(
         return
     raise error
 
+# ─── Ready & Sync ─────────────────────────────────────────────────────────────
 @bot.event
 async def on_ready() -> None:
     load_state()
     guild = discord.Object(id=1366830976369557654)
     await bot.tree.sync(guild=guild)
-    print("Bot ready; active matches:", list(ongoing_bans.keys()))
-    
+    print(f"Synced commands to guild {guild.id}; bot ready.")
+
 bot.run(os.getenv("DISCORD_TOKEN"))
