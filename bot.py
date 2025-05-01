@@ -486,6 +486,12 @@ async def match_time_cmd(
     interaction: discord.Interaction,
     time: str
 ) -> None:
+    ch = interaction.channel_id
+    # Only team members may set match time
+    team_a, team_b = channel_teams.get(ch, (None, None))
+    user_roles = {r.name for r in interaction.user.roles}
+    if team_a not in user_roles and team_b not in user_roles:
+        return await interaction.response.send_message("❌ You’re not on a team for this match.", ephemeral=True)
     await interaction.response.defer(ephemeral=True)
     ch = interaction.channel_id
     if ch not in ongoing_bans or not is_ban_complete(ch):
