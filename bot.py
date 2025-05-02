@@ -224,7 +224,7 @@ def create_ban_status_image(
     ta_w, _ = measure(team_a, hdr_font)
     tb_w, _ = measure(team_b, hdr_font)
     req2 = max(2*base_sw, max(ta_w, tb_w) + pad_x*2)
-    side_w = (req2 + 1)//2
+    side_w = (req2 + 1)//3
     map_w  = max(max_mw, measure("Maps",hdr_font)[0]) + pad_x*2
 
     row_h = max(max_sh, max_mh) + pad_y*2
