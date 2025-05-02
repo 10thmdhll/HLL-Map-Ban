@@ -500,8 +500,8 @@ async def ban_map(
     ]
     # If only one map remains with two sides, finalize
     final = False
-    print(remaining[0][0])
-    print(remaining[0][1])
+
+    print(remaining)
     if len(remaining) == 2 and remaining[0][0] == remaining[0][1]:
         final_img = create_ban_status_image(
             load_maplist(), ongoing_bans[ch],
