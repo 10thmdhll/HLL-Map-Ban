@@ -535,7 +535,7 @@ async def ban_map(
     turn_name = ""
     if match_turns[ch] == "team_a":
         turn_name = team_a_name
-    if match_turns[ch] == "team_b"
+    if match_turns[ch] == "team_b":
         turn_name = team_b_name
     if final == True:
         turn_name = "Final"
