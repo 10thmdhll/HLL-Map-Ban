@@ -476,7 +476,7 @@ async def ban_map(
     side: str
 ) -> None:
     ch = interaction.channel_id
-            # Determine remaining ban options
+    # Determine remaining ban options
     remaining = [
         (m, t, s)
         for m, tb in ongoing_bans.get(ch, {}).items()
@@ -500,19 +500,15 @@ async def ban_map(
             f"✅ Ban phase complete. Final: {final_map} → Team 1:{final_side1} / Team 2:{final_side2}", ephemeral=False
         )
     # Only the current team may ban
-    # current_key holds the winning team name (role)
     current_key = match_turns.get(ch)
     if not current_key:
         return await interaction.response.send_message("❌ No match in progress.", ephemeral=True)
-    # enforce turn by comparing to user's roles
     if current_key not in {r.name for r in interaction.user.roles}:
         return await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
-    # Proceed with normal ban
     await interaction.response.defer()
     tb = ongoing_bans[ch].get(map_name)
     if tb is None:
         return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
-    # Map raw team name to internal key
     raw_key = current_key
     team_a_name, team_b_name = channel_teams.get(ch, (None, None))
     if raw_key == team_a_name:
@@ -522,11 +518,9 @@ async def ban_map(
     else:
         return await interaction.followup.send("❌ Invalid team turn.", ephemeral=True)
     tb[tk]["manual"].append(side)
-    # auto-ban opposing side
     other = "team_b" if tk=="team_a" else "team_a"
     tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
-    # Persist if now final
     remaining_after = [
         (m, t, s)
         for m, tb2 in ongoing_bans[ch].items()
