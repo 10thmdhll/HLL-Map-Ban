@@ -472,9 +472,13 @@ Mode: {mode}
 
     img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, "team_a" if winner=="team_a" else "team_b", None, match_turns[ch])
     msg = await interaction.followup.send(
-        f"**Match Created**: {title}\nTeams: {a} ({ra}) vs {b} ({rb})\nMode: {mode}\n{description}",
-        file=discord.File(img)
+      f"**Match Created**: {title}
+      Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
+      Mode: {mode}
+      {description}",
+      file=discord.File(img)
     )
+
     channel_messages[ch] = msg.id
     save_state()
 
