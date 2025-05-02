@@ -446,6 +446,15 @@ async def match_create(
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
+        None, None,  # ignore legacy team args, use globals
+        channel_mode[ch],
+        channel_flip[ch],
+        channel_decision[ch],
+        match_turns[ch],
+        None,  # no match_time here
+        False  # final flag
+    ),
+        ongoing_bans[ch],
         None, None,  # ignore these, use globals inside
         channel_mode[ch],
         channel_flip[ch],
