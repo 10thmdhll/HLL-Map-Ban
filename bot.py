@@ -188,7 +188,7 @@ def create_ban_status_image(
     
     # Show the team name instead of key
     current_team_name = team_a if current_turn == "team_a" else team_b if current_turn == "team_b" else "TBD"
-    banner2 = f"Current Turn: {current_team_name}"
+    banner2 = f"Match Time: {match_time_iso}  |  Current Turn: {current_team_name}"
     
     side_sz = [measure(s, row_font) for s in ("Allied","Axis")]
     max_sw, max_sh = max(w for w,h in side_sz), max(h for w,h in side_sz)
@@ -211,7 +211,7 @@ def create_ban_status_image(
             host_field = f"Host: {fw}"
 
     line1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
-    line2 = f"Current Turn: {current_turn or 'TBD'}"
+    line2 = f"Match Time: {match_time_iso}  |  Current Turn: {current_turn or 'TBD'}"
     b1w, b1h = measure(line1, hdr_font)
     b2w, b2h = measure(line2, hdr_font)
 
