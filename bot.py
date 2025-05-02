@@ -469,7 +469,7 @@ async def match_create(
         turn_name,
         None,  # no match_time here
         False  # final flag
-    ),
+    )
     
     msg = await interaction.followup.send(
         f"**Match Created**: {title}\nTeams: {team_a_name} ({ra}) vs {team_b_name} ({rb})\nMode: {mode}\n{description}",
