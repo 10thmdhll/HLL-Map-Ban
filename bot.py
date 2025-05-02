@@ -106,12 +106,17 @@ def is_ban_complete(ch: int) -> bool:
 def create_ban_status_image(
     maps: List[dict],
     bans: dict[str, dict[str, List[str]]],
-    team_a: str, team_b: str,
+    # these args can stay for signature compatibility, but will be ignored:
+    _team_a: str, _team_b: str,
     mode: str, flip_winner: Optional[str],
     decision_choice: Optional[str], current_turn: Optional[str],
     match_time_iso: Optional[str] = None,
     final: bool = False
 ) -> str:
+    global team_a_name, team_b_name
+    # Force-override any passed‐in team names with the globals
+    team_a = team_a_name or "Team A"
+    team_b = team_b_name or "Team B"
     """Generates ban status image, highlighting final remaining combo if final=True."""
     from PIL import Image
     row_fs, hdr_fs = CONFIG["row_font_size"], CONFIG["header_font_size"]
