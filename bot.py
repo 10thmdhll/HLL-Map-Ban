@@ -573,8 +573,8 @@ async def ban_map(
     
     if len(remaining_after) <= 3:
         final = True
-        update_status_message(ch, None, img)
-        interaction.response.send_message("✅ Ban phase complete. Final selection locked.", ephemeral=False)
+        await update_status_message(ch, None, img)
+        await interaction.response.send_message("✅ Ban phase complete. Final selection locked.", ephemeral=False)
         save_state()
       
 @bot.tree.command(
