@@ -445,6 +445,14 @@ async def match_create(
     save_state()
 
     # Send initial status image
+    turn_name = ""
+    if match_turns[ch] == "team_a":
+        turn_name = team_a_name
+    if match_turns[ch] == "team_b":
+        turn_name = team_b_name
+    if final == True:
+        turn_name = "Final"
+        
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
@@ -453,7 +461,7 @@ async def match_create(
         channel_mode[ch],
         team_a_name if channel_flip[ch]=="team_a" else team_b_name if channel_flip[ch] else None,
         channel_decision[ch],
-        team_a_name if match_turns[ch]=="team_a" else team_b_name if channel_flip[ch] else None,
+        team_a_name if match_turns[ch]=="team_a" else team_b_name if match_turns[ch] else None,
         None,  # no match_time here
         False  # final flag
     ),
@@ -543,7 +551,7 @@ async def ban_map(
         turn_name = "Final"
         
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], a, b,
+        load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
         channel_mode[ch], team_a_name if channel_flip[ch]=="team_a" else team_b_name if channel_flip[ch] else None, channel_decision[ch], turn_name, None, final
     )
     await update_status_message(ch, None, img)
