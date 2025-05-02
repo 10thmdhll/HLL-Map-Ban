@@ -466,12 +466,11 @@ async def match_create(
         channel_mode[ch],
         flip_name,
         channel_decision[ch],
-        team_a_name if match_turns[ch]=="team_a" else team_b_name if match_turns[ch] else None,
+        turn_name,
         None,  # no match_time here
         False  # final flag
     ),
     
-    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner_key=="team_a" else b if winner_key else None, None, match_turns[ch], None, False)
     msg = await interaction.followup.send(
         f"**Match Created**: {title}\nTeams: {a} ({ra}) vs {b} ({rb})\nMode: {mode}\n{description}",
         file=discord.File(img)
