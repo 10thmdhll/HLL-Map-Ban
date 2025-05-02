@@ -167,8 +167,7 @@ def create_ban_status_image(
     # build banner lines, adjust if final
     if final and final_map:
         banner1 = f"{team_a} = {final_side1}   |   {team_b} = {final_side2}"
-        banner2 = "Final choice locked."
-        banner3 = "Match Time: {match_time_iso}"
+        banner2 = "Match Time: {match_time_iso}  |  Final choice locked."  
     else:
         fw = flip_winner
         if mode == "ExtraBan":
@@ -185,8 +184,7 @@ def create_ban_status_image(
                 first_lbl = other
                 host_field = f"Host: {fw}"
         banner1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
-        banner2 = f"Current Turn: {current_turn or 'TBD'}"
-        banner3 = "Match Time: {match_time_iso}"
+        banner2 = f"Match Time: {match_time_iso}  |  Current Turn: {current_turn or 'TBD'}"
     
     # Show the team name instead of key
     current_team_name = team_a if current_turn == "team_a" else team_b if current_turn == "team_b" else "TBD"
@@ -214,26 +212,23 @@ def create_ban_status_image(
 
     line1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
     line2 = f"Current Turn: {current_turn or 'TBD'}"
-    line3 = f"Match Time: {match_time_iso}"
-    
     b1w, b1h = measure(line1, hdr_font)
     b2w, b2h = measure(line2, hdr_font)
-    b3w, b3h = measure(line3, hdr_font)
-    
+
     base_sw = max(max_sw, measure("Allied",hdr_font)[0]) + pad_x*2
     ta_w, _ = measure(team_a, hdr_font)
     tb_w, _ = measure(team_b, hdr_font)
     req2 = max(2*base_sw, max(ta_w, tb_w) + pad_x*2)
-    side_w = (req2 + 1)//3
+    side_w = (req2 + 1)//2
     map_w  = max(max_mw, measure("Maps",hdr_font)[0]) + pad_x*2
 
     row_h = max(max_sh, max_mh) + pad_y*2
-    h1, h2, h3 = hdr_fs + pad_y, hdr_fs + pad_y, hdr_fs + pad_y
-    banner_h = (b1h + pad_y*2) + (b2h + pad_y*2) + (b3h + pad_y*2)
+    h1, h2 = hdr_fs + pad_y, hdr_fs + pad_y
+    banner_h = (b1h + pad_y*2) + (b2h + pad_y*2)
 
-    total_w = max(side_w*4 + map_w, b1w + pad_x*2, b2w + pad_x*2, b3w + pad_x*2)
+    total_w = max(side_w*4 + map_w, b1w + pad_x*2, b2w + pad_x*2)
     map_w   = total_w - side_w*4
-    height  = banner_h + h1 + h2 + h3 + len(maps)*row_h + pad_y
+    height  = banner_h + h1 + h2 + len(maps)*row_h + pad_y
 
     img  = Image.new("RGB", (total_w, height), (240,240,240))
     draw = ImageDraw.Draw(img)
@@ -241,9 +236,8 @@ def create_ban_status_image(
 
     # Banner
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
-    draw.text((total_w//3, y+(b1h+pad_y*3)//3), line1, font=hdr_font, anchor="mm", fill="black")
-    draw.text((total_w//3, y+(b1h+pad_y*3)+(b2h+pad_y*3)//3), line2, font=hdr_font, anchor="mm", fill="black")
-    draw.text((total_w//3, y+(b1h+pad_y*3)+(b2h+pad_y*3)+(b3h+pad_y*3)//3), line3, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y+(b1h+pad_y*2)//2), line1, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y+(b1h+pad_y*2)+(b2h+pad_y*2)//2), line2, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
     # Headers
@@ -260,11 +254,11 @@ def create_ban_status_image(
     widths = [side_w, side_w, map_w, side_w, side_w]
     x = 0
     for w, lab in zip(widths, labels):
-        draw.rectangle([x,y,x+w,y+h3], fill=(220,220,220), outline="black")
+        draw.rectangle([x,y,x+w,y+h2], fill=(220,220,220), outline="black")
         if lab:
-            draw.text((x+w//2,y+h3//2), lab, font=hdr_font, anchor="mm", fill="black")
+            draw.text((x+w//2,y+h2//2), lab, font=hdr_font, anchor="mm", fill="black")
         x += w
-    y += h3
+    y += h2
 
     # Map rows
     for m in maps:
