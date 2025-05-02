@@ -451,6 +451,15 @@ async def match_create(
         match_turns[ch]
     )
     msg = await interaction.followup.send(
+    f"**Match Created**: {title}
+"
+    f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
+"
+    f"Mode: {mode}
+"
+    f"{description}",
+    file=discord.File(img)
+)
         f"**Match Created**: {title}
 "
         f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
