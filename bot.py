@@ -532,14 +532,11 @@ async def ban_map(
         save_state()
     
     # Ban result image creation
-    teama = "TBD"
-    teamb = "TBD"
-    if channel_teams[ch] == "team_a":
-        teama = team_a_name
-        teamb = team_b_name
-    else:
-        teama = team_b_name
-        teamb = team_a_name
+    teama = ""
+    teamb = ""
+    
+    teama = team_a_name
+    teamb = team_b_name
     
     turn_name = ""
     if match_turns[ch] == "team_a":
