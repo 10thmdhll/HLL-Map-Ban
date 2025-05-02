@@ -454,12 +454,13 @@ async def match_create(
         None,  # no match_time here
         False  # final flag
     ),
-        ongoing_bans[ch],
-        None, None,  # ignore these, use globals inside
-        channel_mode[ch],
-        channel_flip[ch],
-        channel_decision[ch],
-        match_turns[ch]
+    ongoing_bans[ch],
+    None,
+    None,  # ignore these, use globals inside
+    channel_mode[ch],
+    channel_flip[ch],
+    channel_decision[ch],
+    match_turns[ch]
     )
     img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner_key=="team_a" else b if winner_key else None, None, match_turns[ch])
     msg = await interaction.followup.send(
