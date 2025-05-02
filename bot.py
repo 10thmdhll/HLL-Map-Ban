@@ -228,7 +228,7 @@ def create_ban_status_image(
     map_w  = max(max_mw, measure("Maps",hdr_font)[0]) + pad_x*2
 
     row_h = max(max_sh, max_mh) + pad_y*2
-    h1, h2, h3 = hdr_fs + pad_y, hdr_fs + pad_y
+    h1, h2, h3 = hdr_fs + pad_y, hdr_fs + pad_y, hdr_fs + pad_y
     banner_h = (b1h + pad_y*2) + (b2h + pad_y*2) + (b3h + pad_y*2)
 
     total_w = max(side_w*4 + map_w, b1w + pad_x*2, b2w + pad_x*2, b3w + pad_x*2)
@@ -260,11 +260,11 @@ def create_ban_status_image(
     widths = [side_w, side_w, map_w, side_w, side_w]
     x = 0
     for w, lab in zip(widths, labels):
-        draw.rectangle([x,y,x+w,y+h2], fill=(220,220,220), outline="black")
+        draw.rectangle([x,y,x+w,y+h3], fill=(220,220,220), outline="black")
         if lab:
-            draw.text((x+w//2,y+h2//2), lab, font=hdr_font, anchor="mm", fill="black")
+            draw.text((x+w//2,y+h3//2), lab, font=hdr_font, anchor="mm", fill="black")
         x += w
-    y += h2
+    y += h3
 
     # Map rows
     for m in maps:
