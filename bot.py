@@ -481,6 +481,7 @@ async def ban_map(
 ) -> None:
     ch = interaction.channel_id
     # Determine remaining ban options
+    final = False
     remaining = [
         (m, t, s)
         for m, tb in ongoing_bans.get(ch, {}).items()
@@ -536,8 +537,6 @@ async def ban_map(
         flip_name = team_b_name
         
     # If only one map remains with two sides, finalize
-    final = False
-
     print(len(remaining))
     if len(remaining) == 2:
         turn_name = ""
