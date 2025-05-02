@@ -488,41 +488,6 @@ async def ban_map(
         for s in ("Allied", "Axis")
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
-    # If only one map remains with two sides, finalize
-    final = False
-
-    print(len(remaining))
-    if len(remaining) == 4:
-        turn_name = ""
-        if match_turns[ch] == "team_a":
-            turn_name = team_a_name
-        if match_turns[ch] == "team_b":
-            turn_name = team_b_name
-        if final == True:
-            turn_name = "Final"
-    
-        flip_name = ""
-        if channel_flip[ch]=="team_a":
-            flip_name = team_a_name
-        if channel_flip[ch]=="team_b":
-            flip_name = team_b_name
-        
-        final_img = create_ban_status_image(
-            load_maplist(), 
-            ongoing_bans[ch],
-            team_a_name,
-            team_b_name,
-            channel_mode[ch], 
-            flip_name,
-            channel_decision[ch], 
-            turn_name,
-            None,
-            final=True
-        )
-        await update_status_message(ch, None, final_img)
-        return await interaction.response.send_message(
-            "✅ Ban phase complete. Final selection locked.", ephemeral=False
-        )
     # Only the current team may ban
     current_key = match_turns.get(ch)
     if not current_key:
@@ -569,6 +534,42 @@ async def ban_map(
         flip_name = team_a_name
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
+        
+    # If only one map remains with two sides, finalize
+    final = False
+
+    print(len(remaining))
+    if len(remaining) == 2:
+        turn_name = ""
+        if match_turns[ch] == "team_a":
+            turn_name = team_a_name
+        if match_turns[ch] == "team_b":
+            turn_name = team_b_name
+        if final == True:
+            turn_name = "Final"
+    
+        flip_name = ""
+        if channel_flip[ch]=="team_a":
+            flip_name = team_a_name
+        if channel_flip[ch]=="team_b":
+            flip_name = team_b_name
+        
+        final_img = create_ban_status_image(
+            load_maplist(), 
+            ongoing_bans[ch],
+            team_a_name,
+            team_b_name,
+            channel_mode[ch], 
+            flip_name,
+            channel_decision[ch], 
+            turn_name,
+            None,
+            final=True
+        )
+        await update_status_message(ch, None, final_img)
+        return await interaction.response.send_message(
+            "✅ Ban phase complete. Final selection locked.", ephemeral=False
+        )
         
     img = create_ban_status_image(
         load_maplist(),
