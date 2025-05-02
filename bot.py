@@ -459,14 +459,17 @@ async def match_create(
         match_turns[ch]
     )
     msg = await interaction.followup.send(
-        f"**Match Created**: {title}
-Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
-Mode: {mode}
-{description}",
-        file=discord.File(img)
-    )
-    channel_messages[ch] = msg.id
-    save_state()
+    f"**Match Created**: {title}
+"
+    f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
+"
+    f"Mode: {mode}
+"
+    f"{description}",
+    file=discord.File(img)
+)
+channel_messages[ch] = msg.id
+save_state()
 :{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
     save_state()
 
