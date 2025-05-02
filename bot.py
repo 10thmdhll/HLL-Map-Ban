@@ -421,6 +421,8 @@ async def match_create(
 
     cfg = load_teammap()
     maps = load_maplist()
+    a = team_a_name
+    b = team_b_name
     ra = cfg.get("team_regions", {}).get(team_a_name, "Unknown")
     rb = cfg.get("team_regions", {}).get(team_b_name, "Unknown")
     mode = determine_ban_option(ra, rb, cfg)
