@@ -432,7 +432,10 @@ async def match_create(
     channel_flip[ch]    = winner
     channel_decision[ch]= None
     match_turns[ch]     = winner
-    ongoing_bans[ch]    = {m["name"]
+    ongoing_bans[ch] = {
+        m["name"]: {"team_a": {"manual": [], "auto": []}, "team_b": {"manual": [], "auto": []}}
+        for m in maps
+    }
     save_state()  
 
         img = create_ban_status_image(
