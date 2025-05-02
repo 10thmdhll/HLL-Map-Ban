@@ -692,7 +692,7 @@ async def match_decide(
 
 @bot.tree.command(
     name="match_delete",
-    description="Delete current match")
+    description="Delete current match"
 )
 async def match_delete(
     interaction: discord.Interaction
