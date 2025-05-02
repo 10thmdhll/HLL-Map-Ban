@@ -539,7 +539,7 @@ async def ban_map(
         final
     )
     
-    if len(remain_after) >= 5:
+    if len(remaining_after) >= 5:
         # Proceed with normal ban
         await interaction.response.defer()
         tb = ongoing_bans[ch].get(map_name)
