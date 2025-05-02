@@ -450,26 +450,11 @@ async def match_create(
         None,
         match_turns[ch]
     )
+    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner=="team_a" else b if winner else None, None, match_turns[ch])
     msg = await interaction.followup.send(
-    f"**Match Created**: {title}
-"
-    f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
-"
-    f"Mode: {mode}
-"
-    f"{description}",
-    file=discord.File(img)
-)
-        f"**Match Created**: {title}
-"
-        f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
-"
-        f"Mode: {mode}
-"
-        f"{description}",
+        f"**Match Created**: {title}\nTeams: {a} ({ra}) vs {b} ({rb})\nMode: {mode}\n{description}",
         file=discord.File(img)
     )
-    channel_messages[ch] = msg.id
     save_state()
 
 @bot.tree.command(
