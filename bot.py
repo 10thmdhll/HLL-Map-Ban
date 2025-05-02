@@ -241,9 +241,9 @@ def create_ban_status_image(
 
     # Banner
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
-    draw.text((total_w//2, y+(b1h+pad_y*2)//3), line1, font=hdr_font, anchor="mm", fill="black")
-    draw.text((total_w//2, y+(b1h+pad_y*2)+(b2h+pad_y*2)//3), line2, font=hdr_font, anchor="mm", fill="black")
-    draw.text((total_w//2, y+(b1h+pad_y*2)+(b2h+pad_y*2)//2)+(b3h+pad_y*2)//3), line3, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//3, y+(b1h+pad_y*3)//3), line1, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//3, y+(b1h+pad_y*3)+(b2h+pad_y*3)//3), line2, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//3, y+(b1h+pad_y*3)+(b2h+pad_y*3)+(b3h+pad_y*3)//3)), line3, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
     # Headers
