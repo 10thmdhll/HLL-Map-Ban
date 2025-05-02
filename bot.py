@@ -600,6 +600,8 @@ async def match_time(
     except Exception as e:
         return await interaction.followup.send(f"❌ Invalid datetime: {e}", ephemeral=True)
     
+    final = False
+    
     turn_name = ""
     if match_turns[ch] == "team_a":
         turn_name = team_a_name
@@ -613,8 +615,6 @@ async def match_time(
         flip_name = team_a_name
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
-    
-    final = False
     
     img = create_ban_status_image(
         load_maplist(),
@@ -657,6 +657,7 @@ async def match_decide(
     match_turns[ch]      = channel_flip[ch] if choice=="Ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
     save_state()
     
+    final = False
     turn_name = ""
     if match_turns[ch] == "team_a":
         turn_name = team_a_name
@@ -670,8 +671,6 @@ async def match_decide(
         flip_name = team_a_name
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
-    
-    final = false
     
     img = create_ban_status_image(
             load_maplist(),
