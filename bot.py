@@ -492,7 +492,7 @@ async def ban_map(
     final = False
 
     print(len(remaining))
-    if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
+    if len(remaining) == 4:
         turn_name = ""
         if match_turns[ch] == "team_a":
             turn_name = team_a_name
