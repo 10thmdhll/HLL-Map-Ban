@@ -175,7 +175,7 @@ def create_ban_status_image(
         else:
             if decision_choice is None:
                 first_lbl, host_field = "TBD", f"{fw} chooses host"
-            elif decision_choice == "ban":
+            elif decision_choice == "Ban":
                 first_lbl = fw
                 other = team_b if fw==team_a else team_a
                 host_field = f"Host: {other}"
@@ -654,7 +654,11 @@ async def match_decide(
         return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
         
     channel_decision[ch] = choice
-    match_turns[ch]      = channel_flip[ch] if choice=="Ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
+    
+    if choice=="Ban":
+        match_turns[ch] = "team_a"
+    else:
+        match_turns[ch] = "team_b"
     save_state()
     
     final = False
