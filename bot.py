@@ -544,18 +544,7 @@ async def ban_map(
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
 
-@bot.tree.command(
-    name="ban_map",
-    description="Ban a map for a given side",
-    guild=discord.Object(id=1366830976369557654)
-)
-@app_commands.describe(map_name="Map to ban", side="Allied or Axis")
-@app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
-async def ban_map(
-    interaction: discord.Interaction,
-    map_name: str,
-    side: str
-) -> None:
+
     ch = interaction.channel_id
             # Determine remaining ban options
     remaining = [
