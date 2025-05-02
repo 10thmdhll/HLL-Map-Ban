@@ -444,12 +444,12 @@ async def match_create(
 
     # Send initial status image
     img = create_ban_status_image(
-        maps,
+        load_maplist(),
         ongoing_bans[ch],
-        None, None,
-        mode,
-        winner_key,
-        None,
+        None, None,  # ignore these, use globals inside
+        channel_mode[ch],
+        channel_flip[ch],
+        channel_decision[ch],
         match_turns[ch]
     )
     img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner_key=="team_a" else b if winner_key else None, None, match_turns[ch])
@@ -521,14 +521,8 @@ async def ban_map(
     if len(remaining_after) == 2 and remaining_after[0][0] == remaining_after[1][0]:
         save_state()
     
-    a = team_a_name
-    b = team_b_name
-    
-    channel_teams_names:     dict[int, Tuple[str, str]]                = {}
-    channel_teams_names[ch] = (a,b)
-    
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], *channel_teams_names[ch],
+        load_maplist(), ongoing_bans[ch], channel_teams[ch],
         channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
     )
     await update_status_message(ch, None, img)
