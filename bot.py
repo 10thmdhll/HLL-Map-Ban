@@ -422,7 +422,7 @@ async def match_create(
     ongoing_bans[ch]    = {m["name"]:{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
     save_state()
 
-    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner=="team_a" else b if winner else None, None, match_turns[ch])
+    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, "team_a" if winner=="team_a" else "team_b", None, match_turns[ch])
     msg = await interaction.followup.send(
         f"**Match Created**: {title}\nTeams: {a} ({ra}) vs {b} ({rb})\nMode: {mode}\n{description}",
         file=discord.File(img)
