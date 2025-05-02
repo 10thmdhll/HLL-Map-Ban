@@ -523,7 +523,10 @@ async def ban_map(
     
     a = team_a_name
     b = team_b_name
+    
+    channel_teams_names:     dict[int, Tuple[str, str]]                = {}
     channel_teams_names[ch] = (a,b)
+    
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], *channel_teams_names[ch],
         channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
