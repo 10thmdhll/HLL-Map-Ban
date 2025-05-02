@@ -117,7 +117,7 @@ def create_ban_status_image(
     current_turn: Optional[str],
     match_time_iso: Optional[str] = None,
     final: bool = False,
-    channel_host: str
+    channel_host: str = ""
 ) -> str:
     global team_a_name, team_b_name
     # Force-override any passed‐in team names with the globals
