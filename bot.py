@@ -503,10 +503,30 @@ async def ban_map(
 
     print(remaining)
     if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
+        turn_name = ""
+        if match_turns[ch] == "team_a":
+            turn_name = team_a_name
+        if match_turns[ch] == "team_b":
+            turn_name = team_b_name
+        if final == True:
+            turn_name = "Final"
+    
+        flip_name = ""
+        if channel_flip[ch]=="team_a":
+            flip_name = team_a_name
+        if channel_flip[ch]=="team_b":
+            flip_name = team_b_name
+        
         final_img = create_ban_status_image(
-            load_maplist(), ongoing_bans[ch],
-            *channel_teams[ch], channel_mode[ch], channel_flip[ch],
-            channel_decision[ch], None,
+            load_maplist(), 
+            ongoing_bans[ch],
+            team_a_name,
+            team_b_name,
+            channel_mode[ch], 
+            flip_name,
+            channel_decision[ch], 
+            turn_name,
+            None,
             final=True
         )
         await update_status_message(ch, None, final_img)
