@@ -423,8 +423,6 @@ async def match_create(
 
     cfg = load_teammap()
     maps = load_maplist()
-    a = team_a_name
-    b = team_b_name
     ra = cfg.get("team_regions", {}).get(team_a_name, "Unknown")
     rb = cfg.get("team_regions", {}).get(team_b_name, "Unknown")
     mode = determine_ban_option(ra, rb, cfg)
@@ -454,13 +452,19 @@ async def match_create(
     if final == True:
         turn_name = "Final"
         
+    flip_name = ""
+    if channel_flip[ch] == "team_a":
+        flip_name = team_a_name
+    if channel_flip[ch] == "team_b":
+        flip_name = team_b_name
+
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
         None,
         None,  # ignore these, use globals inside
         channel_mode[ch],
-        team_a_name if channel_flip[ch]=="team_a" else team_b_name if channel_flip[ch] else None,
+        flip_name,
         channel_decision[ch],
         team_a_name if match_turns[ch]=="team_a" else team_b_name if match_turns[ch] else None,
         None,  # no match_time here
