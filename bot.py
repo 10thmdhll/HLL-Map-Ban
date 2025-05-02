@@ -588,7 +588,7 @@ async def ban_map(
     description="Set match date/time",
     guild=discord.Object(id=1366830976369557654)
 )
-@app_commands.describe(time="ISO8601 datetime with timezone -> 2025-05-21T18:00:00-04:00")
+@app_commands.describe(time="ISO8601 datetime with timezone 2025-05-21T18:00:00-04:00")
 async def match_time(
     interaction: discord.Interaction,
     time: str
@@ -728,10 +728,6 @@ async def on_ready():
     synced = await bot.tree.sync(guild=guild)
     print(f"➤ Guild sync: {[c.name for c in synced]}")
 
-    # 2) If match_time didn’t land, fall back to a global sync
-    if "match_time" not in [c.name for c in synced]:
-        global_synced = await bot.tree.sync()
-        print(f"➤ Global sync: {[c.name for c in global_synced]}")
     print("Bot ready.")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
