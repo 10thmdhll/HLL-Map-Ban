@@ -436,9 +436,19 @@ async def match_create(
         m["name"]: {"team_a": {"manual": [], "auto": []}, "team_b": {"manual": [], "auto": []}}
         for m in maps
     }
-    save_state()  
+    save_state()
 
-        img = create_ban_status_image(
+    # Generate and send the initial status image
+    img = create_ban_status_image(
+        maps,
+        ongoing_bans[ch],
+        team_a_name,
+        team_b_name,
+        mode,
+        channel_flip[ch],
+        None,
+        match_turns[ch]
+    )(
         maps,
         ongoing_bans[ch],
         team_a_name,
