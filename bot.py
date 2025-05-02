@@ -427,13 +427,25 @@ async def match_create(
     channel_flip[ch]    = winner
     channel_decision[ch]= None
     match_turns[ch]     = winner
-    ongoing_bans[ch]    = {m["name"]:{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
+    ongoing_bans[ch]    = {m["name"]
     save_state()  
 
-    img = create_ban_status_image(
-        maps, mode, winner, None, match_turns[ch]
+        img = create_ban_status_image(
+        maps,
+        ongoing_bans[ch],
+        team_a_name,
+        team_b_name,
+        mode,
+        channel_flip[ch],
+        None,
+        match_turns[ch]
     )
-    msg = await interaction.followup.send(f"Match Created: {title} : Teams: {a} ({ra}) vs {b} ({rb}) Mode: {mode} {description}",      file=discord.File(img)
+    msg = await interaction.followup.send(
+        f"**Match Created**: {title}
+Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
+Mode: {mode}
+{description}",
+        file=discord.File(img)
     )
     channel_messages[ch] = msg.id
     save_state()
