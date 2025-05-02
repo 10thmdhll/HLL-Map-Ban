@@ -158,7 +158,7 @@ def create_ban_status_image(
         banner1 = f"{team_a} = {final_side1}   |   {team_b} = {final_side2}"
         banner2 = "Final choice locked."  
     else:
-        fw = flip_winner or "TBD"
+        fw = flip_winner
         if mode == "ExtraBan":
             first_lbl, host_field = fw, "Middle ground rules in effect."
         else:
