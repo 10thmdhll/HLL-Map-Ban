@@ -540,7 +540,7 @@ async def ban_map(
         final
     )
     
-    if len(remaining_after) >= 5:
+    if len(remaining_after) >= 4:
         # Proceed with normal ban
         await interaction.response.defer()
         tb = ongoing_bans[ch].get(map_name)
@@ -571,9 +571,9 @@ async def ban_map(
         msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
         asyncio.create_task(delete_later(msg, 10)) 
     
-    if len(remaining_after) <= 4:
+    if len(remaining_after) <= 3:
         final = True
-        await update_status_message(ch, None, img)
+        update_status_message(ch, None, img)
         interaction.response.send_message("✅ Ban phase complete. Final selection locked.", ephemeral=False)
         save_state()
       
