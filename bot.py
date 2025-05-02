@@ -534,7 +534,7 @@ async def ban_map(
     # Ban result image creation
     teama = "TBD"
     teamb = "TBD"
-    if channel_teams[0] == "team_a":
+    if channel_teams[ch] == "team_a":
         teama = team_a_name
         teamb = team_b_name
     else:
