@@ -35,8 +35,11 @@ CONFIG = {
 }
 
 # ─── In-Memory State ─────────────────────────────────────────────────────────────
-going  = {}
-ongoing_bans:      dict[int, dict[str, dict[str, List[str]]]] = {}
+# Global team names for current match
+team_a_name: Optional[str] = None
+team_b_name: Optional[str] = None
+
+going  = {}\ ongoing_bans:      dict[int, dict[str, dict[str, List[str]]]] = {}
 match_turns:       dict[int, str]                            = {}
 match_times:       dict[int, str]                            = {}
 channel_teams:     dict[int, Tuple[str, str]]                = {}
@@ -400,6 +403,10 @@ async def match_create(
     title: str,
     description: str = "No description provided"
 ) -> None:
+    global team_a_name, team_b_name
+    # Set global team names
+    team_a_name = team_a.name
+    team_b_name = team_b.name
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch in ongoing_bans:
@@ -420,6 +427,21 @@ async def match_create(
     channel_decision[ch]= None
     match_turns[ch]     = winner
     ongoing_bans[ch]    = {m["name"]:{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
+    save_state()  
+
+    img = create_ban_status_image(
+        maps, mode, winner, None, match_turns[ch]
+    )
+    msg = await interaction.followup.send(
+        f"**Match Created**: {title}
+Teams: {a} ({ra}) vs {b} ({rb})
+Mode: {mode}
+{description}",
+        file=discord.File(img)
+    )
+    channel_messages[ch] = msg.id
+    save_state()
+:{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
     save_state()
 
     img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, "team_a" if winner=="team_a" else "team_b", None, match_turns[ch])
