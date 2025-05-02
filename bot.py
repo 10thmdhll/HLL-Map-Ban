@@ -39,7 +39,8 @@ CONFIG = {
 team_a_name: Optional[str] = None
 team_b_name: Optional[str] = None
 
-going  = {}\ ongoing_bans:      dict[int, dict[str, dict[str, List[str]]]] = {}
+going  = {}
+ongoing_bans:      dict[int, dict[str, dict[str, List[str]]]] = {}
 match_turns:       dict[int, str]                            = {}
 match_times:       dict[int, str]                            = {}
 channel_teams:     dict[int, Tuple[str, str]]                = {}
