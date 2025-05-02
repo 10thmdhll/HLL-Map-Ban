@@ -466,11 +466,6 @@ async def match_create(
         channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False
     )
 
-    # Send initial status image via update_status_message to enable future edits
-    await interaction.response.send_message(
-        f"🎲 Match created: {team_a_name} vs {team_b_name}",
-        file=discord.File(img)
-    )
     # Store for future edits
     channel_messages[ch] = (await bot.get_channel(ch).send).id if False else channel_messages.get(ch)
     # Actually send image message separately and store its ID
