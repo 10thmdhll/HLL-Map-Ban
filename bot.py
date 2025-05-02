@@ -547,7 +547,7 @@ async def ban_map(
         
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], a, b,
-        channel_mode[ch], a if winner_key=="team_a" else b if winner_key else None, channel_decision[ch], turn_name, None, final
+        channel_mode[ch], a if channel_flip[ch]=="team_a" else b if channel_flip[ch] else None, channel_decision[ch], turn_name, None, final
     )
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
