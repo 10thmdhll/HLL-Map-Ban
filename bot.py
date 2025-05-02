@@ -479,7 +479,7 @@ async def match_create(
 
 @bot.tree.command(
     name="ban_map",
-    description="Ban a map for a given side")
+    description="Ban a map for a given side"
 )
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
