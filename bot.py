@@ -553,17 +553,16 @@ async def ban_map(
         tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
         match_turns[ch] = other
         
+        await update_status_message(ch, None, img)
         msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
+        asyncio.create_task(delete_later(msg, 10)) 
     
     if len(remaining_after) <= 4:
         final = True
+        await update_status_message(ch, None, img)
         interaction.response.send_message("✅ Ban phase complete. Final selection locked.", ephemeral=False)
         save_state()
-        
-    await update_status_message(ch, None, img)
-    asyncio.create_task(delete_later(msg, 10))    
-        
-            
+      
 @bot.tree.command(
     name="match_time",
     description="Set match date/time",
