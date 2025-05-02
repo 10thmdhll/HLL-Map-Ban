@@ -620,6 +620,8 @@ async def match_time(
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
     
+    final = False
+    
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
