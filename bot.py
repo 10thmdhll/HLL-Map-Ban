@@ -419,9 +419,8 @@ async def match_create(
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch in ongoing_bans:
-        return await interaction.followup.send("❌ Match already active.", ephemeral=True)
+        return await interaction.response.send_message("❌ Match already active.", ephemeral=True)
 
-    await interaction.response.followup.send("Creating match")
     cfg = load_teammap()
     maps = load_maplist()
     ra = cfg.get("team_regions", {}).get(team_a_name, "Unknown")
