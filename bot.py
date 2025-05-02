@@ -472,7 +472,7 @@ async def match_create(
     ),
     
     msg = await interaction.followup.send(
-        f"**Match Created**: {title}\nTeams: {a} ({ra}) vs {b} ({rb})\nMode: {mode}\n{description}",
+        f"**Match Created**: {title}\nTeams: {team_a_name} ({ra}) vs {team_b_name} ({rb})\nMode: {mode}\n{description}",
         file=discord.File(img)
     )
     save_state()
@@ -553,10 +553,24 @@ async def ban_map(
         turn_name = team_b_name
     if final == True:
         turn_name = "Final"
+    
+    flip_name = ""
+    if channel_flip[ch]=="team_a":
+        flip_name = team_a_name
+    if channel_flip[ch]=="team_b":
+        flip_name = team_b_name
         
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
-        channel_mode[ch], team_a_name if channel_flip[ch]=="team_a" else team_b_name if channel_flip[ch] else None, channel_decision[ch], turn_name, None, final
+        load_maplist(),
+        ongoing_bans[ch],
+        team_a_name,
+        team_b_name,
+        channel_mode[ch],
+        flip_name,
+        channel_decision[ch],
+        turn_name,
+        None,
+        final
     )
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
@@ -588,6 +602,7 @@ async def match_time_cmd(
         save_state()
     except Exception as e:
         return await interaction.followup.send(f"❌ Invalid datetime: {e}", ephemeral=True)
+    
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_times[ch])
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"⏱️ Match time set: {dt.strftime('%Y-%m-%d %H:%M %Z')}", ephemeral=True)
@@ -617,6 +632,7 @@ async def match_decide(
     channel_decision[ch] = choice
     match_turns[ch]      = channel_flip[ch] if choice=="ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
     save_state()
+    
     img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], choice, match_turns[ch])
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
