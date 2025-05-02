@@ -470,7 +470,7 @@ async def match_create(
     await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
     save_state()
     
-    return
+    await interaction.response.send_message("✅ Match is ready.", ephemeral=False)
 
 @bot.tree.command(
     name="ban_map",
