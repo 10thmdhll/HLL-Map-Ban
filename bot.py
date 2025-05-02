@@ -401,11 +401,6 @@ async def cleanup_match(ch: int):
     guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(
-    team_a="Role for Team A",
-    team_b="Role for Team B",
-    title="Match title",
-    description="Match description"
-)
 async def match_create(
     interaction: discord.Interaction,
     team_a: discord.Role,
@@ -440,8 +435,7 @@ async def match_create(
         match_turns[ch] = 'team_a'
     else:
         match_turns[ch] = winner_key 
-    if mode!="ExtraBan":
-        match_turns[ch] = b
+    
     
     ongoing_bans[ch]    = {m["name"]:{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
     save_state()
