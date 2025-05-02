@@ -532,13 +532,17 @@ async def ban_map(
         save_state()
     
     # Ban result image creation
-    team_names = []
-    team_names[0] = team_a_name
-    team_names[1] = team_b_name
-    
+    turn_name = ""
+    if match_turns[ch] = "team_a":
+        turn_name = team_a_name
+    if match_turns[ch] = "team_b"
+        turn_name = team_b_name
+    if final = True:
+        turn_name = "Final"
+        
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], team_names[],
-        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch], None, final
+        load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
+        channel_mode[ch], channel_flip[ch], channel_decision[ch], turn_name, None, final
     )
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
