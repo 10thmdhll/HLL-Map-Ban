@@ -497,7 +497,7 @@ async def ban_map(
         )
         await update_status_message(ch, None, final_img)
         return await interaction.response.send_message(
-            "✅ Ban phase complete. Final selection locked.", ephemeral=True
+            "✅ Ban phase complete. Final selection locked.", ephemeral=False
         )
     # Only the current team may ban
     current_key = match_turns.get(ch)
@@ -506,6 +506,7 @@ async def ban_map(
     expected_role = channel_teams[ch][0] if current_key=="team_a" else channel_teams[ch][1]
     if expected_role not in {r.name for r in interaction.user.roles}:
         return await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
+    
     # Proceed with normal ban
     await interaction.response.defer()
     tb = ongoing_bans[ch].get(map_name)
@@ -513,10 +514,12 @@ async def ban_map(
         return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
     tk = current_key
     tb[tk]["manual"].append(side)
+    
     # auto-ban opposing side
     other = "team_b" if tk=="team_a" else "team_a"
     tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
+    
     # Persist if now final
     remaining_after = [
         (m, t, s)
@@ -528,8 +531,13 @@ async def ban_map(
     if len(remaining_after) == 2 and remaining_after[0][0] == remaining_after[1][0]:
         save_state()
     
+    # Ban result image creation
+    team_names = []
+    team_names[0] = team_a_name
+    team_names[1] = team_b_name
+    
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], channel_teams[ch],
+        load_maplist(), ongoing_bans[ch], team_names[],
         channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch], None, final
     )
     await update_status_message(ch, None, img)
