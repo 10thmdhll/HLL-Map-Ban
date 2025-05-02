@@ -400,7 +400,7 @@ async def cleanup_match(ch: int):
 # ─── Slash Commands ─────────────────────────────────────────────────────────────
 @bot.tree.command(
     name="match_create",
-    description="Create a new match")
+    description="Create a new match"
 )
 @app_commands.describe(
     team_a="Role for Team A",
