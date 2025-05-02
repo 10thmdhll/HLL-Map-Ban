@@ -556,7 +556,7 @@ async def ban_map(
         return await interaction.response.send_message(
             "✅ Ban phase complete. Final selection locked.", ephemeral=False
         )
-    if final = False:    
+    if final == False:    
         img = create_ban_status_image(
             load_maplist(),
             ongoing_bans[ch],
