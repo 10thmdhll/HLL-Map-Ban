@@ -538,6 +538,13 @@ async def ban_map(
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
         
+    # If only one map remains with two sides, finalize
+    if len(remaining) == 4:
+        final = True        
+        return interaction.response.send_message(
+            "✅ Ban phase complete. Final selection locked.", ephemeral=False
+        )
+        
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
@@ -553,14 +560,7 @@ async def ban_map(
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
-        
-    # If only one map remains with two sides, finalize
-    if len(remaining) == 4:
-        final = True        
-        return await interaction.response.send_message(
-            "✅ Ban phase complete. Final selection locked.", ephemeral=False
-        )
-    
+            
 @bot.tree.command(
     name="match_time",
     description="Set match date/time",
