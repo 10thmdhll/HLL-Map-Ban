@@ -416,11 +416,14 @@ async def match_create(
     team_a_name = team_a.name
     team_b_name = team_b.name
 
-    #await interaction.response.defer()
     ch = interaction.channel_id
     if ch in ongoing_bans:
         return await interaction.response.send_message("❌ Match already active.", ephemeral=True)
 
+    ch = interaction.channel_id
+    if ch in ongoing_bans:
+        return await interaction.followup.send("❌ Match already active.", ephemeral=True)
+        
     cfg = load_teammap()
     maps = load_maplist()
     ra = cfg.get("team_regions", {}).get(team_a_name, "Unknown")
@@ -457,14 +460,22 @@ async def match_create(
         flip_name = team_a_name
     if channel_flip[ch] == "team_b":
         flip_name = team_b_name
-
-    # Send initial status image via update_status_message to enable future edits
+        
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
         channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False
     )
-    # Post and store the message for later edits
-    await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
+
+    # Send initial status image via update_status_message to enable future edits
+    await interaction.response.send_message(
+        f"🎲 Match created: {team_a_name} vs {team_b_name}",
+        file=discord.File(img)
+    )
+    # Store for future edits
+    channel_messages[ch] = (await bot.get_channel(ch).send).id if False else channel_messages.get(ch)
+    # Actually send image message separately and store its ID
+    msg = await interaction.followup.send(file=discord.File(img))
+    channel_messages[ch] = msg.id
     save_state()
     
     return
