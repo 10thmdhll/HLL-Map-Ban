@@ -446,6 +446,7 @@ async def match_create(
 
     # Send initial status image
     turn_name = ""
+    final = False
     if match_turns[ch] == "team_a":
         turn_name = team_a_name
     if match_turns[ch] == "team_b":
