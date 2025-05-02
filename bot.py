@@ -212,9 +212,12 @@ def create_ban_status_image(
 
     line1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
     line2 = f"Current Turn: {current_turn or 'TBD'}"
+    line3 = f"Match Time: {match_time_iso}"
+    
     b1w, b1h = measure(line1, hdr_font)
     b2w, b2h = measure(line2, hdr_font)
-
+    b3w, b3h = measure(line3, hdr_font)
+    
     base_sw = max(max_sw, measure("Allied",hdr_font)[0]) + pad_x*2
     ta_w, _ = measure(team_a, hdr_font)
     tb_w, _ = measure(team_b, hdr_font)
@@ -238,6 +241,7 @@ def create_ban_status_image(
     draw.rectangle([0,y,total_w,y+banner_h], fill=(220,220,255), outline="black")
     draw.text((total_w//2, y+(b1h+pad_y*2)//2), line1, font=hdr_font, anchor="mm", fill="black")
     draw.text((total_w//2, y+(b1h+pad_y*2)+(b2h+pad_y*2)//2), line2, font=hdr_font, anchor="mm", fill="black")
+    draw.text((total_w//2, y+(b1h+pad_y*2)+(b2h+pad_y*2)//2), line3, font=hdr_font, anchor="mm", fill="black")
     y += banner_h
 
     # Headers
@@ -359,7 +363,6 @@ async def map_autocomplete(
             choices.append(app_commands.Choice(name=name, value=name))
     return choices[:25]
 
-
 async def side_autocomplete(
     interaction: discord.Interaction,
     current: str
@@ -439,6 +442,7 @@ async def match_create(
     channel_flip[ch] = winner_key
     channel_decision[ch] = None
     match_turns[ch] = winner_key
+    match_times[ch] = None
     ongoing_bans[ch] = {
         m["name"]: {"team_a": {"manual": [], "auto": []}, "team_b": {"manual": [], "auto": []}}
         for m in maps
@@ -536,7 +540,7 @@ async def ban_map(
         flip_name,
         channel_decision[ch],
         turn_name,
-        None,
+        match_times[ch],
         final
     )
     
@@ -563,7 +567,7 @@ async def ban_map(
             flip_name,
             channel_decision[ch],
             turn_name,
-            None,
+            match_times[ch],
             final
         )
         
@@ -582,8 +586,8 @@ async def ban_map(
     description="Set match date/time",
     guild=discord.Object(id=1366830976369557654)
 )
-@app_commands.describe(time="ISO8601 datetime with timezone")
-async def match_time_cmd(
+@app_commands.describe(time="ISO8601 datetime with timezone -> 2025-05-21T18:00:00-04:00")
+async def match_time(
     interaction: discord.Interaction,
     time: str
 ) -> None:
@@ -595,8 +599,7 @@ async def match_time_cmd(
         return await interaction.response.send_message("❌ You’re not on a team for this match.", ephemeral=True)
     await interaction.response.defer(ephemeral=True)
     ch = interaction.channel_id
-    if ch not in ongoing_bans or not is_ban_complete(ch):
-        return await interaction.followup.send("❌ Ban phase not done.", ephemeral=True)
+
     try:
         dt = parser.isoparse(time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
         match_times[ch] = dt.isoformat()
@@ -604,7 +607,33 @@ async def match_time_cmd(
     except Exception as e:
         return await interaction.followup.send(f"❌ Invalid datetime: {e}", ephemeral=True)
     
-    img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], channel_decision[ch], match_times[ch])
+    turn_name = ""
+    if match_turns[ch] == "team_a":
+        turn_name = team_a_name
+    if match_turns[ch] == "team_b":
+        turn_name = team_b_name
+    if final == True:
+        turn_name = "Final"
+    
+    flip_name = ""
+    if channel_flip[ch]=="team_a":
+        flip_name = team_a_name
+    if channel_flip[ch]=="team_b":
+        flip_name = team_b_name
+    
+    img = create_ban_status_image(
+        load_maplist(),
+        ongoing_bans[ch],
+        team_a_name,
+        team_b_name,
+        channel_mode[ch],
+        flip_name,
+        channel_decision[ch],
+        turn_name,
+        match_times[ch],
+        final
+        )
+        
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"⏱️ Match time set: {dt.strftime('%Y-%m-%d %H:%M %Z')}", ephemeral=True)
 
@@ -657,7 +686,7 @@ async def match_decide(
             flip_name,
             channel_decision[ch],
             turn_name,
-            None,
+            match_times[ch],
             final
         )
     await update_status_message(ch, None, img)
@@ -702,6 +731,5 @@ async def on_ready():
         global_synced = await bot.tree.sync()
         print(f"➤ Global sync: {[c.name for c in global_synced]}")
     print("Bot ready.")
-
 
 bot.run(os.getenv("DISCORD_TOKEN"))
