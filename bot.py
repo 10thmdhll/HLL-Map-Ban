@@ -458,19 +458,11 @@ async def match_create(
     if channel_flip[ch] == "team_b":
         flip_name = team_b_name
 
+    # Send initial status image via update_status_message to enable future edits
     img = create_ban_status_image(
-        load_maplist(),
-        ongoing_bans[ch],
-        None,
-        None,  # ignore these, use globals inside
-        channel_mode[ch],
-        flip_name,
-        channel_decision[ch],
-        turn_name,
-        None,  # no match_time here
-        False  # final flag
+        load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
+        channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False
     )
-    
     # Post and store the message for later edits
     await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
 (
