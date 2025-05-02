@@ -460,17 +460,14 @@ async def match_create(
         flip_name = team_a_name
     if channel_flip[ch] == "team_b":
         flip_name = team_b_name
-        
+
+    # Send initial status image via update_status_message to enable future edits
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
         channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False
     )
-
-    # Store for future edits
-    channel_messages[ch] = (await bot.get_channel(ch).send).id if False else channel_messages.get(ch)
-    # Actually send image message separately and store its ID
-    msg = await interaction.followup.send(file=discord.File(img))
-    channel_messages[ch] = msg.id
+    # Post and store the message for later edits
+    await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
     save_state()
     
     return
