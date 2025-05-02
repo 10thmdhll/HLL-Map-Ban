@@ -167,7 +167,8 @@ def create_ban_status_image(
     # build banner lines, adjust if final
     if final and final_map:
         banner1 = f"{team_a} = {final_side1}   |   {team_b} = {final_side2}"
-        banner2 = "Final choice locked."  
+        banner2 = "Final choice locked."
+        banner3 = "Match Time: {match_time_iso}"
     else:
         fw = flip_winner
         if mode == "ExtraBan":
@@ -185,6 +186,7 @@ def create_ban_status_image(
                 host_field = f"Host: {fw}"
         banner1 = f"Flip Winner: {fw}   |   First Ban: {first_lbl}   |   {host_field}"
         banner2 = f"Current Turn: {current_turn or 'TBD'}"
+        banner3 = "Match Time: {match_time_iso}"
     
     # Show the team name instead of key
     current_team_name = team_a if current_turn == "team_a" else team_b if current_turn == "team_b" else "TBD"
@@ -226,12 +228,12 @@ def create_ban_status_image(
     map_w  = max(max_mw, measure("Maps",hdr_font)[0]) + pad_x*2
 
     row_h = max(max_sh, max_mh) + pad_y*2
-    h1, h2 = hdr_fs + pad_y, hdr_fs + pad_y
-    banner_h = (b1h + pad_y*2) + (b2h + pad_y*2)
+    h1, h2, h3 = hdr_fs + pad_y, hdr_fs + pad_y
+    banner_h = (b1h + pad_y*2) + (b2h + pad_y*2) + (b3h + pad_y*2)
 
-    total_w = max(side_w*4 + map_w, b1w + pad_x*2, b2w + pad_x*2)
+    total_w = max(side_w*4 + map_w, b1w + pad_x*2, b2w + pad_x*2, b3w + pad_x*2)
     map_w   = total_w - side_w*4
-    height  = banner_h + h1 + h2 + len(maps)*row_h + pad_y
+    height  = banner_h + h1 + h2 + h3 + len(maps)*row_h + pad_y
 
     img  = Image.new("RGB", (total_w, height), (240,240,240))
     draw = ImageDraw.Draw(img)
