@@ -502,18 +502,6 @@ async def ban_map(
     if expected_role not in {r.name for r in interaction.user.roles}:
         await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
     
-    # Proceed with normal ban
-    await interaction.response.defer()
-    tb = ongoing_bans[ch].get(map_name)
-    if tb is None:
-        return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
-    tk = current_key
-    tb[tk]["manual"].append(side)
-    
-    # auto-ban opposing side
-    other = "team_b" if tk=="team_a" else "team_a"
-    tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
-    match_turns[ch] = other
     
     # Persist if now final
     remaining_after = [
@@ -522,10 +510,7 @@ async def ban_map(
         for t in ("team_a","team_b")
         for s in ("Allied","Axis")
         if s not in tb2[t]["manual"] and s not in tb2[t]["auto"]
-    ]
-    if len(remaining_after) == 2 and remaining_after[0][0] == remaining_after[1][0]:
-        save_state()
-    
+    ]    
     # Ban result image creation  
     turn_name = ""
     if match_turns[ch] == "team_a":
@@ -540,14 +525,7 @@ async def ban_map(
         flip_name = team_a_name
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
-        
-    # If only one map remains with two sides, finalize
-    if len(remaining) == 4:
-        final = True        
-        interaction.response.send_message(
-            "✅ Ban phase complete. Final selection locked.", ephemeral=False
-        )
-        
+         
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
@@ -560,9 +538,31 @@ async def ban_map(
         None,
         final
     )
+    
+    if len(remain_after) >= 5:
+        # Proceed with normal ban
+        await interaction.response.defer()
+        tb = ongoing_bans[ch].get(map_name)
+        if tb is None:
+            return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
+        tk = current_key
+        tb[tk]["manual"].append(side)
+    
+        # auto-ban opposing side
+        other = "team_b" if tk=="team_a" else "team_a"
+        tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
+        match_turns[ch] = other
+        
+        msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
+    
+    if len(remaining_after) <= 4:
+        final = True
+        interaction.response.send_message("✅ Ban phase complete. Final selection locked.", ephemeral=False)
+        save_state()
+        
     await update_status_message(ch, None, img)
-    msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
-    asyncio.create_task(delete_later(msg, 10))
+    asyncio.create_task(delete_later(msg, 10))    
+        
             
 @bot.tree.command(
     name="match_time",
