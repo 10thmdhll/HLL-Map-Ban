@@ -433,12 +433,7 @@ async def match_create(
     img = create_ban_status_image(
         maps, mode, winner, None, match_turns[ch]
     )
-    msg = await interaction.followup.send(
-        f"**Match Created**: {title}
-Teams: {a} ({ra}) vs {b} ({rb})
-Mode: {mode}
-{description}",
-        file=discord.File(img)
+    msg = await interaction.followup.send(f"Match Created: {title} : Teams: {a} ({ra}) vs {b} ({rb}) Mode: {mode} {description}",      file=discord.File(img)
     )
     channel_messages[ch] = msg.id
     save_state()
