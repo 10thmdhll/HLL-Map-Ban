@@ -520,6 +520,10 @@ async def ban_map(
     ]
     if len(remaining_after) == 2 and remaining_after[0][0] == remaining_after[1][0]:
         save_state()
+    
+    a = team_a_name
+    b = team_b_name
+    channel_teams[] = (a,b)
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], *channel_teams[ch],
         channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
