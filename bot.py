@@ -538,52 +538,8 @@ async def ban_map(
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
     asyncio.create_task(delete_later(msg, 10))
 
-
-    ch = interaction.channel_id
-            # Determine remaining ban options
-    remaining = [
-        (m, t, s)
-        for m, tb in ongoing_bans.get(ch, {}).items()
-        for t in ("team_a", "team_b")
-        for s in ("Allied", "Axis")
-        if s not in tb[t]["manual"] and s not in tb[t]["auto"]
-    ]
-    # If only one map remains with exactly two sides, finalize immediately
-    if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
-        final_map = remaining[0][0]
-        final_side1 = remaining[0][2]
-        final_side2 = remaining[1][2]
-        final_img = create_ban_status_image(
-            load_maplist(), ongoing_bans[ch],
-            *channel_teams[ch], channel_mode[ch], channel_flip[ch],
-            channel_decision[ch], None,
-            final=True
-        )
-        await update_status_message(ch, None, final_img)
-        return await interaction.response.send_message(
-            f"✅ Ban phase complete. Final: {final_map} → Team 1:{final_side1} / Team 2:{final_side2}", ephemeral=False
-        )
-    # Only the current team may ban
-    current_key = match_turns.get(ch)
-    ifn tb2[t]["auto"]
-    ]
-    if len(remaining_after) == 2 and remaining_after[0][0] == remaining_after[1][0]:
-        save_state()
-    img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], *channel_teams[ch],
-        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
-    )
-    await update_status_message(ch, None, img)
-    msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
-    asyncio.create_task(delete_later(msg, 10))
-    
 @bot.tree.command(
-    name="match_time",
-    description="Set match date/time",
-    guild=discord.Object(id=1366830976369557654)
-)
-@app_commands.describe(time="ISO8601 datetime with timezone")
-async def match_time_cmd(
+    name="match_time",(
     interaction: discord.Interaction,
     time: str
 ) -> None:
