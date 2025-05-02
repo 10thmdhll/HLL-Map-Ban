@@ -437,9 +437,9 @@ async def match_create(
     
     # Channel Host
     host_name = "Middle ground rules apply"
-    if channel_host[ch] = "team_a":
+    if channel_host[ch] == "team_a":
         host_name = team_a_name
-    if channel_host[ch] = "team_b":
+    if channel_host[ch] == "team_b":
         host_name = team_b_name
 
     # Initialize state
