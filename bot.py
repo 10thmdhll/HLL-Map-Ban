@@ -418,11 +418,11 @@ async def match_create(
 
     ch = interaction.channel_id
     if ch in ongoing_bans:
-        return await interaction.response.send_message("❌ Match already active.", ephemeral=True)
+        await interaction.response.send_message("❌ Match already active.", ephemeral=True)
 
     ch = interaction.channel_id
     if ch in ongoing_bans:
-        return await interaction.followup.send("❌ Match already active.", ephemeral=True)
+        await interaction.response.send_message("❌ Match already active.", ephemeral=True)
         
     cfg = load_teammap()
     maps = load_maplist()
@@ -497,10 +497,10 @@ async def ban_map(
     # Only the current team may ban
     current_key = match_turns.get(ch)
     if not current_key:
-        return await interaction.response.send_message("❌ No match in progress.", ephemeral=True)
+        await interaction.response.send_message("❌ No match in progress.", ephemeral=True)
     expected_role = channel_teams[ch][0] if current_key=="team_a" else channel_teams[ch][1]
     if expected_role not in {r.name for r in interaction.user.roles}:
-        return await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
+        await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
     
     # Proceed with normal ban
     await interaction.response.defer()
@@ -544,7 +544,7 @@ async def ban_map(
     # If only one map remains with two sides, finalize
     if len(remaining) == 4:
         final = True        
-        return interaction.response.send_message(
+        interaction.response.send_message(
             "✅ Ban phase complete. Final selection locked.", ephemeral=False
         )
         
