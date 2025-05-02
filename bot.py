@@ -487,6 +487,7 @@ async def ban_map(
         if s not in tb[t]["manual"] and s not in tb[t]["auto"]
     ]
     # If only one map remains with two sides, finalize
+    final = False
     if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
         final_img = create_ban_status_image(
             load_maplist(), ongoing_bans[ch],
