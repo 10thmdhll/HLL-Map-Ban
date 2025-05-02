@@ -400,8 +400,7 @@ async def cleanup_match(ch: int):
 # ─── Slash Commands ─────────────────────────────────────────────────────────────
 @bot.tree.command(
     name="match_create",
-    description="Create a new match",
-    guild=discord.Object(id=1366830976369557654)
+    description="Create a new match")
 )
 @app_commands.describe(
     team_a="Role for Team A",
@@ -480,8 +479,7 @@ async def match_create(
 
 @bot.tree.command(
     name="ban_map",
-    description="Ban a map for a given side",
-    guild=discord.Object(id=1366830976369557654)
+    description="Ban a map for a given side")
 )
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
@@ -585,8 +583,7 @@ async def ban_map(
       
 @bot.tree.command(
     name="match_time",
-    description="Set match date/time",
-    guild=discord.Object(id=1366830976369557654)
+    description="Set match date/time")
 )
 @app_commands.describe(time="ISO8601 datetime with timezone 2025-05-21T18:00:00-04:00")
 async def match_time(
@@ -641,8 +638,7 @@ async def match_time(
 
 @bot.tree.command(
     name="match_decide",
-    description="Winner chooses host or first ban",
-    guild=discord.Object(id=1366830976369557654)
+    description="Winner chooses host or first ban")
 )
 async def match_decide(
     interaction: discord.Interaction,
@@ -696,8 +692,7 @@ async def match_decide(
 
 @bot.tree.command(
     name="match_delete",
-    description="Delete current match",
-    guild=discord.Object(id=1366830976369557654)
+    description="Delete current match")
 )
 async def match_delete(
     interaction: discord.Interaction
@@ -722,12 +717,6 @@ async def on_app_command_error(
 @bot.event
 async def on_ready():
     load_state()
-    guild = discord.Object(id=1366830976369557654)
-
-    # 1) Sync just that guild
-    synced = await bot.tree.sync(guild=guild)
-    print(f"➤ Guild sync: {[c.name for c in synced]}")
-
     print("Bot ready.")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
