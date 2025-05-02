@@ -413,75 +413,53 @@ async def match_create(
     # Set global team names
     team_a_name = team_a.name
     team_b_name = team_b.name
+
     await interaction.response.defer()
     ch = interaction.channel_id
     if ch in ongoing_bans:
         return await interaction.followup.send("❌ Match already active.", ephemeral=True)
 
-    cfg  = load_teammap()
+    cfg = load_teammap()
     maps = load_maplist()
-    a, b = team_a.name, team_b.name
-    ra   = cfg.get("team_regions", {}).get(a, "Unknown")
-    rb   = cfg.get("team_regions", {}).get(b, "Unknown")
+    ra = cfg.get("team_regions", {}).get(team_a_name, "Unknown")
+    rb = cfg.get("team_regions", {}).get(team_b_name, "Unknown")
     mode = determine_ban_option(ra, rb, cfg)
-    winner = random.choice(["team_a","team_b"])
+
+    # Coin flip
+    winner_key = random.choice(["team_a", "team_b"])
 
     # Initialize state
-    channel_teams[ch]   = (a, b)
-    channel_mode[ch]    = mode
-    channel_flip[ch]    = winner
-    channel_decision[ch]= None
-    match_turns[ch]     = winner
+    channel_teams[ch] = (team_a_name, team_b_name)
+    channel_mode[ch] = mode
+    channel_flip[ch] = winner_key
+    channel_decision[ch] = None
+    match_turns[ch] = winner_key
     ongoing_bans[ch] = {
         m["name"]: {"team_a": {"manual": [], "auto": []}, "team_b": {"manual": [], "auto": []}}
         for m in maps
     }
     save_state()
 
-    # Generate and send the initial status image
+    # Send initial status image
     img = create_ban_status_image(
         maps,
         ongoing_bans[ch],
-        team_a_name,
-        team_b_name,
+        None, None,
         mode,
-        channel_flip[ch],
-        None,
-        match_turns[ch]
-    )(
-        maps,
-        ongoing_bans[ch],
-        team_a_name,
-        team_b_name,
-        mode,
-        channel_flip[ch],
+        winner_key,
         None,
         match_turns[ch]
     )
     msg = await interaction.followup.send(
-    f"**Match Created**: {title}
+        f"**Match Created**: {title}
 "
-    f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
+        f"Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
 "
-    f"Mode: {mode}
+        f"Mode: {mode}
 "
-    f"{description}",
-    file=discord.File(img)
-)
-channel_messages[ch] = msg.id
-save_state()
-:{"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}} for m in maps}
-    save_state()
-
-    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, "team_a" if winner=="team_a" else "team_b", None, match_turns[ch])
-    msg = await interaction.followup.send(
-      f"**Match Created**: {title}
-      Teams: {team_a_name} ({ra}) vs {team_b_name} ({rb})
-      Mode: {mode}
-      {description}",
-      file=discord.File(img)
+        f"{description}",
+        file=discord.File(img)
     )
-
     channel_messages[ch] = msg.id
     save_state()
 
