@@ -491,7 +491,7 @@ async def ban_map(
     # If only one map remains with two sides, finalize
     final = False
 
-    print(remaining)
+    print(len(remaining))
     if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
         turn_name = ""
         if match_turns[ch] == "team_a":
