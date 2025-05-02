@@ -583,7 +583,7 @@ async def ban_map(
       
 @bot.tree.command(
     name="match_time",
-    description="Set match date/time")
+    description="Set match date/time"
 )
 @app_commands.describe(time="ISO8601 datetime with timezone 2025-05-21T18:00:00-04:00")
 async def match_time(
@@ -638,7 +638,7 @@ async def match_time(
 
 @bot.tree.command(
     name="match_decide",
-    description="Winner chooses host or first ban")
+    description="Winner chooses host or first ban"
 )
 async def match_decide(
     interaction: discord.Interaction,
