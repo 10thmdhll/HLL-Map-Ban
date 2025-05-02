@@ -615,7 +615,7 @@ async def match_time_cmd(
 )
 async def match_decide(
     interaction: discord.Interaction,
-    choice: Literal["ban","host"]
+    choice: Literal["Ban","Host"]
 ) -> None:
     await interaction.response.defer(ephemeral=True)
     ch = interaction.channel_id
@@ -631,10 +631,35 @@ async def match_decide(
         return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
         
     channel_decision[ch] = choice
-    match_turns[ch]      = channel_flip[ch] if choice=="ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
+    match_turns[ch]      = channel_flip[ch] if choice=="Ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
     save_state()
     
-    img = create_ban_status_image(load_maplist(), ongoing_bans[ch], *channel_teams[ch], channel_mode[ch], channel_flip[ch], choice, match_turns[ch])
+    turn_name = ""
+    if match_turns[ch] == "team_a":
+        turn_name = team_a_name
+    if match_turns[ch] == "team_b":
+        turn_name = team_b_name
+    if final == True:
+        turn_name = "Final"
+    
+    flip_name = ""
+    if channel_flip[ch]=="team_a":
+        flip_name = team_a_name
+    if channel_flip[ch]=="team_b":
+        flip_name = team_b_name
+    
+    img = create_ban_status_image(
+            load_maplist(),
+            ongoing_bans[ch],
+            team_a_name,
+            team_b_name,
+            channel_mode[ch],
+            flip_name,
+            channel_decision[ch],
+            turn_name,
+            None,
+            final
+        )
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
 
