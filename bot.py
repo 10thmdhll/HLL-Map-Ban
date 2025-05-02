@@ -416,7 +416,7 @@ async def match_create(
     team_a_name = team_a.name
     team_b_name = team_b.name
 
-    await interaction.response.defer()
+    #await interaction.response.defer()
     ch = interaction.channel_id
     if ch in ongoing_bans:
         return await interaction.followup.send("❌ Match already active.", ephemeral=True)
