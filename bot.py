@@ -48,6 +48,7 @@ channel_messages:  dict[int, int]                            = {}
 channel_flip:      dict[int, str]                            = {}
 channel_decision:  dict[int, Optional[str]]                  = {}
 channel_mode:      dict[int, str]                            = {}
+channel_host:      dict[int, str]                            = {}
 
 # ─── Persistence Helpers ────────────────────────────────────────────────────────
 STATE_FILE = CONFIG["state_file"]
@@ -67,6 +68,7 @@ def load_state() -> None:
     channel_flip.update({int(k):v for k,v in data.get("channel_flip",{}).items()})
     channel_decision.update({int(k):v for k,v in data.get("channel_decision",{}).items()})
     channel_mode.update({int(k):v for k,v in data.get("channel_mode",{}).items()})
+    channel_host.update({int(k):tuple(v) for k,v in data.get("channel_host",{}).items()})
 
 
 def save_state() -> None:
@@ -79,6 +81,7 @@ def save_state() -> None:
         "channel_flip":     {str(k):v for k,v in channel_flip.items()},
         "channel_decision": {str(k):v for k,v in channel_decision.items()},
         "channel_mode":     {str(k):v for k,v in channel_mode.items()},
+        "channel_host":    {str(k):list(v) for k,v in channel_host.items()},
     }
     with open(STATE_FILE, "w") as f:
         json.dump(payload, f, indent=2)
@@ -113,7 +116,8 @@ def create_ban_status_image(
     decision_choice: Optional[str],
     current_turn: Optional[str],
     match_time_iso: Optional[str] = None,
-    final: bool = False
+    final: bool = False,
+    channel_host: str
 ) -> str:
     global team_a_name, team_b_name
     # Force-override any passed‐in team names with the globals
@@ -382,7 +386,7 @@ async def side_autocomplete(
 async def cleanup_match(ch: int):
     for d in (
         ongoing_bans, match_turns, channel_teams,
-        channel_messages, channel_flip, channel_decision, channel_mode
+        channel_messages, channel_flip, channel_decision, channel_mode, channel_host
     ):
         d.pop(ch, None)
     save_state()
@@ -430,6 +434,13 @@ async def match_create(
 
     # Coin flip
     winner_key = random.choice(["team_a", "team_b"])
+    
+    # Channel Host
+    host_name = "Middle ground rules apply"
+    if channel_host[ch] = "team_a":
+        host_name = team_a_name
+    if channel_host[ch] = "team_b":
+        host_name = team_b_name
 
     # Initialize state
     channel_teams[ch] = (team_a_name, team_b_name)
@@ -438,6 +449,7 @@ async def match_create(
     channel_decision[ch] = None
     match_turns[ch] = winner_key
     match_times[ch] = None
+    channel_host[ch] = host_name
     ongoing_bans[ch] = {
         m["name"]: {"team_a": {"manual": [], "auto": []}, "team_b": {"manual": [], "auto": []}}
         for m in maps
@@ -463,7 +475,7 @@ async def match_create(
     # Send initial status image via update_status_message to enable future edits
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
-        channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False
+        channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False, channel_host[ch]
     )
     # Post and store the message for later edits
     await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
@@ -500,8 +512,7 @@ async def ban_map(
     expected_role = channel_teams[ch][0] if current_key=="team_a" else channel_teams[ch][1]
     if expected_role not in {r.name for r in interaction.user.roles}:
         await interaction.response.send_message("❌ Not your turn to ban.", ephemeral=True)
-    
-    
+      
     # Persist if now final
     remaining_after = [
         (m, t, s)
@@ -535,7 +546,8 @@ async def ban_map(
         channel_decision[ch],
         turn_name,
         match_times[ch],
-        final
+        final,
+        channel_host[ch]
     )
     
     if len(remaining_after) >= 4:
@@ -562,7 +574,8 @@ async def ban_map(
             channel_decision[ch],
             turn_name,
             match_times[ch],
-            final
+            final,
+            channel_host[ch]
         )
         
         await update_status_message(ch, None, img)
@@ -626,7 +639,8 @@ async def match_time(
         channel_decision[ch],
         turn_name,
         match_times[ch],
-        final
+        final,
+        channel_host[ch]
         )
         
     await update_status_message(ch, None, img)
@@ -647,6 +661,7 @@ async def match_decide(
         
     if channel_decision[ch] is not None:
         return await interaction.response.send_message("❌ Already decided.", ephemeral=True)
+        
     winner = channel_flip[ch]
     wl = channel_teams[ch][0] if winner=="team_a" else channel_teams[ch][1]
     
@@ -656,9 +671,11 @@ async def match_decide(
     channel_decision[ch] = choice
     
     if choice=="Ban":
-        match_turns[ch] = "team_a"
-    else:
+        channel_host[ch] = team_b_name
+    if choice=="Host":
         match_turns[ch] = "team_b"
+        channel_host[ch] = team_a_name
+        
     save_state()
     
     final = False
@@ -686,7 +703,8 @@ async def match_decide(
             channel_decision[ch],
             turn_name,
             match_times[ch],
-            final
+            final,
+            channel_host[ch]
         )
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
