@@ -502,7 +502,7 @@ async def ban_map(
     final = False
 
     print(remaining)
-    if len(remaining) == 2 and remaining[1][0] == remaining[1][0]:
+    if len(remaining) == 2 and remaining[0][0] == remaining[1][0]:
         final_img = create_ban_status_image(
             load_maplist(), ongoing_bans[ch],
             *channel_teams[ch], channel_mode[ch], channel_flip[ch],
