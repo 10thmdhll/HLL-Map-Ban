@@ -523,9 +523,9 @@ async def ban_map(
     
     a = team_a_name
     b = team_b_name
-    channel_teams[] = (a,b)
+    channel_teams_names[ch] = (a,b)
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], *channel_teams[ch],
+        load_maplist(), ongoing_bans[ch], *channel_teams_names[ch],
         channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
     )
     await update_status_message(ch, None, img)
