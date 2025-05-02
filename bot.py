@@ -107,9 +107,11 @@ def create_ban_status_image(
     maps: List[dict],
     bans: dict[str, dict[str, List[str]]],
     # these args can stay for signature compatibility, but will be ignored:
-    _team_a: str, _team_b: str,
+    _team_a: str,
+    _team_b: str,
     mode: str, flip_winner: Optional[str],
-    decision_choice: Optional[str], current_turn: Optional[str],
+    decision_choice: Optional[str],
+    current_turn: Optional[str],
     match_time_iso: Optional[str] = None,
     final: bool = False
 ) -> str:
@@ -456,7 +458,7 @@ async def match_create(
         False  # final flag
     ),
     
-    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner_key=="team_a" else b if winner_key else None, None, match_turns[ch])
+    img = create_ban_status_image(maps, ongoing_bans[ch], a, b, mode, a if winner_key=="team_a" else b if winner_key else None, None, match_turns[ch], None, False)
     msg = await interaction.followup.send(
         f"**Match Created**: {title}\nTeams: {a} ({ra}) vs {b} ({rb})\nMode: {mode}\n{description}",
         file=discord.File(img)
@@ -527,7 +529,7 @@ async def ban_map(
     
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], channel_teams[ch],
-        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch]
+        channel_mode[ch], channel_flip[ch], channel_decision[ch], match_turns[ch], None, final
     )
     await update_status_message(ch, None, img)
     msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
