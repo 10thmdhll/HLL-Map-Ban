@@ -465,10 +465,6 @@ async def match_create(
     )
     # Post and store the message for later edits
     await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
-(
-        f"**Match Created**: {title}\nTeams: {team_a_name} ({ra}) vs {team_b_name} ({rb})\nMode: {mode}\n{description}",
-        file=discord.File(img)
-    )
     save_state()
 
 @bot.tree.command(
