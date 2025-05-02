@@ -485,6 +485,7 @@ async def ban_map(
     side: str
 ) -> None:
     ch = interaction.channel_id
+    
     # Determine remaining ban options
     final = False
     remaining = [
@@ -552,6 +553,19 @@ async def ban_map(
         other = "team_b" if tk=="team_a" else "team_a"
         tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
         match_turns[ch] = other
+        
+        img = create_ban_status_image(
+            load_maplist(),
+            ongoing_bans[ch],
+            team_a_name,
+            team_b_name,
+            channel_mode[ch],
+            flip_name,
+            channel_decision[ch],
+            turn_name,
+            None,
+            final
+        )
         
         await update_status_message(ch, None, img)
         msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
