@@ -525,8 +525,10 @@ async def ban_map(
         final=False
     )
 
-    await interaction.edit_original_response(
-        file=discord.File(img),
+    await update_status_message(
+        ch,
+        channel_messages[ch],
+        discord.File(img),
         embed=embed
     )
 
@@ -613,8 +615,10 @@ async def match_time_cmd(
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
     # 7) Edit the original image message with both image + embed
-    await interaction.edit_original_response(
-        file=discord.File(img),
+    await update_status_message(
+        ch,
+        channel_messages[ch],
+        discord.File(img),
         embed=embed
     )
 
@@ -703,8 +707,10 @@ async def match_decide(
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
     # 8) Edit the original image message with both image + embed
-    await interaction.edit_original_response(
-        file=discord.File(img),
+    await update_status_message(
+        ch,
+        channel_messages[ch],
+        discord.File(img),
         embed=embed
     )
 
