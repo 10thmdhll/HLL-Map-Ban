@@ -186,7 +186,7 @@ def create_ban_status_image(
     h1 = draw.textsize(banner1, font=hdr_font)[1]
     h2 = draw.textsize(banner2, font=hdr_font)[1]
     h3 = draw.textsize(banner3, font=hdr_font)[1]
-    header_h = PADDING + h1 + LINE_SPACER + h2 + LINE_SPACER + h3 + PADDING
+    header_h = padding + h1 + line_spacer + h2 + line_spacer + h3 + padding
 
     # — Grid dimensions —
     rows = len(maps)
@@ -194,22 +194,22 @@ def create_ban_status_image(
     total_width = 900
     cell_w = total_width // cols
     row_h = 40
-    img_h = header_h + rows * row_h + PADDING
+    img_h = header_h + rows * row_h + padding
 
     # — Create canvas —
-    img = Image.new("RGBA", (total_width + PADDING*2, img_h), "white")
+    img = Image.new("RGBA", (total_width + padding*2, img_h), "white")
     draw = ImageDraw.Draw(img)
     
     # — Draw banners —
-    y = PADDING
-    draw.text((PADDING, y), banner1, font=hdr_font, fill="black")
-    y += h1 + LINE_SPACER
-    draw.text((PADDING, y), banner2, font=hdr_font, fill="black")
-    y += h2 + LINE_SPACER
-    draw.text((PADDING, y), banner3, font=hdr_font, fill="black")
+    y = padding
+    draw.text((padding, y), banner1, font=hdr_font, fill="black")
+    y += h1 + line_spacer
+    draw.text((padding, y), banner2, font=hdr_font, fill="black")
+    y += h2 + line_spacer
+    draw.text((padding, y), banner3, font=hdr_font, fill="black")
 
     # — Draw grid rows —
-    grid_x0 = PADDING
+    grid_x0 = padding
     grid_y0 = header_h
     square = "■"
     
