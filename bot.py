@@ -24,10 +24,8 @@ CONFIG = {
     "quantize_colors":  64,
     "compress_level":   9,
     "optimize_png":     True,
-    "font_hize_h":      32,
+    "font_size_h":      32,
     "font_size":        24,
-    "padding":          20,
-    "line_spacer":      10,
     "font_paths": [
         "arialbd.ttf",
         "DejaVuSans-Bold.ttf",
@@ -166,19 +164,28 @@ def create_ban_status_image(
 ) -> str:
     # — Load fonts with fallback —
     try:
-        hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["header_font_size"])
-        row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["row_font_size"])
+        hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size_h"])
+        row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size"])
     except OSError:
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
 
     # — Prepare banner lines —
-    dt = parser.isoparse(match_time_iso).astimezone(pytz.timezone(USER_TZ))
+    dt = parser.isoparse(match_time_iso).astimezone(pytz.timezone(CONFIG["user_timezone"]))
     dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    
+    ch = interaction.channel_id
+    coin_winner = channel_flip[ch]
+    host_key = channel_host[ch]
+    current_turn = match_turns[ch]
+
 
     banner1 = f"Coin Flip Winner: {coin_winner}"
-    banner2 = f"Host: {host}    |    Match: {dt_str}"
+    banner2 = f"Host: {host_key}    |    Match: {dt_str}"
     banner3 = f"Current Turn: {current_turn}"
+    
+    padding = 20
+    line_spacer = 10
     
     # — Measure banner heights —
     dummy = Image.new("RGB", (1,1))
@@ -474,9 +481,7 @@ async def ban_map(
     # channel_teams[ch] == (team_a_name, team_b_name)
     allowed_role = channel_teams[ch][0] if current_key == "team_a" else channel_teams[ch][1]
     if not any(r.name == allowed_role for r in interaction.user.roles):
-        return await interaction.response.send_message(
-            f"❌ It's not {allowed_role}'s turn to ban.", ephemeral=True
-    )
+        return await interaction.response.send_message(f"❌ It's not {allowed_role}'s turn to ban.", ephemeral=True)
     
     # 2) Pre‐compute remaining combos
     combos = remaining_combos(ch)
