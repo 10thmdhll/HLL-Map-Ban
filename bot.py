@@ -581,7 +581,7 @@ async def ban_map(
     )
 
     # Then confirm privately
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
       
 @bot.tree.command(
@@ -624,7 +624,7 @@ async def match_time_cmd(
         match_times[ch] = dt.isoformat()
         save_state()
     except Exception as e:
-        return await interaction.followup.send(
+        return msg = await interaction.followup.send(
             f"❌ Invalid datetime: {e}", 
             ephemeral=True
         )
@@ -678,7 +678,7 @@ async def match_time_cmd(
     )
 
     # Then confirm privately
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
     
 @bot.tree.command(
@@ -775,7 +775,7 @@ async def match_decide(
     )
 
     # Then confirm privately
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
 
 @bot.tree.command(
@@ -828,7 +828,7 @@ async def match_delete(interaction: discord.Interaction) -> None:
     save_state()
 
     # 6) Confirm deletion to the user
-    await interaction.followup.send(
+    msg = await interaction.followup.send(
         "✅ Match has been deleted and state cleared.", 
         ephemeral=True
     )
