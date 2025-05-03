@@ -688,7 +688,6 @@ async def match_decide(
     else:
         # host: the other team bans first
         match_turns[ch] = "team_b" if flip == "team_a" else "team_a"
-    save_state()
     # Regenerate and update image
     img = create_ban_status_image(
         load_maplist(),
