@@ -391,7 +391,6 @@ async def cleanup_match(ch: int):
 )
 async def match_create(
     interaction: discord.Interaction,
-    title:       str,
     team_a:      discord.Role,
     team_b:      discord.Role,
 ) -> None:
@@ -466,7 +465,9 @@ async def match_create(
     curr_key   = match_turns[ch]
     curr_name  = A if curr_key=="team_a" else B
 
-    embed = discord.Embed(title=f"🎲 {title}")
+    embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Team A: ",  value=team_a_name,  inline=True)
+    embed.add_field(name="Team B: ",  value=team_b_name,  inline=True)
     embed.add_field(name="Flip Winner",  value=coin_winner,  inline=True)
     embed.add_field(name="Map Host",     value=host_name,    inline=True)
     embed.add_field(name="Mode",         value=mode,         inline=True)
@@ -562,6 +563,8 @@ async def ban_map(
         current_name= A if current_key=="team_a" else B
 
         embed = discord.Embed(title="Match Status")
+        embed.add_field(name="Team A: ",  value=team_a_name,  inline=True)
+        embed.add_field(name="Team B: ",  value=team_b_name,  inline=True)
         embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
         embed.add_field(name="Map Host",      value=host_name,     inline=True)
         embed.add_field(name="Mode",          value=mode,          inline=True)
@@ -625,6 +628,8 @@ async def ban_map(
     current_name= A if current_key=="team_a" else B
 
     embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Team A: ",  value=team_a_name,  inline=True)
+    embed.add_field(name="Team B: ",  value=team_b_name,  inline=True)
     embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
     embed.add_field(name="Map Host",      value=host_name,     inline=True)
     embed.add_field(name="Mode",          value=mode,          inline=True)
@@ -723,6 +728,8 @@ async def match_time_cmd(
     current_name= A if current_key=="team_a" else B
 
     embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Team A: ",  value=team_a_name,  inline=True)
+    embed.add_field(name="Team B: ",  value=team_b_name,  inline=True)
     embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
     embed.add_field(name="Map Host",      value=host_name,     inline=True)
     embed.add_field(name="Mode",          value=mode,          inline=True)
@@ -822,6 +829,8 @@ async def match_decide(
     current_name= A if current_key=="team_a" else B
 
     embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Team A: ",  value=team_a_name,  inline=True)
+    embed.add_field(name="Team B: ",  value=team_b_name,  inline=True)
     embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
     embed.add_field(name="Map Host",      value=host_name,     inline=True)
     embed.add_field(name="Mode",          value=mode,          inline=True)
