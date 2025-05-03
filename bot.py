@@ -260,7 +260,7 @@ async def update_status_message(
         try:
             msg = await channel.fetch_message(message_id)
             file = discord.File(image_path, filename=os.path.basename(image_path))
-            await msg.edit(files=[file], embed=embed)
+            await msg.edit(attachments=[file], embed=embed)
         except Exception:
             # fallback: send a fresh message and store its ID
             new = await channel.send(file=discord.File(image_path), embed=embed)
