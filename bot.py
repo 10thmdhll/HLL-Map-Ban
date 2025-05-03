@@ -515,6 +515,32 @@ async def ban_map(
             final=True
         )
 
+        # 6) Build the status embed
+        A = team_a_name; B = team_b_name
+        coin_winner = A if channel_flip[ch]=="team_a" else B
+        host_name  = channel_host[ch]
+        mode       = channel_mode[ch]
+        # Safely format match time, skipping placeholders
+        match_time = match_times.get(ch)
+        if match_time and match_time not in ("Undecided", "TBD"):
+            try:
+                dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+                time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+            except Exception:
+                time_str = "Undecided"
+        else:
+            time_str = "Undecided"
+        current_key = match_turns.get(ch)
+        current_name= A if current_key=="team_a" else B
+
+        embed = discord.Embed(title="Match Status")
+        embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
+        embed.add_field(name="Map Host",      value=host_name,     inline=True)
+        embed.add_field(name="Mode",          value=mode,          inline=True)
+        embed.add_field(name="Match Time",    value=time_str,      inline=True)
+        embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+        embed.add_field(name="Stage",  "Map ban complete",  inline=False)
+    
         # Single acknowledge + edit
         await interaction.response.send_message(
             "✅ Ban phase complete — final map locked.",
@@ -572,6 +598,7 @@ async def ban_map(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+    embed.add_field(name="Stage",  "Map ban ongoing",  inline=False)
 
     await update_status_message(
         ch,
@@ -669,6 +696,7 @@ async def match_time_cmd(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+    embed.add_field(name="Stage",  "Map ban complete, time updated",  inline=False)
 
 
     # 7) Edit the original image message with both image + embed
@@ -767,6 +795,7 @@ async def match_decide(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+    embed.add_field(name="Stage",  "Starting",  inline=False)
 
 
     # 8) Edit the original image message with both image + embed
