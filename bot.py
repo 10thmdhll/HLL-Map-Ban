@@ -697,7 +697,7 @@ async def match_decide(
         channel_mode[ch],
         flip_name,
         choice,
-        match_turns[ch],
+        team_a_name if match_turns[ch] == "team_a" else team_b_name,
         None,
         False
     )
