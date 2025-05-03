@@ -9,7 +9,6 @@ from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
-import textwrap
 from dateutil import parser
 import pytz
 
@@ -150,8 +149,8 @@ def create_ban_status_image(
     else:
         host = host_key or "TBD"
     current = A if current_turn == "team_a" else B if current_turn == "team_b" else "TBD"
-
-    banner1 = f"Coin Flip Winner: {coin_winner}"
+    decision = decision_choice or "None"
+    banner1 = f"Coin Flip Winner: {coin_winner} | Decision: {decision}"
     banner2 = f"Host: {host}    |    Match: {dt_str}"
     banner3 = f"Current Turn: {current}"
     
@@ -172,9 +171,10 @@ def create_ban_status_image(
     # — Grid dimensions —
     rows = len(maps)
     cols = 3  # Team A, Map name, Team B
-    total_width = 900
+    total_width = CONFIG["max_inline_width"]
     cell_w = total_width // cols
-    row_h = (bbox1[3] - bbox1[1]) + padding
+    row_bbox = measure.textbbox((0,0), "Allied [ ] | Axis [ ]", font=row_font)
+    row_h    = (row_bbox[3] - row_bbox[1]) + padding
     img_h = header_h + rows * row_h + padding
 
     # — Create canvas —
@@ -195,7 +195,7 @@ def create_ban_status_image(
     square = "■"
     
     for i, m in enumerate(maps):
-        name =m["name"]
+        name = m["name"]
         y0 = grid_y0 + i * row_h
         # Team A cell
         ta = bans[name]["team_a"]
@@ -594,7 +594,7 @@ async def match_time_cmd(
         dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
         time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
     else:
-        time_str = "None"
+        time_str = "Undecided"
     current_key = match_turns.get(ch)
     current_name= A if current_key=="team_a" else B
 
@@ -607,6 +607,8 @@ async def match_time_cmd(
 
     # 7) Edit the original image message with both image + embed
     await update_status_message(ch, channel_messages[ch], img, embed)
+    await interaction.followup.send("✅ Updated.", ephemeral=True)
+
     
 @bot.tree.command(
     name="match_decide",
@@ -688,6 +690,8 @@ async def match_decide(
 
     # 8) Edit the original image message with both image + embed
     await update_status_message(ch, channel_messages[ch], img, embed)
+    await interaction.followup.send("✅ Updated.", ephemeral=True)
+
 
 @bot.tree.command(
     name="match_delete",
