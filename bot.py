@@ -255,29 +255,35 @@ def create_ban_status_image(
     return out
 
 # ─── Messaging Helper ─────────────────────────────────────────────────────────
-async def update_status_message(ch: int, content: Optional[str], img: str) -> None:
-    channel = bot.get_channel(ch)
-    if not channel:
-        return
-    file = discord.File(img)
-    msg_id = channel_messages.get(ch)
-    if msg_id:
+async def update_status_message(
+    channel_id: int,
+    message_id: Optional[int],
+    image_path: str,
+    embed: Optional[discord.Embed] = None
+) -> None:
+    """
+    Edits the existing match‐status message (if message_id is set)
+    to replace its attachment with the new image and update its embed.
+    """
+    channel = bot.get_channel(channel_id)
+    if message_id:
         try:
-            msg = await channel.fetch_message(msg_id)
-            await msg.edit(content=content, attachments=[file])
-            return
-        except discord.NotFound:
-            pass
-    msg = await channel.send(content=content, file=file)
-    channel_messages[ch] = msg.id
-    save_state()
-
-async def delete_later(msg: discord.Message, delay: float) -> None:
-    await asyncio.sleep(delay)
-    try:
-        await msg.delete()
-    except:
-        pass
+            msg = await channel.fetch_message(message_id)
+            file = discord.File(image_path, filename=os.path.basename(image_path))
+            kwargs = {"attachments": [file]}
+            if embed:
+                kwargs["embed"] = embed
+            await msg.edit(**kwargs)
+        except Exception:
+            # fallback: send a fresh message and store its ID
+            new = await channel.send(file=discord.File(image_path), embed=embed)
+            channel_messages[channel_id] = new.id
+            save_state()
+    else:
+        # no existing message → send new
+        new = await channel.send(file=discord.File(image_path), embed=embed)
+        channel_messages[channel_id] = new.id
+        save_state()
 
 # ─── Bot Setup ─────────────────────────────────────────────────────────────────
 load_dotenv()
@@ -408,6 +414,35 @@ async def match_create(
     channel_messages[ch] = msg_id
     save_state()
     
+    # 1) Build the status embed
+    A = team_a_name; B = team_b_name
+    coin_winner = A if channel_flip[ch]=="team_a" else B
+    host_key   = channel_host.get(ch)
+    host_name  = A if host_key=="team_a" else B
+    mode       = channel_mode[ch]
+    match_time = match_times.get(ch)
+    if match_time:
+        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    else:
+        time_str = "None"
+    current_key = match_turns.get(ch)
+    current_name= A if current_key=="team_a" else B
+
+    embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
+    embed.add_field(name="Map Host",      value=host_name,     inline=True)
+    embed.add_field(name="Mode",          value=mode,          inline=True)
+    embed.add_field(name="Match Time",    value=time_str,      inline=True)
+    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+
+    # 2) Edit the original image message with both image + embed
+    await interaction.response.defer()
+    await update_status_message(ch, None, img, embed)
+
+    # 3) Confirm
+    await interaction.followup.send("✅ Match Created.", ephemeral=True)
+    
 
 @bot.tree.command(
     name="ban_map",
@@ -491,6 +526,35 @@ async def ban_map(
     # Edit original message and confirm
     await update_status_message(ch, None, img)
     await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    
+    # 1) Build the status embed
+    A = team_a_name; B = team_b_name
+    coin_winner = A if channel_flip[ch]=="team_a" else B
+    host_key   = channel_host.get(ch)
+    host_name  = A if host_key=="team_a" else B
+    mode       = channel_mode[ch]
+    match_time = match_times.get(ch)
+    if match_time:
+        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    else:
+        time_str = "None"
+    current_key = match_turns.get(ch)
+    current_name= A if current_key=="team_a" else B
+
+    embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
+    embed.add_field(name="Map Host",      value=host_name,     inline=True)
+    embed.add_field(name="Mode",          value=mode,          inline=True)
+    embed.add_field(name="Match Time",    value=time_str,      inline=True)
+    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+
+    # 2) Edit the original image message with both image + embed
+    await interaction.response.defer()
+    await update_status_message(ch, None, img, embed)
+
+    # 3) Confirm
+    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
       
 @bot.tree.command(
     name="match_time",
@@ -556,6 +620,34 @@ async def match_time_cmd(
         ephemeral=True
     )
     
+    # 1) Build the status embed
+    A = team_a_name; B = team_b_name
+    coin_winner = A if channel_flip[ch]=="team_a" else B
+    host_key   = channel_host.get(ch)
+    host_name  = A if host_key=="team_a" else B
+    mode       = channel_mode[ch]
+    match_time = match_times.get(ch)
+    if match_time:
+        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    else:
+        time_str = "None"
+    current_key = match_turns.get(ch)
+    current_name= A if current_key=="team_a" else B
+
+    embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
+    embed.add_field(name="Map Host",      value=host_name,     inline=True)
+    embed.add_field(name="Mode",          value=mode,          inline=True)
+    embed.add_field(name="Match Time",    value=time_str,      inline=True)
+    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+
+    # 2) Edit the original image message with both image + embed
+    await interaction.response.defer()
+    await update_status_message(ch, None, img, embed)
+
+    # 3) Confirm
+    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
 @bot.tree.command(
     name="match_decide",
     description="Choose whether the flip-winner bans first or hosts first",
@@ -620,6 +712,36 @@ async def match_decide(
         "✅ Decision recorded; turn order updated.", 
         ephemeral=True
     )
+    
+    # 1) Build the status embed
+    A = team_a_name; B = team_b_name
+    coin_winner = A if channel_flip[ch]=="team_a" else B
+    host_key   = channel_host.get(ch)
+    host_name  = A if host_key=="team_a" else B
+    mode       = channel_mode[ch]
+    match_time = match_times.get(ch)
+    if match_time:
+        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    else:
+        time_str = "None"
+    current_key = match_turns.get(ch)
+    current_name= A if current_key=="team_a" else B
+
+    embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
+    embed.add_field(name="Map Host",      value=host_name,     inline=True)
+    embed.add_field(name="Mode",          value=mode,          inline=True)
+    embed.add_field(name="Match Time",    value=time_str,      inline=True)
+    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+
+    # 2) Edit the original image message with both image + embed
+    await interaction.response.defer()
+    await update_status_message(ch, None, img, embed)
+
+    # 3) Confirm
+    await interaction.followup.send("✅ Decision recorded.", ephemeral=True)
+
 
 @bot.tree.command(
     name="match_delete",
