@@ -174,12 +174,6 @@ def create_ban_status_image(
     dt = parser.isoparse(match_time_iso).astimezone(pytz.timezone(CONFIG["user_timezone"]))
     dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
     
-    ch = interaction.channel_id
-    coin_winner = channel_flip[ch]
-    host_key = channel_host[ch]
-    current_turn = match_turns[ch]
-
-
     banner1 = f"Coin Flip Winner: {coin_winner}"
     banner2 = f"Host: {host_key}    |    Match: {dt_str}"
     banner3 = f"Current Turn: {current_turn}"
