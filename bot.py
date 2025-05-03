@@ -618,6 +618,11 @@ async def match_time(
     except Exception as e:
         return await interaction.followup.send(f"❌ Invalid datetime: {e}", ephemeral=True)
     
+    display_time = dt.strftime("%Y-%m-%d %H:%M %Z")
+    embed = discord.Embed(title="Match Scheduled")
+    embed.add_field(name="Match Time", value=display_time, inline=False)
+    await interaction.followup.send(embed=embed)
+    
     final = False
     
     turn_name = ""
@@ -649,7 +654,7 @@ async def match_time(
         flip_name,
         channel_decision[ch],
         turn_name,
-        match_times[ch],
+        display_time,
         final,
         host_name
         )
