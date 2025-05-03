@@ -583,6 +583,7 @@ async def ban_map(
     # Then confirm privately
     msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
+    return
       
 @bot.tree.command(
     name="match_time",
@@ -624,11 +625,12 @@ async def match_time_cmd(
         match_times[ch] = dt.isoformat()
         save_state()
     except Exception as e:
-        return msg = await interaction.followup.send(
+        msg = await interaction.followup.send(
             f"❌ Invalid datetime: {e}", 
             ephemeral=True
         )
         asyncio.create_task(delete_later(msg, 5.0))
+        return
         
     # 5) Rebuild the image (now with the new time included)
     img = create_ban_status_image(
@@ -680,6 +682,7 @@ async def match_time_cmd(
     # Then confirm privately
     msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
+    return
     
 @bot.tree.command(
     name="match_decide",
@@ -777,6 +780,7 @@ async def match_decide(
     # Then confirm privately
     msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
+    return
 
 @bot.tree.command(
     name="match_delete",
@@ -833,6 +837,7 @@ async def match_delete(interaction: discord.Interaction) -> None:
         ephemeral=True
     )
     asyncio.create_task(delete_later(msg, 5.0))
+    return
 
 @bot.tree.error
 async def on_app_command_error(
