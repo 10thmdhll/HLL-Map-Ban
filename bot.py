@@ -39,9 +39,7 @@ CONFIG = {
 # Global team names for current match
 team_a_name: Optional[str] = None
 team_b_name: Optional[str] = None
-final: Optional[bool] = False
 
-going  = {}
 ongoing_bans:      dict[int, dict[str, dict[str, List[str]]]] = {}
 match_turns:       dict[int, str]                            = {}
 match_times:       dict[int, str]                            = {}
@@ -70,7 +68,7 @@ def load_state() -> None:
     channel_flip.update({int(k):v for k,v in data.get("channel_flip",{}).items()})
     channel_decision.update({int(k):v for k,v in data.get("channel_decision",{}).items()})
     channel_mode.update({int(k):v for k,v in data.get("channel_mode",{}).items()})
-    channel_host.update({int(k):tuple(v) for k,v in data.get("channel_host",{}).items()})
+    channel_host.update({int(k): v for k,v in data.get("channel_host",{}).items()})
 
 
 def save_state() -> None:
@@ -83,7 +81,7 @@ def save_state() -> None:
         "channel_flip":     {str(k):v for k,v in channel_flip.items()},
         "channel_decision": {str(k):v for k,v in channel_decision.items()},
         "channel_mode":     {str(k):v for k,v in channel_mode.items()},
-        "channel_host":    {str(k):list(v) for k,v in channel_host.items()},
+        "channel_host": { str(k): v for k,v in channel_host.items() }
     }
     with open(STATE_FILE, "w") as f:
         json.dump(payload, f, indent=2)
@@ -135,7 +133,7 @@ def build_banners(
             pass
 
     return banner1, banner2
-    
+
 def remaining_combos(ch: int) -> List[Tuple[str,str,str]]:
     combos = []
     for m, tb in ongoing_bans.get(ch, {}).items():
@@ -146,7 +144,8 @@ def remaining_combos(ch: int) -> List[Tuple[str,str,str]]:
     return combos
 
 def is_ban_complete(ch: int) -> bool:
-    return len(remaining_combos) == 2 and combos[0][0] == combos[1][0]
+    combos = remaining_combos(ch)
+    return len(combos) == 2 and combos[0][0] == combos[1][0]
 
 async def respond_and_edit(interaction, img_path: str):
     """Sends the initial message and saves message_id."""
@@ -154,13 +153,6 @@ async def respond_and_edit(interaction, img_path: str):
     msg = await interaction.original_response()
     return msg.id
 
-async def defer_and_followup(interaction, img_path: str, confirm: str = None):
-    """Defers, edits the stored message, and optionally sends a confirmation."""
-    await interaction.response.defer()
-    await update_status_message(interaction.channel_id, None, img_path)
-    if confirm:
-        await interaction.followup.send(confirm, ephemeral=True)
-        
 def create_ban_status_image(
     maps,
     bans,
@@ -180,34 +172,18 @@ def create_ban_status_image(
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
 
-    # — Build header lines —
-    A = team_a_name or "Team A"
-    B = team_b_name or "Team B"
-    coin_winner = A if flip_winner == "team_a" else B if flip_winner == "team_b" else "TBD"
-    host_name   = A if host_key    == "team_a" else B if host_key == "team_b" else "TBD"
-
-    line1 = f"Flip: {coin_winner}   |   Host: {host_name}   |   Mode: {mode}"
-
-    if match_time_iso:
-        try:
-            dt = parser.isoparse(match_time_iso)
-            local = dt.astimezone(pytz.timezone(CONFIG["user_timezone"]))
-            time_str = local.strftime("%Y-%m-%d %H:%M %Z")
-        except Exception:
-            time_str = "Invalid"
-    else:
-        time_str = "TBD"
-
-    current_name = A if current_turn == "team_a" else B if current_turn == "team_b" else "Unknown"
-    line2 = f"Match Time: {time_str}   |   Current Turn: {current_name}"
-
+    # - Build Banners -
+    banner1, banner2 = build_banners(
+        mode, flip_winner, decision_choice, current_turn, match_time_iso, final
+    )
+    
     # — Measure header —  
     pad = 20
     tmp = Image.new("RGBA", (1,1))
     meas = ImageDraw.Draw(tmp)
-    x0,y0,x1,y1 = meas.textbbox((0,0), line1, font=hdr_font)
+    x0,y0,x1,y1 = meas.textbbox((0,0), banner1, font=hdr_font)
     h1 = y1 - y0
-    x0,y0,x1,y1 = meas.textbbox((0,0), line2, font=hdr_font)
+    x0,y0,x1,y1 = meas.textbbox((0,0), banner2, font=hdr_font)
     h2 = y1 - y0
     header_h = h1 + h2 + pad * 2
 
@@ -235,10 +211,10 @@ def create_ban_status_image(
 
     img = Image.new("RGBA", (img_w, img_h), "white")
     draw = ImageDraw.Draw(img)
-
+    
     # — Draw headers —
-    draw.text((pad, pad), line1, font=hdr_font, anchor="mm", fill="black")
-    draw.text((pad, pad + h1), line2, font=hdr_font, anchor="mm", fill="black")
+    draw.text((pad, pad), banner1, font=hdr_font, fill="black")
+    draw.text((pad, pad + h1), banner2, font=hdr_font, fill="black")
 
     # — Draw grid —
     for i, m in enumerate(maps):
@@ -258,7 +234,7 @@ def create_ban_status_image(
                 elif manual:
                     bg = "red"
                 elif auto:
-                    bg = "organge"
+                    bg = "orange"
                 else:
                     bg = "white"
 
@@ -269,7 +245,7 @@ def create_ban_status_image(
                 tw, th = bx1 - bx0, by1 - by0
                 tx = x0 + ((cell_w - 2*pad) - tw) / 2
                 ty = y0 + ((cell_h - 2*pad) - th) / 2
-                draw.multiline_text((tx, ty), wrapped, font=row_font,anchor="mm", fill="black")
+                draw.multiline_text((tx, ty), wrapped, font=row_font, fill="black")
 
     # — Save and return —
     out_path = os.path.join(os.getcwd(), CONFIG["output_image"])
@@ -292,10 +268,7 @@ async def update_status_message(
         try:
             msg = await channel.fetch_message(message_id)
             file = discord.File(image_path, filename=os.path.basename(image_path))
-            kwargs = {"attachments": [file]}
-            if embed:
-                kwargs["embed"] = embed
-            await msg.edit(**kwargs)
+            await msg.edit(files=[file], embed=embed)
         except Exception:
             # fallback: send a fresh message and store its ID
             new = await channel.send(file=discord.File(image_path), embed=embed)
@@ -413,18 +386,27 @@ async def match_create(
     mode_cfg = load_teammap()
     ra = mode_cfg.get("team_regions", {}).get(team_a.name, "Unknown")
     rb = mode_cfg.get("team_regions", {}).get(team_b.name, "Unknown")
-    mode = determine_ban_option(ra, rb, cfg)
+    mode = determine_ban_option(ra, rb, mode_cfg)
     
     # Determine coin flip winner
     flip = random.choice(("team_a","team_b"))
     
+    # Determine channel host
+    chost = ""
+    if mode == "DetermineHost":
+        chost = "DetermineHost"
+    elif mode == "ExtraBan":
+        chost = "Middle Ground Rule"
+    else:
+        chost = "TBD"
+
     channel_teams[ch]    = (team_a.name, team_b.name)
     channel_mode[ch]     = mode
     channel_flip[ch]     = flip
     channel_decision[ch] = None
     match_turns[ch]      = flip
     match_times[ch]      = "TBD"
-    channel_host[ch]     = "Middle Ground Rule" if mode == "ExtraBan" if mode == "DetermineHost" else "TBD"
+    channel_host[ch]     = chost
     ongoing_bans[ch]     = {
         m["name"]: {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}}
         for m in load_maplist()
@@ -432,14 +414,14 @@ async def match_create(
     save_state()
 
     # Build the image and embed
-    img_path = create_ban_status_image(
-        load_maplist(),
-        ongoing_bans[ch],
-        channel_mode[ch],
-        channel_flip[ch],
-        channel_host.get(ch),
-        channel_decision.get(ch),
-        match_turns[ch],
+    img = create_ban_status_image(
+        maps=load_maplist(),
+        bans=ongoing_bans[ch],
+        mode=channel_mode[ch],
+        flip_winner=channel_flip[ch],
+        host_key=channel_host[ch],
+        decision_choice=channel_decision[ch],
+        current_turn=match_turns[ch],
         match_time_iso=match_times.get(ch),
         final=False
     )
@@ -448,7 +430,7 @@ async def match_create(
     A, B = team_a_name, team_b_name
     coin_winner = A if flip=="team_a" else B
     host_key   = channel_host.get(ch)
-    host_name  = A if host_key=="team_a" else B
+    host_name  = channel_host[ch]
     tm_iso     = match_times.get(ch)
     tm_str     = (
         parser.isoparse(tm_iso)
@@ -460,8 +442,6 @@ async def match_create(
     curr_name  = A if curr_key=="team_a" else B
 
     embed = discord.Embed(title=f"🎲 {title}")
-    if description:
-        embed.description = description
     embed.add_field(name="Flip Winner",  value=coin_winner,  inline=True)
     embed.add_field(name="Map Host",     value=host_name,    inline=True)
     embed.add_field(name="Mode",         value=mode,         inline=True)
@@ -470,7 +450,7 @@ async def match_create(
 
     # **One** response: send image + embed, capture message ID
     await interaction.response.send_message(
-        file=discord.File(img_path),
+        file=discord.File(img),
         embed=embed
     )
     msg = await interaction.original_response()
@@ -497,7 +477,7 @@ async def ban_map(
 ) -> None:
     ch = interaction.channel_id
 
-    # 1) Turn check omitted for brevity…
+    # 1) Turn check
     if ch not in match_turns:
         return await interaction.response.send_message(
             "❌ No active match in this channel.", ephemeral=True
@@ -516,16 +496,24 @@ async def ban_map(
 
     if final_combo:
         # --- FINAL BRANCH: lock in and send in one shot ---
-        # record the manual + auto ban as you do now…
-        # regenerate state…
+        tb = ongoing_bans.setdefault(ch, {})
+        tb.setdefault(map_name, {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
+        tk = match_turns[ch]
+        tb[map_name][tk]["manual"].append(side)
+        other = "team_b" if tk=="team_a" else "team_a"
+        tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
+        #match_turns[ch] = other
+        save_state()
+
 
         img = create_ban_status_image(
-            load_maplist(),
-            ongoing_bans[ch],
-            channel_mode[ch],
-            channel_flip[ch],
-            channel_decision.get(ch),
-            match_turns[ch],
+            maps=load_maplist(),
+            bans=ongoing_bans[ch],
+            mode=channel_mode[ch],
+            flip_winner=channel_flip[ch],
+            host_key=channel_host[ch],
+            decision_choice=channel_decision[ch],
+            current_turn=match_turns[ch],
             match_time_iso=match_times.get(ch),
             final=True
         )
@@ -535,7 +523,7 @@ async def ban_map(
             "✅ Ban phase complete — final map locked.",
             ephemeral=True
         )
-        await update_status_message(ch, None, img)
+        await update_status_message(ch, channel_messages[ch], img)
         return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
@@ -552,17 +540,18 @@ async def ban_map(
     save_state()
 
     img = create_ban_status_image(
-        load_maplist(),
-        ongoing_bans[ch],
-        channel_mode[ch],
-        channel_flip[ch],
-        channel_decision.get(ch),
-        match_turns[ch],
+        maps=load_maplist(),
+        bans=ongoing_bans[ch],
+        mode=channel_mode[ch],
+        flip_winner=channel_flip[ch],
+        host_key=channel_host[ch],
+        decision_choice=channel_decision[ch],
+        current_turn=match_turns[ch],
         match_time_iso=match_times.get(ch),
         final=False
     )
 
-    await update_status_message(ch, None, img)
+    await update_status_message(ch, channel_messages[ch], img)
     await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
       
 @bot.tree.command(
@@ -610,30 +599,21 @@ async def match_time_cmd(
 
     # 5) Rebuild the image (now with the new time included)
     img = create_ban_status_image(
-        load_maplist(),
-        ongoing_bans[ch],
-        channel_mode[ch],
-        channel_flip[ch],
-        channel_decision.get(ch),
-        match_turns[ch],
-        match_time_iso=match_times[ch],
+        maps=load_maplist(),
+        bans=ongoing_bans[ch],
+        mode=channel_mode[ch],
+        flip_winner=channel_flip[ch],
+        host_key=channel_host[ch],
+        decision_choice=channel_decision[ch],
+        current_turn=match_turns[ch],
+        match_time_iso=match_times.get(ch),
         final=False
     )
 
-    # 6) Edit the original match image
-    await update_status_message(ch, None, img)
-
-    # 7) Confirm to the user
-    await interaction.followup.send(
-        "✅ Match time updated on the image.", 
-        ephemeral=True
-    )
-    
-    # 1) Build the status embed
+    # 6) Build the status embed
     A = team_a_name; B = team_b_name
     coin_winner = A if channel_flip[ch]=="team_a" else B
-    host_key   = channel_host.get(ch)
-    host_name  = A if host_key=="team_a" else B
+    host_name  = channel_host[ch]
     mode       = channel_mode[ch]
     match_time = match_times.get(ch)
     if match_time:
@@ -651,12 +631,9 @@ async def match_time_cmd(
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
-    # 2) Edit the original image message with both image + embed
-    await interaction.response.defer()
-    await update_status_message(ch, None, img, embed)
-
-    # 3) Confirm
-    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    # 7) Edit the original image message with both image + embed
+    await update_status_message(ch, channel_messages[ch], img, embed)
+    
 @bot.tree.command(
     name="match_decide",
     description="Choose whether the flip-winner bans first or hosts first if no Middle Ground Rule",
@@ -703,27 +680,22 @@ async def match_decide(
 
     # 6) Rebuild the updated status image
     img = create_ban_status_image(
-        load_maplist(),
-        ongoing_bans[ch],
-        channel_mode[ch],
-        channel_flip[ch],
-        channel_decision.get(ch),
-        match_turns[ch],
+        maps=load_maplist(),
+        bans=ongoing_bans[ch],
+        mode=channel_mode[ch],
+        flip_winner=channel_flip[ch],
+        host_key=channel_host[ch],
+        decision_choice=channel_decision[ch],
+        current_turn=match_turns[ch],
         match_time_iso=match_times.get(ch),
         final=False
     )
 
-    # 7) Edit the original match message
-    await update_status_message(ch, None, img)
-
-    # 8) Confirm to the user
-    await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
-    
-    # 1) Build the status embed
+    # 7) Build the status embed
     A = team_a_name; B = team_b_name
     coin_winner = A if channel_flip[ch]=="team_a" else B
     host_key   = channel_host.get(ch)
-    host_name  = A if host_key=="team_a" else B
+    host_name  = channel_host[ch]
     mode       = channel_mode[ch]
     match_time = match_times.get(ch)
     if match_time:
@@ -741,13 +713,8 @@ async def match_decide(
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
-    # 2) Edit the original image message with both image + embed
-    await interaction.response.defer()
-    await update_status_message(ch, None, img, embed)
-
-    # 3) Confirm
-    await interaction.followup.send("✅ Decision recorded.", ephemeral=True)
-
+    # 8) Edit the original image message with both image + embed
+    await update_status_message(ch, channel_messages[ch], img, embed)
 
 @bot.tree.command(
     name="match_delete",
@@ -792,7 +759,8 @@ async def match_delete(interaction: discord.Interaction) -> None:
         channel_messages,
         channel_flip,
         channel_decision,
-        channel_mode
+        channel_mode,
+        channel_host
     ):
         state_dict.pop(ch, None)
     save_state()
