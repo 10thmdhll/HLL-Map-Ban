@@ -693,7 +693,7 @@ async def match_decide(
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
-        None, None,
+        team_a_name, team_b_name,
         channel_mode[ch],
         channel_flip[ch],
         choice,
