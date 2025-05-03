@@ -686,7 +686,9 @@ async def match_decide(
         
     channel_decision[ch] = choice
     
-    other = "team_b" if channel_flip[ch] == "team_a" else "team_a"
+    other = "team_a"
+    if winner=="team_a"
+        other = "team_b"
     
     if choice == "Host":
         channel_host[ch] = channel_flip[ch]  # flip_winner is host
