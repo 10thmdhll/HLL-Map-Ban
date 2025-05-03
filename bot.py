@@ -198,7 +198,7 @@ def create_ban_status_image(
     cell_w = total_width // cols
     row_bbox = measure.textbbox((0,0), "Allied [ ] | Axis [ ]", font=row_font)
     row_h    = (row_bbox[3] - row_bbox[1]) + padding
-    img_h = header_h + rows * row_h + padding
+    img_h = header_h + (rows + 1) * row_h + padding
 
     # — Create canvas —
     img = Image.new("RGBA", (total_width + padding*2, img_h), "white")
