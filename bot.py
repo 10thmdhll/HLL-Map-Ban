@@ -524,11 +524,18 @@ async def ban_map(
         match_time_iso=match_times.get(ch),
         final=False
     )
-
+    
+    embed = discord.Embed(title="Match Status")
+    embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
+    embed.add_field(name="Map Host",      value=host_name,     inline=True)
+    embed.add_field(name="Mode",          value=mode,          inline=True)
+    embed.add_field(name="Match Time",    value=time_str,      inline=True)
+    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+    
     await update_status_message(
         ch,
         channel_messages[ch],
-        discord.File(img),
+        img,
         embed=embed
     )
 
@@ -618,7 +625,7 @@ async def match_time_cmd(
     await update_status_message(
         ch,
         channel_messages[ch],
-        discord.File(img),
+        img,
         embed=embed
     )
 
@@ -710,7 +717,7 @@ async def match_decide(
     await update_status_message(
         ch,
         channel_messages[ch],
-        discord.File(img),
+        img,
         embed=embed
     )
 
