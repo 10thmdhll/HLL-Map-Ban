@@ -686,13 +686,15 @@ async def match_decide(
         
     channel_decision[ch] = choice
     
+    other = "team_b" if channel_flip[ch] == "team_a" else "team_a"
+    
     if choice == "Host":
         channel_host[ch] = channel_flip[ch]  # flip_winner is host
-        match_turns[ch] = "team_a" if channel_flip[ch]=="team_a" else "team_b"
+        match_turns[ch] = other
         
     if choice == "Ban":
-        channel_host[ch] = "team_b" if channel_flip[ch]=="team_b" else "team_a"
-        match_turns[ch] = "team_a" if channel_flip[ch]=="team_a" else "team_b"
+        channel_host[ch] = other
+        match_turns[ch] = channel_flip[ch]
     
     host_name = "Middle ground rules apply"
     if channel_host[ch] == "team_a":
