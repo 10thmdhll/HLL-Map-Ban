@@ -371,16 +371,16 @@ async def cleanup_match(ch: int):
 )
 async def match_create(
     interaction: discord.Interaction,
-    team_a:      discord.Role,
-    team_b:      discord.Role,
-    mode:        Literal["ExtraBan", "Standard"],
+    title: str,
+    team_a: discord.Role,
+    team_b: discord.Role,
+    mode: Literal["ExtraBan","Standard"],
     description: Optional[str] = None
 ) -> None:
-    # 1) Set global display names
     global team_a_name, team_b_name
     team_a_name, team_b_name = team_a.name, team_b.name
 
-    # 2) Initialize in‐memory state
+    # Initialize state...
     load_state()
     ch = interaction.channel_id
     channel_teams[ch]      = (team_a.name, team_b.name)
@@ -398,7 +398,7 @@ async def match_create(
     save_state()
 
     # 3) Generate the initial status image
-    img = create_ban_status_image(
+    img_path = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
         channel_mode[ch],
@@ -409,24 +409,17 @@ async def match_create(
         final=False
     )
 
-    # 4) Send & cache the message ID
-    msg_id = await respond_and_edit(interaction, img)
-    channel_messages[ch] = msg_id
-    save_state()
-    
-    # 1) Build the status embed
-    A = team_a_name; B = team_b_name
+    # Build the embed with all five fields
+    A, B = team_a_name, team_b_name
     coin_winner = A if channel_flip[ch]=="team_a" else B
     host_key   = channel_host.get(ch)
     host_name  = A if host_key=="team_a" else B
-    mode       = channel_mode[ch]
-    match_time = match_times.get(ch)
-    if match_time:
-        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
-        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
-    else:
-        time_str = "None"
-    current_key = match_turns.get(ch)
+    time_iso   = match_times.get(ch)
+    time_str   = (parser.isoparse(time_iso).astimezone(
+                    pytz.timezone(CONFIG["user_timezone"])
+                 ).strftime("%Y-%m-%d %H:%M %Z")
+                  if time_iso else "None")
+    current_key = match_turns[ch]
     current_name= A if current_key=="team_a" else B
 
     embed = discord.Embed(title="Match Status")
@@ -436,12 +429,17 @@ async def match_create(
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
-    # 2) Edit the original image message with both image + embed
-    await interaction.response.defer()
-    await update_status_message(ch, None, img, embed)
+    # **ONE** initial response: image + embed
+    await interaction.response.send_message(
+        content=f"🎲 **{title}**\n{description or ''}",
+        file=discord.File(img_path),
+        embed=embed
+    )
 
-    # 3) Confirm
-    await interaction.followup.send("✅ Match Created.", ephemeral=True)
+    # Capture that message’s ID for future edits
+    msg = await interaction.original_response()
+    channel_messages[ch] = msg.id
+    save_state()
     
 
 @bot.tree.command(
