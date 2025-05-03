@@ -690,6 +690,8 @@ async def match_decide(
     # If flip winner chooses to ban, they go first; if choose host, other goes first
     if choice == "ban":
         match_turns[ch] = flip_key
+        next_turn = "team_b" if current == "team_a" else "team_a"
+        match_turns[ch] = next_turn
     else:
         # host choice: other team bans first
         match_turns[ch] = "team_b" if flip_key == "team_a" else "team_a"
