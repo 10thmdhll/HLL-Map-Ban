@@ -23,8 +23,8 @@ CONFIG = {
     "quantize_colors":  64,
     "compress_level":   9,
     "optimize_png":     True,
-    "font_size_h":      48,
-    "font_size":        36,
+    "font_size_h":      72,
+    "font_size":        64,
     "font_paths": [
         "arialbd.ttf",
         "DejaVuSans-Bold.ttf",
