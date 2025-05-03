@@ -166,91 +166,90 @@ def create_ban_status_image(
     bans: Dict[str, Dict[str, List[str]]],
     mode: str,
     flip_winner: Optional[str],
-    decision_choice: Optional[str],
-    current_turn: Optional[str],
+    decision: Optional[str],
+    current: Optional[str],
     match_time_iso: Optional[str] = None,
     final: bool = False
 ) -> str:
-    """
-    Generates a PNG showing the ban grid and header banners.
-    Returns the absolute path to the saved image.
-    """
-    # Build banner lines
-    banner1, banner2 = build_banners(
-        mode, flip_winner, decision_choice, current_turn, match_time_iso, final
-    )
-
-    # Load fonts
+    """Generate a 3-column banner+grid image matching your example."""
+    # — Fonts & fallback —
     try:
         hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["header_font_size"])
         row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["row_font_size"])
     except OSError:
-        # Fallback to PIL's built-in font if your TTF isn't available
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
-        
-    # --- Measure text sizes using textbbox on a temporary draw ---
-    pad = 20
-    temp_img = Image.new("RGBA", (1,1))
-    meas = ImageDraw.Draw(temp_img)
-    # getbbox returns (x0, y0, x1, y1)
-    x0, y0, x1, y1 = meas.textbbox((0,0), banner1, font=hdr_font)
-    w1, h1 = x1 - x0, y1 - y0
-    x0, y0, x1, y1 = meas.textbbox((0,0), banner2, font=hdr_font)
-    w2, h2 = x1 - x0, y1 - y0
-    
-    # Compute overall image size
-    header_height = h1 + h2 + pad * 2
-    cols = len(maps)
-    rows = 2  # Allied, Axis
-    cell_w = max(200, CONFIG["max_inline_width"] // max(cols, 1))
-    cell_h = CONFIG["row_font_size"] * 2
 
-    # Now that header_height, cell_w and cell_h are known, define img_w/img_h
-    img_w = cols * cell_w
-    img_h = header_height + rows * cell_h
+    # — Build the two header lines —
+    # (You can replace with your build_banners helper if you like.)
+    tA, tB = team_a_name or "Team A", team_b_name or "Team B"
+    line1 = f"{tA}    Maps    {tB}"
+    if match_time_iso:
+        dt = parser.isoparse(match_time_iso).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+        line0 = f"{line1}    |    Time: {time_str}"
+    else:
+        line0 = line1
 
-    # Create the actual canvas and draw object
-    img = Image.new("RGBA", (img_w, img_h), "white")
+    # — Measure text via a temp draw —
+    tmp = Image.new("RGB", (1,1))
+    meas = ImageDraw.Draw(tmp)
+    x0,y0,x1,y1 = meas.textbbox((0,0), line0, font=hdr_font)
+    header_h = (y1-y0) * 2 + 20  # two lines + padding
+
+    # — Grid dimensions —
+    n = len(maps)
+    col_w = 200
+    map_w = 300
+    total_w = col_w + map_w + col_w
+    row_h = CONFIG["row_font_size"] + 10
+
+    total_h = header_h + n * row_h
+
+    # — New canvas & real draw —
+    img = Image.new("RGBA", (total_w, total_h), "white")
     draw = ImageDraw.Draw(img)
 
-    # Draw banners
-    draw.text((pad, pad), banner1, font=hdr_font, fill="black")
-    draw.text((pad, pad + h1), banner2, font=hdr_font, fill="black")
+    # — Draw headers —
+    draw.text((10,10), line0, font=hdr_font, fill="black")
+    draw.text((10,10 + (y1-y0) + 5), line0, font=hdr_font, fill="black")  # duplicate if you want two lines
 
-    # Draw grid cells
+    # — Sub-column headers under each team —
+    sub_y = header_h - row_h
+    # Team A sub-headers
+    draw.text((10, sub_y),        "Allied", font=row_font, fill="black")
+    draw.text((10+col_w//2,sub_y),"Axis",   font=row_font, fill="black")
+    # Team B sub-headers
+    base = col_w + map_w
+    draw.text((base+10, sub_y),        "Allied", font=row_font, fill="black")
+    draw.text((base+10+col_w//2, sub_y),"Axis",   font=row_font, fill="black")
+
+    # — Draw each map row —
     for i, m in enumerate(maps):
-        map_name = m["name"]
-        tb = bans.get(map_name, {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
+        y = header_h + i*row_h
+        # Center map name
+        mx = col_w + (map_w//2)
+        draw.text((mx - len(m["name"])*4, y), m["name"], font=row_font, fill="black")
 
-        for y, side in enumerate(("Allied", "Axis")):
-            for ti, team_key in enumerate(("team_a", "team_b")):
-                x0 = i * cell_w + ti * (cell_w // 2)
-                y0 = header_height + y * cell_h
-                x1 = x0 + cell_w // 2 - pad
-                y1 = y0 + cell_h - pad
-
-                manual = side in tb[team_key]["manual"]
-                auto   = side in tb[team_key]["auto"]
-                if final and manual and len(bans) == 1:
-                    bg = "green"
-                elif manual or auto:
-                    bg = "red"
+        tb = bans.get(m["name"], {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
+        for ti, team_key in enumerate(("team_a","team_b")):
+            x_base = ti*(col_w+map_w)
+            # determine which side is banned
+            man = tb[team_key]["manual"]
+            auto= tb[team_key]["auto"]
+            for si, side in enumerate(("Allied","Axis")):
+                x = x_base + (col_w//2)*si + 5
+                # color
+                if final and len(bans)==1 and side in man:
+                    color="green"
+                elif side in man or side in auto:
+                    color="red"
                 else:
-                    bg = "lightgray"
+                    color="yellow"
+                draw.rectangle([x-2, y-2, x + (col_w//2)-10, y+row_h-2], fill=color)
+                draw.text((x, y), side, font=row_font, fill="black")
 
-                draw.rectangle([x0, y0, x1, y1], fill=bg, outline="black")
-
-                text = f"{map_name}\n{side}"
-                wrapped = textwrap.fill(text, width=15)
-                # measure multiline text
-                bx0, by0, bx1, by1 = draw.multiline_textbbox((0,0), wrapped, font=row_font)
-                tw, th = bx1 - bx0, by1 - by0
-                tx = x0 + ((cell_w // 2 - pad) - tw) / 2
-                ty = y0 + ((cell_h - pad) - th) / 2
-                draw.multiline_text((tx, ty), wrapped, font=row_font, fill="black")
-
-    # Save to file
+    # — Save & return path —
     out = os.path.join(os.getcwd(), CONFIG["output_image"])
     img.save(out, optimize=True, compress_level=9)
     return out
