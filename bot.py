@@ -188,12 +188,15 @@ def create_ban_status_image(
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
         
-    # --- Measure text sizes using a temporary draw ---
+    # --- Measure text sizes using textbbox on a temporary draw ---
     pad = 20
     temp_img = Image.new("RGBA", (1,1))
     meas = ImageDraw.Draw(temp_img)
-    w1, h1 = meas.textsize(banner1, font=hdr_font)
-    w2, h2 = meas.textsize(banner2, font=hdr_font)
+    # getbbox returns (x0, y0, x1, y1)
+    x0, y0, x1, y1 = meas.textbbox((0,0), banner1, font=hdr_font)
+    w1, h1 = x1 - x0, y1 - y0
+    x0, y0, x1, y1 = meas.textbbox((0,0), banner2, font=hdr_font)
+    w2, h2 = x1 - x0, y1 - y0
     
     # Now compute overall image size, then create real canvas
     header_height = h1 + h2 + pad * 2
@@ -242,7 +245,9 @@ def create_ban_status_image(
 
                 text = f"{map_name}\n{side}"
                 wrapped = textwrap.fill(text, width=15)
-                tw, th = draw.multiline_textsize(wrapped, font=row_font)
+                # measure multiline text
+                bx0, by0, bx1, by1 = draw.multiline_textbbox((0,0), wrapped, font=row_font)
+                tw, th = bx1 - bx0, by1 - by0
                 tx = x0 + ((cell_w // 2 - pad) - tw) / 2
                 ty = y0 + ((cell_h - pad) - th) / 2
                 draw.multiline_text((tx, ty), wrapped, font=row_font, fill="black")
