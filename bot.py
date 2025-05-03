@@ -676,6 +676,9 @@ async def match_decide(
     # Validate state
     if ch not in ongoing_bans or channel_flip.get(ch) is None or channel_decision.get(ch) is not None:
         return await interaction.response.send_message("❌ Invalid state.", ephemeral=True)
+    if wl not in [r.name for r in interaction.user.roles]:
+        return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
+       
     # Acknowledge
     await interaction.response.defer(ephemeral=True)
     # Record decision
