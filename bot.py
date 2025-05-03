@@ -38,6 +38,7 @@ CONFIG = {
 # Global team names for current match
 team_a_name: Optional[str] = None
 team_b_name: Optional[str] = None
+final: Optional[bool] = False
 
 going  = {}
 ongoing_bans:      dict[int, dict[str, dict[str, List[str]]]] = {}
@@ -109,7 +110,6 @@ def is_ban_complete(ch: int) -> bool:
 def create_ban_status_image(
     maps: List[dict],
     bans: dict[str, dict[str, List[str]]],
-    # these args can stay for signature compatibility, but will be ignored:
     _team_a: str,
     _team_b: str,
     mode: str, flip_winner: Optional[str],
@@ -119,7 +119,7 @@ def create_ban_status_image(
     final: bool = False,
     channel_host: str = ""
 ) -> str:
-    global team_a_name, team_b_name
+    global team_a_name, team_b_name, final
     # Force-override any passed‐in team names with the globals
     team_a = team_a_name or "Team A"
     team_b = team_b_name or "Team B"
@@ -361,7 +361,7 @@ async def map_autocomplete(
                 break
         if open_slot:
             choices.append(app_commands.Choice(name=name, value=name))
-    return choices[:25]
+    return choices[:50]
 
 async def side_autocomplete(
     interaction: discord.Interaction,
@@ -381,7 +381,7 @@ async def side_autocomplete(
         if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
             if current.lower() in side.lower():
                 choices.append(app_commands.Choice(name=side, value=side))
-    return choices[:25]
+    return choices[:50]
 
 async def cleanup_match(ch: int):
     for d in (
@@ -413,10 +413,11 @@ async def match_create(
     title: str,
     description: str = "No description provided"
 ) -> None:
-    global team_a_name, team_b_name
+    global team_a_name, team_b_name, final
     # Set global team names
     team_a_name = team_a.name
     team_b_name = team_b.name
+    final = is_ban_complete()
 
     ch = interaction.channel_id
     if ch in ongoing_bans:
@@ -451,7 +452,6 @@ async def match_create(
 
     # Send initial status image
     turn_name = ""
-    final = False
     if match_turns[ch] == "team_a":
         turn_name = team_a_name
     if match_turns[ch] == "team_b":
@@ -467,8 +467,17 @@ async def match_create(
 
     # Send initial status image via update_status_message to enable future edits
     img = create_ban_status_image(
-        load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
-        channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False, host_name
+        load_maplist(), 
+        ongoing_bans[ch], 
+        team_a_name, 
+        team_b_name,
+        channel_mode[ch], 
+        flip_name, 
+        channel_decision[ch], 
+        turn_name, 
+        None, 
+        is_ban_complete(), 
+        host_name
     )
     # Post and store the message for later edits
     await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
@@ -490,7 +499,7 @@ async def ban_map(
     ch = interaction.channel_id
     
     # Determine remaining ban options
-    final = False
+    final = is_ban_complete()
     remaining = [
         (m, t, s)
         for m, tb in ongoing_bans.get(ch, {}).items()
@@ -579,7 +588,7 @@ async def ban_map(
             channel_decision[ch],
             turn_name,
             match_times[ch],
-            final,
+            is_ban_complete(),
             host_name
         )
         
@@ -587,8 +596,8 @@ async def ban_map(
         msg = await interaction.followup.send("✅ Ban recorded.", ephemeral=False)
         asyncio.create_task(delete_later(msg, 10)) 
     
-    if len(remaining_after) <= 3:
-        final = True
+    #if len(remaining_after) <= 3:
+    if is_ban_complete():
         await update_status_message(ch, None, img)
         await interaction.response.send_message("✅ Ban phase complete.", ephemeral=False)
         save_state()
@@ -623,7 +632,7 @@ async def match_time(
     embed.add_field(name="Match Time", value=display_time, inline=False)
     await interaction.followup.send(embed=embed)
     
-    final = False
+    final = is_ban_complete()
     
     turn_name = ""
     if match_turns[ch] == "team_a":
@@ -701,13 +710,15 @@ async def match_decide(
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
-        team_a_name, team_b_name,
+        team_a_name, 
+        team_b_name,
         channel_mode[ch],
         team_b_name if channel_flip[ch] == team_a_name else team_a_name,
         choice,
         team_b_name if match_turns[ch] == team_a_name else team_a_name,
         match_times.get(ch),
-        False
+        is_ban_complete(),
+        channel_host[ch]
     )
     await update_status_message(ch, None, img)
     # Confirmation
