@@ -92,9 +92,32 @@ def load_teammap() -> dict:
 def load_maplist() -> List[dict]:
     with open(CONFIG["maplist_file"]) as f:
         return json.load(f)["maps"]
+   
+def determine_ban_option(
+    team_a: str,
+    team_b: str,
+    cfg: dict
+) -> str:
+    """
+    Determine ban option based on team names and a teammap config.
+    Config should have keys "team_regions" mapping team names to regions,
+    and "region_pairings" mapping region pairs to ban modes.
+    """
+    # Lookup regions for each team
+    team_regions = cfg.get("team_regions", {})
+    region_a = team_regions.get(team_a)
+    region_b = team_regions.get(team_b)
+    if not region_a or not region_b:
+        # Missing region data → fallback
+        return "ExtraBan"
+    # Lookup pairing rules
+    pairings = cfg.get("region_pairings", {})
+    # Try direct and reverse pairing
+    option = pairings.get(region_a, {}).get(region_b)
+    if option:
+        return option
+    return pairings.get(region_b, {}).get(region_a, "ExtraBan")
 
-def determine_ban_option(a: str, b: str, cfg: dict) -> str:
-    return cfg.get("region_pairings", {}).get(a, {}).get(b, "ExtraBan")
 
 def remaining_combos(ch: int) -> List[Tuple[str,str,str]]:
     combos = []
