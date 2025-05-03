@@ -581,7 +581,7 @@ async def ban_map(
     )
 
     # Then confirm privately
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    await interaction.followup.send("✅ Updated.", ephemeral=True, delete_after=5)
       
 @bot.tree.command(
     name="match_time",
@@ -625,7 +625,8 @@ async def match_time_cmd(
     except Exception as e:
         return await interaction.followup.send(
             f"❌ Invalid datetime: {e}", 
-            ephemeral=True
+            ephemeral=True,
+            delete_after=5
         )
 
     # 5) Rebuild the image (now with the new time included)
@@ -676,7 +677,7 @@ async def match_time_cmd(
     )
 
     # Then confirm privately
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    await interaction.followup.send("✅ Updated.", ephemeral=True, delete_after=5)
 
     
 @bot.tree.command(
@@ -773,7 +774,7 @@ async def match_decide(
     )
 
     # Then confirm privately
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    await interaction.followup.send("✅ Updated.", ephemeral=True, delete_after=5)
 
 
 @bot.tree.command(
@@ -828,7 +829,8 @@ async def match_delete(interaction: discord.Interaction) -> None:
     # 6) Confirm deletion to the user
     await interaction.followup.send(
         "✅ Match has been deleted and state cleared.", 
-        ephemeral=True
+        ephemeral=True,
+        delete_after=5
     )
 
 @bot.tree.error
