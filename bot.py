@@ -700,7 +700,7 @@ async def match_decide(
         ongoing_bans[ch],
         team_a_name, team_b_name,
         channel_mode[ch],
-        channel_flip[ch],
+        team_b_name if channel_flip[ch] == team_a_name else team_a_name,
         choice,
         team_b_name if match_turns[ch] == team_a_name else team_a_name,
         match_times.get(ch),
