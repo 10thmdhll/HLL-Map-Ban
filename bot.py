@@ -418,7 +418,7 @@ async def match_create(
     save_state()
 
     # 3) Generate the initial status image
-    img = create_ban_status_image(
+    img_path = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
         channel_mode[ch],
@@ -457,9 +457,9 @@ async def match_create(
         embed=embed
     )
 
-    # Capture that message’s ID for future edits
-    msg = await interaction.original_response()
-    channel_messages[ch] = msg.id
+    # Send & cache the message ID
+    msg_id = await respond_and_edit(interaction, img_path)
+    channel_messages[ch] = msg_id
     save_state()
     
 
