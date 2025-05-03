@@ -232,10 +232,6 @@ async def update_status_message(
     image_path: str,
     embed: Optional[discord.Embed] = None
 ) -> None:
-    """
-    Edits the existing match‐status message (if message_id is set)
-    to replace its attachment with the new image and update its embed.
-    """
     channel = bot.get_channel(channel_id)
     if message_id:
         try:
@@ -454,6 +450,8 @@ async def ban_map(
     side: str
 ) -> None:
     ch = interaction.channel_id
+    global team_a_name, team_b_name
+    team_a_name, team_b_name = channel_teams[ch]
 
     # 1) Turn check
     if ch not in match_turns:
@@ -543,6 +541,8 @@ async def match_time_cmd(
     time: str
 ) -> None:
     ch = interaction.channel_id
+    global team_a_name, team_b_name
+    team_a_name, team_b_name = channel_teams[ch]
 
     # 1) Ensure there’s an active match and it’s past ban phase
     if ch not in ongoing_bans or not is_ban_complete(ch):
@@ -625,6 +625,8 @@ async def match_decide(
     choice: Literal["ban", "host"]
 ) -> None:
     ch = interaction.channel_id
+    global team_a_name, team_b_name
+    team_a_name, team_b_name = channel_teams[ch]
 
     # 1) Ensure a match exists
     if ch not in channel_messages:
