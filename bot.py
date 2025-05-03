@@ -554,7 +554,7 @@ async def ban_map(
         await interaction.response.defer()
         tb = ongoing_bans[ch].get(map_name)
         if tb is None:
-            return await interaction.followup.send("❌ Invalid map.", ephemeral=True)
+            return await interaction.response.send_message("❌ Invalid map.", ephemeral=True)
         tk = current_key
         tb[tk]["manual"].append(side)
     
@@ -673,7 +673,7 @@ async def match_decide(
     await interaction.response.defer(ephemeral=True)
     ch = interaction.channel_id
     if ch not in ongoing_bans or channel_flip[ch] is None or channel_decision[ch] is not None:
-        return await interaction.followup.send("❌ Invalid state.", ephemeral=True)
+        return await interaction.response.send_message("❌ Invalid state.", ephemeral=True)
         
     if channel_decision[ch] is not None:
         return await interaction.response.send_message("❌ Already decided.", ephemeral=True)
