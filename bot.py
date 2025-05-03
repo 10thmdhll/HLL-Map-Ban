@@ -93,7 +93,7 @@ def load_teammap() -> dict:
 def load_maplist() -> List[dict]:
     return json.load(open(CONFIG["maplist_file"]))["maps"]
 
-def determine__option(a: str, b: str, cfg: dict) -> str:
+def determine_ban_option(a: str, b: str, cfg: dict) -> str:
     return cfg.get("region_pairings", {}).get(a, {}).get(b, "ExtraBan")
 
 def is_ban_complete(ch: int) -> bool:
