@@ -660,7 +660,7 @@ async def match_time(
         )
         
     await update_status_message(ch, None, img)
-    return await interaction.followup.send(f"⏱️ Match time set: {dt.strftime('%Y-%m-%d %H:%M %Z')}", ephemeral=True)
+    return await interaction.followup.send(f"⏱️ Match time set: {dt.strftime('%Y-%m-%d %H:%M %Z')}", ephemeral=False)
 
 @bot.tree.command(
     name="match_decide",
