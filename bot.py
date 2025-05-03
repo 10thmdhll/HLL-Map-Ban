@@ -590,7 +590,7 @@ async def ban_map(
     if len(remaining_after) <= 3:
         final = True
         await update_status_message(ch, None, img)
-        await interaction.response.send_message("✅ Ban phase complete. Final selection locked.", ephemeral=False)
+        await interaction.response.send_message("✅ Ban phase complete.", ephemeral=False)
         save_state()
       
 @bot.tree.command(
@@ -697,15 +697,14 @@ async def match_decide(
     if choice == "Ban":
         channel_host[ch] = other
         match_turns[ch] = winner
+        
+    save_state()
     
     host_name = "Middle ground rules apply"
     if channel_host[ch] == "team_a":
         host_name = team_a_name
     if channel_host[ch] == "team_b":
         host_name = team_b_name
-
-        
-    save_state()
     
     final = False
     turn_name = ""
