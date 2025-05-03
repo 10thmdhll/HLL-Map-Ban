@@ -253,9 +253,9 @@ def create_ban_status_image(
         x1 = x0 + half_w
         ta = bans[name]["team_a"]
         
-        if "Allied" in tb["manual"]:
+        if "Allied" in ta["manual"]:
             color = "red"
-        elif "Allied" in tb["auto"]:
+        elif "Allied" in ta["auto"]:
             color = "orange"
         else:
             color = "white"
@@ -271,9 +271,9 @@ def create_ban_status_image(
         x0 = grid_x0 + half_w
         x1 = grid_x0 + cell_w
         
-        if "Axis" in tb["manual"]:
+        if "Axis" in ta["manual"]:
             color = "red"
-        elif "Axis" in tb["auto"]:
+        elif "Axis" in ta["auto"]:
             color = "orange"
         else:
             color = "white"
