@@ -24,10 +24,10 @@ CONFIG = {
     "quantize_colors":  64,
     "compress_level":   9,
     "optimize_png":     True,
-    "row_font_size":    168,
-    "header_font_size": 240,
-    "pad_x_factor":     0.5,
-    "pad_y_factor":     0.25,
+    "font_hize_h":      32,
+    "font_size":        24,
+    "padding":          20,
+    "line_spacer":      10,
     "font_paths": [
         "arialbd.ttf",
         "DejaVuSans-Bold.ttf",
@@ -172,80 +172,68 @@ def create_ban_status_image(
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
 
-    # - Build Banners -
-    banner1, banner2 = build_banners(
-        mode, flip_winner, decision_choice, current_turn, match_time_iso, final
-    )
+    # — Prepare banner lines —
+    dt = parser.isoparse(match_time_iso).astimezone(pytz.timezone(USER_TZ))
+    dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+
+    banner1 = f"Coin Flip Winner: {coin_winner}"
+    banner2 = f"Host: {host}    |    Match: {dt_str}"
+    banner3 = f"Current Turn: {current_turn}"
     
-    # — Measure header —  
-    pad = 20
-    tmp = Image.new("RGBA", (1,1))
-    meas = ImageDraw.Draw(tmp)
-    x0,y0,x1,y1 = meas.textbbox((0,0), banner1, font=hdr_font)
-    h1 = y1 - y0
-    x0,y0,x1,y1 = meas.textbbox((0,0), banner2, font=hdr_font)
-    h2 = y1 - y0
-    header_h = h1 + h2 + pad * 2
+    # — Measure banner heights —
+    dummy = Image.new("RGB", (1,1))
+    draw = ImageDraw.Draw(dummy)
+    h1 = draw.textsize(banner1, font=hdr_font)[1]
+    h2 = draw.textsize(banner2, font=hdr_font)[1]
+    h3 = draw.textsize(banner3, font=hdr_font)[1]
+    header_h = PADDING + h1 + LINE_SPACER + h2 + LINE_SPACER + h3 + PADDING
 
-    # — Determine dynamic cell height by scanning all cell texts —
-    max_text_h = 0
-    for m in maps:
-        name = m["name"]
-        tb = bans.get(name, {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
-        for team_key in ("team_a","team_b"):
-            for side in ("Allied","Axis"):
-                wrapped = textwrap.fill(f"{name}\n{side}", width=15)
-                bx0, by0, bx1, by1 = meas.multiline_textbbox((0,0), wrapped, font=row_font)
-                text_h = by1 - by0
-                if text_h > max_text_h:
-                    max_text_h = text_h
-    padding_v = 8
-    cell_h = max_text_h + padding_v * 2
+    # — Grid dimensions —
+    rows = len(maps)
+    cols = 3  # Team A, Map name, Team B
+    total_width = 900
+    cell_w = total_width // cols
+    row_h = 40
+    img_h = header_h + rows * row_h + PADDING
 
-    # — Canvas size —
-    cols = len(maps)
-    rows = 2
-    cell_w = max(200, CONFIG["max_inline_width"] // max(cols,1))
-    img_w = cols * cell_w
-    img_h = header_h + rows * cell_h
-
-    img = Image.new("RGBA", (img_w, img_h), "white")
+    # — Create canvas —
+    img = Image.new("RGBA", (total_width + PADDING*2, img_h), "white")
     draw = ImageDraw.Draw(img)
     
-    # — Draw headers —
-    draw.text((pad, pad), banner1, font=hdr_font, fill="black")
-    draw.text((pad, pad + h1), banner2, font=hdr_font, fill="black")
+    # — Draw banners —
+    y = PADDING
+    draw.text((PADDING, y), banner1, font=hdr_font, fill="black")
+    y += h1 + LINE_SPACER
+    draw.text((PADDING, y), banner2, font=hdr_font, fill="black")
+    y += h2 + LINE_SPACER
+    draw.text((PADDING, y), banner3, font=hdr_font, fill="black")
 
-    # — Draw grid —
-    for i, m in enumerate(maps):
-        name = m["name"]
-        tb   = bans.get(name, {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
-        for row_index, side in enumerate(("Allied","Axis")):
-            y0 = header_h + row_index * cell_h
-            for col_index, team_key in enumerate(("team_a","team_b")):
-                x0 = col_index * (img_w // 2) + i * (cell_w - img_w // 2)
-                x1 = x0 + cell_w - 2*pad
-                y1 = y0 + cell_h - pad
+    # — Draw grid rows —
+    grid_x0 = PADDING
+    grid_y0 = header_h
+    square = "■"
+    
+    for i, name in enumerate(maps):
+        y0 = grid_y0 + i * row_h
+        # Team A cell
+        ta = bans[name]["team_a"]
+        a_mark = square if "Allied" in ta["manual"] or "Allied" in ta["auto"] else " "
+        x_mark = square if "Axis" in ta["manual"] or "Axis" in ta["auto"] else " "
+        left_text = f"Allied [{a_mark}] | Axis [{x_mark}]"
+        draw.text((grid_x0, y0), left_text, font=row_font, fill="black")
 
-                manual = side in tb[team_key]["manual"]
-                auto   = side in tb[team_key]["auto"]
-                if final and manual and len(bans)==1:
-                    bg = "green"
-                elif manual:
-                    bg = "red"
-                elif auto:
-                    bg = "orange"
-                else:
-                    bg = "white"
+        # Map name cell (centered in middle column)
+        mx = grid_x0 + cell_w
+        w_map = draw.textsize(name, font=row_font)[0]
+        draw.text((mx + (cell_w - w_map)/2, y0), name, font=row_font, fill="black")
 
-                draw.rectangle([x0, y0, x1, y1], fill=bg, outline="black")
-
-                wrapped = textwrap.fill(f"{name}\n{side}", width=15)
-                bx0, by0, bx1, by1 = draw.multiline_textbbox((0,0), wrapped, font=row_font)
-                tw, th = bx1 - bx0, by1 - by0
-                tx = x0 + ((cell_w - 2*pad) - tw) / 2
-                ty = y0 + ((cell_h - 2*pad) - th) / 2
-                draw.multiline_text((tx, ty), wrapped, font=row_font, fill="black")
+        # Team B cell
+        tb = bans[name]["team_b"]
+        a_mark = square if "Allied" in tb["manual"] or "Allied" in tb["auto"] else " "
+        x_mark = square if "Axis" in tb["manual"] or "Axis" in tb["auto"] else " "
+        right_text = f"Allied [{a_mark}] | Axis [{x_mark}]"
+        rx = grid_x0 + 2*cell_w
+        draw.text((rx, y0), right_text, font=row_font, fill="black")
 
     # — Save and return —
     out_path = os.path.join(os.getcwd(), CONFIG["output_image"])
