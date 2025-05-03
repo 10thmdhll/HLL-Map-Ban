@@ -341,7 +341,8 @@ async def cleanup_match(ch: int):
         
 @bot.tree.command(
     name="match_create",
-    description="Start a new map‐ban match"
+    description="Start a new map‐ban match",
+    guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(
     team_a="Role for Team A",
@@ -397,7 +398,8 @@ async def match_create(
 
 @bot.tree.command(
     name="ban_map",
-    description="Ban a map for a given side"
+    description="Ban a map for a given side",
+    guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(map_name="Map to ban", side="Allied or Axis")
 @app_commands.autocomplete(map_name=map_autocomplete, side=side_autocomplete)
@@ -479,7 +481,8 @@ async def ban_map(
       
 @bot.tree.command(
     name="match_time",
-    description="Set the scheduled match time"
+    description="Set the scheduled match time",
+    guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(
     time="ISO-8601 datetime (with timezone) for the match"
@@ -542,7 +545,8 @@ async def match_time_cmd(
     
 @bot.tree.command(
     name="match_decide",
-    description="Choose whether the flip-winner bans first or hosts first"
+    description="Choose whether the flip-winner bans first or hosts first",
+    guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(
     choice="If ‘ban’, flip-winner bans first; if ‘host’, flip-winner hosts and other side bans first"
@@ -606,7 +610,8 @@ async def match_decide(
 
 @bot.tree.command(
     name="match_delete",
-    description="End and remove the current match"
+    description="End and remove the current match",
+    guild=discord.Object(id=1366830976369557654)
 )
 async def match_delete(interaction: discord.Interaction) -> None:
     ch = interaction.channel_id
