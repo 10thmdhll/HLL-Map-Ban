@@ -421,10 +421,6 @@ async def match_create(
     ch = interaction.channel_id
     if ch in ongoing_bans:
         await interaction.response.send_message("❌ Match already active.", ephemeral=True)
-
-    ch = interaction.channel_id
-    if ch in ongoing_bans:
-        await interaction.response.send_message("❌ Match already active.", ephemeral=True)
         
     cfg = load_teammap()
     maps = load_maplist()
@@ -437,6 +433,7 @@ async def match_create(
     
     # Channel Host
     host_name = "Middle ground rules apply"
+    
     if channel_host[ch] == "team_a":
         host_name = team_a_name
     if channel_host[ch] == "team_b":
@@ -475,7 +472,7 @@ async def match_create(
     # Send initial status image via update_status_message to enable future edits
     img = create_ban_status_image(
         load_maplist(), ongoing_bans[ch], team_a_name, team_b_name,
-        channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False, channel_host[ch]
+        channel_mode[ch], flip_name, channel_decision[ch], turn_name, None, False, host_name
     )
     # Post and store the message for later edits
     await update_status_message(ch, f"🎲 Match created: {team_a_name} vs {team_b_name}", img)
@@ -535,6 +532,12 @@ async def ban_map(
         flip_name = team_a_name
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
+        
+    host_name = "Middle ground rules apply"
+    if channel_host[ch] == "team_a":
+        host_name = team_a_name
+    if channel_host[ch] == "team_b":
+        host_name = team_b_name
          
     img = create_ban_status_image(
         load_maplist(),
@@ -547,7 +550,7 @@ async def ban_map(
         turn_name,
         match_times[ch],
         final,
-        channel_host[ch]
+        host_name
     )
     
     if len(remaining_after) >= 4:
@@ -564,6 +567,12 @@ async def ban_map(
         tb[other]["auto"].append("Axis" if side=="Allied" else "Allied")
         match_turns[ch] = other
         
+        host_name = "Middle ground rules apply"
+        if channel_host[ch] == "team_a":
+            host_name = team_a_name
+        if channel_host[ch] == "team_b":
+            host_name = team_b_name
+        
         img = create_ban_status_image(
             load_maplist(),
             ongoing_bans[ch],
@@ -575,7 +584,7 @@ async def ban_map(
             turn_name,
             match_times[ch],
             final,
-            channel_host[ch]
+            host_name
         )
         
         await update_status_message(ch, None, img)
@@ -628,6 +637,12 @@ async def match_time(
         flip_name = team_a_name
     if channel_flip[ch]=="team_b":
         flip_name = team_b_name
+        
+    host_name = ""
+    if channel_host[ch] == "team_a":
+        host_name = team_a_name
+    else:
+        host_name = team_b_name
     
     img = create_ban_status_image(
         load_maplist(),
@@ -640,7 +655,7 @@ async def match_time(
         turn_name,
         match_times[ch],
         final,
-        channel_host[ch]
+        host_name
         )
         
     await update_status_message(ch, None, img)
@@ -670,11 +685,20 @@ async def match_decide(
         
     channel_decision[ch] = choice
     
-    if choice=="Ban":
-        channel_host[ch] = team_b_name
-    if choice=="Host":
-        match_turns[ch] = "team_b"
-        channel_host[ch] = team_a_name
+    if choice == "Host":
+        channel_host[ch] = channel_flip[ch]  # flip_winner is host
+        match_turns[ch] = "team_a" if channel_flip[ch]=="team_a" else "team_b"
+        
+    if choice == "Ban":
+        channel_host[ch] = "team_b" if channel_flip[ch]=="team_b" else "team_a"
+        match_turns[ch] = "team_a" if channel_flip[ch]=="team_a" else "team_b"
+    
+    host_name = "Middle ground rules apply"
+    if channel_host[ch] == "team_a":
+        host_name = team_a_name
+    if channel_host[ch] == "team_b":
+        host_name = team_b_name
+
         
     save_state()
     
@@ -704,7 +728,7 @@ async def match_decide(
             turn_name,
             match_times[ch],
             final,
-            channel_host[ch]
+            host_name
         )
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
