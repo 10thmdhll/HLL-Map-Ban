@@ -201,8 +201,8 @@ def create_ban_status_image(
         y0 = grid_y0 + i * row_h
         # Team A cell
         ta = bans[name]["team_a"]
-        a_mark = redx if "Allied" in ta["manual"] or "Allied" in ta["auto"] else " "
-        x_mark = redx if "Axis" in ta["manual"] or "Axis" in ta["auto"] else " "
+        a_mark = redx if "Allied" in ta["manual"] or "Allied" in ta["auto"] else "    "
+        x_mark = redx if "Axis" in ta["manual"] or "Axis" in ta["auto"] else "    "
         left_text = f"   Allied [{a_mark}]    |    Axis [{x_mark}]   "
         draw.text((grid_x0, y0), left_text, font=row_font, fill="black")
 
