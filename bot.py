@@ -211,37 +211,65 @@ def create_ban_status_image(
     draw.text((padding, y), banner2, font=hdr_font, fill="black")
     y += h2 + line_spacer
     draw.text((padding, y), banner3, font=hdr_font, fill="black")
-
+    
     # — Draw grid rows —
     grid_x0 = padding
     grid_y0 = header_h
-    square = "■"
-    redx = "❌"
-    
-    
+    half_w = cell_w // 2
     for i, m in enumerate(maps):
         name = m["name"]
         y0 = grid_y0 + i * row_h
-        # Team A cell
+        # Left team (Team A) Allied cell
+        x0 = grid_x0
+        x1 = x0 + half_w
         ta = bans[name]["team_a"]
-        a_mark = redx if "Allied" in ta["manual"] or "Allied" in ta["auto"] else "    "
-        x_mark = redx if "Axis" in ta["manual"] or "Axis" in ta["auto"] else "    "
-        left_text = f"   Allied [{a_mark}]    |    Axis [{x_mark}]   "
-        draw.text((grid_x0, y0), left_text, font=row_font, fill="black")
-
-        # Map name cell (centered in middle column)
-        mx = grid_x0 + cell_w
+        color = "red" if "Allied" in ta["manual"] or "Allied" in ta["auto"] else "green"
+        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
+        text = "Allies"
+        bbox = measure.textbbox((0,0), text, font=row_font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+        # Left team (Team A) Axis cell
+        x0 = grid_x0 + half_w
+        x1 = grid_x0 + cell_w
+        color = "red" if "Axis" in ta["manual"] or "Axis" in ta["auto"] else "green"
+        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
+        text = "Axis"
+        bbox = measure.textbbox((0,0), text, font=row_font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+        # Center map name cell
+        x0 = grid_x0 + cell_w
+        x1 = x0 + cell_w
+        draw.rectangle([x0, y0, x1, y0 + row_h], fill="white", outline="black")
         bbox = measure.textbbox((0,0), name, font=row_font)
-        w_map = bbox[2] - bbox[0]
-        draw.text((mx + (cell_w - w_map)/2, y0), name, font=row_font, fill="black")
-
-        # Team B cell
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        draw.text((x0 + (cell_w - w)/2, y0 + (row_h - h)/2), name, font=row_font, fill="black")
+        # Right team (Team B) Allied cell
+        x0 = grid_x0 + 2 * cell_w
+        x1 = x0 + half_w
         tb = bans[name]["team_b"]
-        a_mark = redx if "Allied" in tb["manual"] or "Allied" in tb["auto"] else " "
-        x_mark = redx if "Axis" in tb["manual"] or "Axis" in tb["auto"] else " "
-        right_text = f"    Allied [{a_mark}]   |   Axis [{x_mark}]    "
-        rx = grid_x0 + 2*cell_w
-        draw.text((rx, y0), right_text, font=row_font, fill="black")
+        color = "red" if "Allied" in tb["manual"] or "Allied" in tb["auto"] else "green"
+        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
+        text = "Allies"
+        bbox = measure.textbbox((0,0), text, font=row_font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+        # Right team (Team B) Axis cell
+        x0 = grid_x0 + 2 * cell_w + half_w
+        x1 = x0 + half_w
+        color = "red" if "Axis" in tb["manual"] or "Axis" in tb["auto"] else "green"
+        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
+        text = "Axis"
+        bbox = measure.textbbox((0,0), text, font=row_font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+
 
     # — Save and return —
     out_path = os.path.join(os.getcwd(), CONFIG["output_image"])
@@ -538,7 +566,7 @@ async def ban_map(
         embed.add_field(name="Map Host",      value=host_name,     inline=True)
         embed.add_field(name="Mode",          value=mode,          inline=True)
         embed.add_field(name="Match Time",    value=time_str,      inline=True)
-        embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+        embed.add_field(name="Final Ban",  value=current_name,  inline=True)
         embed.add_field(name="Stage", value="Map ban complete",  inline=False)
     
         await update_status_message(
@@ -699,7 +727,7 @@ async def match_time_cmd(
     embed.add_field(name="Map Host",      value=host_name,     inline=True)
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
-    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+    embed.add_field(name="Final Ban",  value=current_name,  inline=True)
     embed.add_field(name="Stage", value="Map ban complete, time updated",  inline=False)
 
 
