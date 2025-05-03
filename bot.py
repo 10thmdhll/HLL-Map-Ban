@@ -553,22 +553,26 @@ async def ban_map(
     coin_winner = A if channel_flip[ch]=="team_a" else B
     host_name  = channel_host[ch]
     mode       = channel_mode[ch]
+    # Safely format match time, skipping placeholders
     match_time = match_times.get(ch)
-    if match_time:
-        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
-        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    if match_time and match_time not in ("Undecided", "TBD"):
+        try:
+            dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+            time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+        except Exception:
+            time_str = "Undecided"
     else:
         time_str = "Undecided"
     current_key = match_turns.get(ch)
     current_name= A if current_key=="team_a" else B
-    
+
     embed = discord.Embed(title="Match Status")
     embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
     embed.add_field(name="Map Host",      value=host_name,     inline=True)
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
-    
+
     await update_status_message(
         ch,
         channel_messages[ch],
@@ -642,10 +646,14 @@ async def match_time_cmd(
     coin_winner = A if channel_flip[ch]=="team_a" else B
     host_name  = channel_host[ch]
     mode       = channel_mode[ch]
+    # Safely format match time, skipping placeholders
     match_time = match_times.get(ch)
-    if match_time:
-        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
-        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    if match_time and match_time not in ("Undecided", "TBD"):
+        try:
+            dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+            time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+        except Exception:
+            time_str = "Undecided"
     else:
         time_str = "Undecided"
     current_key = match_turns.get(ch)
@@ -657,6 +665,7 @@ async def match_time_cmd(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+
 
     # 7) Edit the original image message with both image + embed
     await update_status_message(
@@ -734,12 +743,16 @@ async def match_decide(
     coin_winner = A if channel_flip[ch]=="team_a" else B
     host_name  = channel_host[ch]
     mode       = channel_mode[ch]
+    # Safely format match time, skipping placeholders
     match_time = match_times.get(ch)
-    if match_time:
-        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
-        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    if match_time and match_time not in ("Undecided", "TBD"):
+        try:
+            dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+            time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+        except Exception:
+            time_str = "Undecided"
     else:
-        time_str = "None"
+        time_str = "Undecided"
     current_key = match_turns.get(ch)
     current_name= A if current_key=="team_a" else B
 
@@ -749,6 +762,7 @@ async def match_decide(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+
 
     # 8) Edit the original image message with both image + embed
     await update_status_message(
