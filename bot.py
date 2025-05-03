@@ -433,12 +433,8 @@ async def match_create(
     
     # Channel Host
     host_name = "Middle ground rules apply"
+    channel_host[ch] = host_name
     
-    if channel_host[ch] == "team_a":
-        host_name = team_a_name
-    if channel_host[ch] == "team_b":
-        host_name = team_b_name
-
     # Initialize state
     channel_teams[ch] = (team_a_name, team_b_name)
     channel_mode[ch] = mode
