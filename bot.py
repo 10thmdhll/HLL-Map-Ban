@@ -183,8 +183,8 @@ def create_ban_status_image(
     # — Build header lines —
     A = team_a_name or "Team A"
     B = team_b_name or "Team B"
-    coin_winner = A if flip_winner == "team_a" else B
-    host_name   = A if host_key    == "team_a" else B
+    coin_winner = A if flip_winner == "team_a" else B if flip_winner == "team_b" else "TBD"
+    host_name   = A if host_key    == "team_a" else B if host_key == "team_b" else "TBD"
 
     line1 = f"Flip: {coin_winner}   |   Host: {host_name}   |   Mode: {mode}"
 
@@ -196,9 +196,9 @@ def create_ban_status_image(
         except Exception:
             time_str = "Invalid"
     else:
-        time_str = "None"
+        time_str = "TBD"
 
-    current_name = A if current_turn == "team_a" else B
+    current_name = A if current_turn == "team_a" else B if current_turn == "team_b" else "Unknown"
     line2 = f"Match Time: {time_str}   |   Current Turn: {current_name}"
 
     # — Measure header —  
@@ -237,8 +237,8 @@ def create_ban_status_image(
     draw = ImageDraw.Draw(img)
 
     # — Draw headers —
-    draw.text((pad, pad), line1, font=hdr_font, fill="black")
-    draw.text((pad, pad + h1), line2, font=hdr_font, fill="black")
+    draw.text((pad, pad), line1, font=hdr_font, anchor="mm", fill="black")
+    draw.text((pad, pad + h1), line2, font=hdr_font, anchor="mm", fill="black")
 
     # — Draw grid —
     for i, m in enumerate(maps):
@@ -255,10 +255,12 @@ def create_ban_status_image(
                 auto   = side in tb[team_key]["auto"]
                 if final and manual and len(bans)==1:
                     bg = "green"
-                elif manual or auto:
+                elif manual:
                     bg = "red"
+                elif auto:
+                    bg = "organge"
                 else:
-                    bg = "yellow"
+                    bg = "white"
 
                 draw.rectangle([x0, y0, x1, y1], fill=bg, outline="black")
 
@@ -267,7 +269,7 @@ def create_ban_status_image(
                 tw, th = bx1 - bx0, by1 - by0
                 tx = x0 + ((cell_w - 2*pad) - tw) / 2
                 ty = y0 + ((cell_h - 2*pad) - th) / 2
-                draw.multiline_text((tx, ty), wrapped, font=row_font, fill="black")
+                draw.multiline_text((tx, ty), wrapped, font=row_font,anchor="mm", fill="black")
 
     # — Save and return —
     out_path = os.path.join(os.getcwd(), CONFIG["output_image"])
@@ -305,6 +307,13 @@ async def update_status_message(
         channel_messages[channel_id] = new.id
         save_state()
 
+async def delete_later(msg: discord.Message, delay: float) -> None:
+    await asyncio.sleep(delay)
+    try:
+        await msg.delete()
+    except:
+        pass
+        
 # ─── Bot Setup ─────────────────────────────────────────────────────────────────
 load_dotenv()
 # Enable necessary intents for slash commands and message content
@@ -386,82 +395,87 @@ async def cleanup_match(ch: int):
 @app_commands.describe(
     team_a="Role for Team A",
     team_b="Role for Team B",
-    mode="ExtraBan or Standard",
-    description="Optional match description"
 )
 async def match_create(
     interaction: discord.Interaction,
-    title: str,
-    team_a: discord.Role,
-    team_b: discord.Role,
-    mode: Literal["ExtraBan","Standard"],
-    description: Optional[str] = None
+    title:       str,
+    team_a:      discord.Role,
+    team_b:      discord.Role,
 ) -> None:
     global team_a_name, team_b_name
     team_a_name, team_b_name = team_a.name, team_b.name
 
-    # Initialize state...
+    # Initialize state
     load_state()
     ch = interaction.channel_id
-    channel_teams[ch]      = (team_a.name, team_b.name)
-    channel_mode[ch]       = mode
-    flip_key               = random.choice(("team_a", "team_b"))
-    channel_flip[ch]       = flip_key
-    match_turns[ch]        = flip_key if mode == "ExtraBan" else "team_a"
-    ongoing_bans[ch]       = {
-        m["name"]: {
-            "team_a": {"manual": [], "auto": []},
-            "team_b": {"manual": [], "auto": []}
-        }
+    
+    # Determine mode based on team_regions mapping
+    mode_cfg = load_teammap()
+    ra = mode_cfg.get("team_regions", {}).get(team_a.name, "Unknown")
+    rb = mode_cfg.get("team_regions", {}).get(team_b.name, "Unknown")
+    mode = determine_ban_option(ra, rb, cfg)
+    
+    # Determine coin flip winner
+    flip = random.choice(("team_a","team_b"))
+    
+    channel_teams[ch]    = (team_a.name, team_b.name)
+    channel_mode[ch]     = mode
+    channel_flip[ch]     = flip
+    channel_decision[ch] = None
+    match_turns[ch]      = flip
+    match_times[ch]      = "TBD"
+    channel_host[ch]     = "Middle Ground Rule" if mode == "ExtraBan" if mode == "DetermineHost" else "TBD"
+    ongoing_bans[ch]     = {
+        m["name"]: {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}}
         for m in load_maplist()
     }
     save_state()
 
-    # 3) Generate the initial status image
+    # Build the image and embed
     img_path = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
         channel_mode[ch],
         channel_flip[ch],
-        channel_host.get(ch),          # host_key (if you’re tracking host)
-        channel_decision.get(ch),      # decision_choice (likely None here)
-        match_turns[ch],               # ← make sure you pass current_turn
+        channel_host.get(ch),
+        channel_decision.get(ch),
+        match_turns[ch],
         match_time_iso=match_times.get(ch),
         final=False
     )
 
-    # Build the embed with all five fields
+    # Build status embed
     A, B = team_a_name, team_b_name
-    coin_winner = A if channel_flip[ch]=="team_a" else B
+    coin_winner = A if flip=="team_a" else B
     host_key   = channel_host.get(ch)
     host_name  = A if host_key=="team_a" else B
-    time_iso   = match_times.get(ch)
-    time_str   = (parser.isoparse(time_iso).astimezone(
-                    pytz.timezone(CONFIG["user_timezone"])
-                 ).strftime("%Y-%m-%d %H:%M %Z")
-                  if time_iso else "None")
-    current_key = match_turns[ch]
-    current_name= A if current_key=="team_a" else B
+    tm_iso     = match_times.get(ch)
+    tm_str     = (
+        parser.isoparse(tm_iso)
+              .astimezone(pytz.timezone(CONFIG["user_timezone"]))
+              .strftime("%Y-%m-%d %H:%M %Z")
+        if tm_iso else "None"
+    )
+    curr_key   = match_turns[ch]
+    curr_name  = A if curr_key=="team_a" else B
 
-    embed = discord.Embed(title="Match Status")
-    embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
-    embed.add_field(name="Map Host",      value=host_name,     inline=True)
-    embed.add_field(name="Mode",          value=mode,          inline=True)
-    embed.add_field(name="Match Time",    value=time_str,      inline=True)
-    embed.add_field(name="Current Turn",  value=current_name,  inline=True)
+    embed = discord.Embed(title=f"🎲 {title}")
+    if description:
+        embed.description = description
+    embed.add_field(name="Flip Winner",  value=coin_winner,  inline=True)
+    embed.add_field(name="Map Host",     value=host_name,    inline=True)
+    embed.add_field(name="Mode",         value=mode,         inline=True)
+    embed.add_field(name="Match Time",   value=tm_str,       inline=True)
+    embed.add_field(name="Current Turn", value=curr_name,    inline=True)
 
-    # **ONE** initial response: image + embed
+    # **One** response: send image + embed, capture message ID
     await interaction.response.send_message(
-        content=f"🎲 **{title}**\n{description or ''}",
         file=discord.File(img_path),
         embed=embed
     )
-
-    # Send & cache the message ID
-    msg_id = await respond_and_edit(interaction, img_path)
-    channel_messages[ch] = msg_id
-    save_state()
-    
+    msg = await interaction.original_response()
+    channel_messages[ch] = msg.id
+    save_state()   
 
 @bot.tree.command(
     name="ban_map",
@@ -484,7 +498,18 @@ async def ban_map(
     ch = interaction.channel_id
 
     # 1) Turn check omitted for brevity…
-
+    if ch not in match_turns:
+        return await interaction.response.send_message(
+            "❌ No active match in this channel.", ephemeral=True
+        )
+    current_key = match_turns[ch]  # "team_a" or "team_b"
+    # channel_teams[ch] == (team_a_name, team_b_name)
+    allowed_role = channel_teams[ch][0] if current_key == "team_a" else channel_teams[ch][1]
+    if not any(r.name == allowed_role for r in interaction.user.roles):
+        return await interaction.response.send_message(
+            f"❌ It's not {allowed_role}'s turn to ban.", ephemeral=True
+    )
+    
     # 2) Pre‐compute remaining combos
     combos = remaining_combos(ch)
     final_combo = (len(combos) == 2 and combos[0][0] == combos[1][0])
@@ -546,7 +571,7 @@ async def ban_map(
     guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(
-    time="ISO-8601 datetime (with timezone) for the match"
+    time="ISO-8601 datetime (with timezone) for the match -> ex. 2025-05-21T18:00:00-04:00"
 )
 async def match_time_cmd(
     interaction: discord.Interaction,
@@ -634,7 +659,7 @@ async def match_time_cmd(
     await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
 @bot.tree.command(
     name="match_decide",
-    description="Choose whether the flip-winner bans first or hosts first",
+    description="Choose whether the flip-winner bans first or hosts first if no Middle Ground Rule",
     guild=discord.Object(id=1366830976369557654)
 )
 @app_commands.describe(
@@ -692,10 +717,7 @@ async def match_decide(
     await update_status_message(ch, None, img)
 
     # 8) Confirm to the user
-    await interaction.followup.send(
-        "✅ Decision recorded; turn order updated.", 
-        ephemeral=True
-    )
+    await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
     
     # 1) Build the status embed
     A = team_a_name; B = team_b_name
@@ -742,11 +764,11 @@ async def match_delete(interaction: discord.Interaction) -> None:
         )
 
     # 2) Restrict to participants of this match
-    team_roles = channel_teams.get(ch, ())
-    if not any(r.name in team_roles for r in interaction.user.roles):
-        return await interaction.response.send_message(
-            "❌ Only participants of this match may delete it.", ephemeral=True
-        )
+    #team_roles = channel_teams.get(ch, ())
+    #if not any(r.name in team_roles for r in interaction.user.roles):
+    #    return await interaction.response.send_message(
+    #        "❌ Only participants of this match may delete it.", ephemeral=True
+    #    )
 
     # 3) Acknowledge to allow I/O
     await interaction.response.defer()
