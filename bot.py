@@ -394,7 +394,7 @@ async def match_create(
     channel_flip[ch]     = flip
     channel_decision[ch] = None
     match_turns[ch]      = flip
-    match_times[ch]      = None #"1900-01-01T00:00-00:00"
+    #match_times[ch]      = "1900-01-01T00:00-00:00"
     channel_host[ch]     = chost
     ongoing_bans[ch]     = {
         m["name"]: {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}}
