@@ -541,12 +541,16 @@ async def ban_map(
         embed.add_field(name="Current Turn",  value=current_name,  inline=True)
         embed.add_field(name="Stage", value="Map ban complete",  inline=False)
     
-        # Single acknowledge + edit
-        await interaction.response.send_message(
-            "✅ Ban phase complete — final map locked.",
-            ephemeral=True
+        await update_status_message(
+            ch,
+            channel_messages[ch],
+            img,
+            embed=embed
         )
-        await update_status_message(ch, channel_messages[ch], img)
+        
+        # Then confirm privately
+        msg = await interaction.followup.send("✅ Map ban confirmed.", ephemeral=True)
+        asyncio.create_task(delete_later(msg, 5.0))
         return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
