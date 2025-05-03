@@ -465,7 +465,7 @@ async def match_create(
     ra = mode_cfg.get("team_regions", {}).get(team_a.name, "Unknown")
     rb = mode_cfg.get("team_regions", {}).get(team_b.name, "Unknown")
     mode = determine_ban_option(ra, rb, mode_cfg)
-    print(mode)
+    
     # Determine coin flip winner
     flip = random.choice(("team_a","team_b"))
     
@@ -638,7 +638,10 @@ async def ban_map(
             embed=embed
         )
         
-        
+        # Then confirm privately
+        msg = await interaction.followup.send("✅ Map ban confirmed.", ephemeral=True)
+        #asyncio.create_task(delete_later(msg, 5.0))
+        return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
     await interaction.response.defer()
