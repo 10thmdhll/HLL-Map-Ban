@@ -690,7 +690,7 @@ async def match_decide(
     # Set next turn based on choice
     if choice == "ban":
         # flip winner bans first
-        match_turns[ch] = flip
+        match_turns[ch] = "team_b" if flip == "team_a" else "team_a"  # internal key 'team_a' or 'team_b'
     else:
         # host: the other team bans first
         match_turns[ch] = "team_b" if flip == "team_a" else "team_a"
@@ -702,7 +702,7 @@ async def match_decide(
         channel_mode[ch],
         channel_flip[ch],
         choice,
-        match_turns[ch],
+        team_b_name if match_turns[ch] == team_a_name else team_a_name,
         match_times.get(ch),
         False
     )
