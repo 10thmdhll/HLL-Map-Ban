@@ -421,7 +421,7 @@ async def match_create(
     ch = interaction.channel_id
     if ch in ongoing_bans:
         await interaction.response.send_message("❌ Match already active.", ephemeral=True)
-        
+    
     cfg = load_teammap()
     maps = load_maplist()
     ra = cfg.get("team_regions", {}).get(team_a_name, "Unknown")
@@ -685,56 +685,22 @@ async def match_decide(
         return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
         
     channel_decision[ch] = choice
-    print(choice)
-    
-    other = "team_a"
-    if winner=="team_a":
-        other = "team_b"
-    
-    if choice == "Host":
-        channel_host[ch] = winner  # flip_winner is host
-        match_turns[ch] = other
-        
-    if choice == "Ban":
-        channel_host[ch] = winner
-        match_turns[ch] = other
-        
+    match_turns[ch]      = channel_flip[ch] if choice=="ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
     save_state()
     
-    host_name = "Middle ground rules apply"
-    if channel_host[ch] == "team_a":
-        host_name = team_a_name
-    if channel_host[ch] == "team_b":
-        host_name = team_b_name
-    
-    final = False
-    turn_name = ""
-    if match_turns[ch] == "team_a":
-        turn_name = team_a_name
-    if match_turns[ch] == "team_b":
-        turn_name = team_b_name
-    if final == True:
-        turn_name = "Final"
-    
-    flip_name = ""
-    if channel_flip[ch]=="team_a":
-        flip_name = team_a_name
-    if channel_flip[ch]=="team_b":
-        flip_name = team_b_name
-    
+        # Map flip key to actual team name
+    flip_name = team_a_name if channel_flip[ch] == "team_a" else team_b_name
     img = create_ban_status_image(
-            load_maplist(),
-            ongoing_bans[ch],
-            team_a_name,
-            team_b_name,
-            channel_mode[ch],
-            flip_name,
-            channel_decision[ch],
-            turn_name,
-            match_times[ch],
-            final,
-            host_name
-        )
+        load_maplist(),
+        ongoing_bans[ch],
+        None, None,
+        channel_mode[ch],
+        flip_name,
+        choice,
+        match_turns[ch],
+        None,
+        False
+    )
     await update_status_message(ch, None, img)
     return await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
 
