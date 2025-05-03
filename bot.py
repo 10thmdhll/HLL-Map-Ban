@@ -94,28 +94,26 @@ def load_maplist() -> List[dict]:
         return json.load(f)["maps"]
    
 def determine_ban_option(
-    team_a: str,
-    team_b: str,
+    a: str,
+    b: str,
     cfg: dict
 ) -> str:
     """
-    Determine ban option based on team names and a teammap config.
-    Config should have keys "team_regions" mapping team names to regions,
-    and "region_pairings" mapping region pairs to ban modes.
+    Determine ban option based on two inputs (team names or region codes) and a config.
+    Config should have:
+      - "team_regions": mapping team names to region codes
+      - "region_pairings": nested mapping regionA -> regionB -> mode
     """
-    # Lookup regions for each team
     team_regions = cfg.get("team_regions", {})
-    region_a = team_regions.get(team_a)
-    region_b = team_regions.get(team_b)
-    if not region_a or not region_b:
-        # Missing region data → fallback
-        return "ExtraBan"
-    # Lookup pairing rules
+    # convert team names to region codes if needed
+    region_a = team_regions.get(a, a)
+    region_b = team_regions.get(b, b)
     pairings = cfg.get("region_pairings", {})
-    # Try direct and reverse pairing
+    # try direct pairing
     option = pairings.get(region_a, {}).get(region_b)
     if option:
         return option
+    # try reverse pairing
     return pairings.get(region_b, {}).get(region_a, "ExtraBan")
 
 
