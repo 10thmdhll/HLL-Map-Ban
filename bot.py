@@ -203,7 +203,7 @@ def create_ban_status_image(
         ta = bans[name]["team_a"]
         a_mark = redx if "Allied" in ta["manual"] or "Allied" in ta["auto"] else " "
         x_mark = redx if "Axis" in ta["manual"] or "Axis" in ta["auto"] else " "
-        left_text = f"   Allied [{a_mark}]    |    Axis [{x_mark]   "
+        left_text = f"   Allied [{a_mark}]    |    Axis [{x_mark}]   "
         draw.text((grid_x0, y0), left_text, font=row_font, fill="black")
 
         # Map name cell (centered in middle column)
@@ -216,7 +216,7 @@ def create_ban_status_image(
         tb = bans[name]["team_b"]
         a_mark = redx if "Allied" in tb["manual"] or "Allied" in tb["auto"] else " "
         x_mark = redx if "Axis" in tb["manual"] or "Axis" in tb["auto"] else " "
-        right_text = f"Allied [{a_mark}] | Axis [{x_mark}]"
+        right_text = f"    Allied [{a_mark}]   |   Axis [{x_mark}]    "
         rx = grid_x0 + 2*cell_w
         draw.text((rx, y0), right_text, font=row_font, fill="black")
 
