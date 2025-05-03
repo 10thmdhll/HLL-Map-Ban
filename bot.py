@@ -462,7 +462,7 @@ async def ban_map(
     # channel_teams[ch] == (team_a_name, team_b_name)
     allowed_role = channel_teams[ch][0] if current_key == "team_a" else channel_teams[ch][1]
     if not any(r.name == allowed_role for r in interaction.user.roles):
-        return await interaction.response.send_message(f"❌ It's not {allowed_role}'s turn to ban.", ephemeral=True)
+        return await interaction.response.send_message(f"❌ It's not your turn to ban.", ephemeral=True)
     
     # 2) Pre‐compute remaining combos
     combos = remaining_combos(ch)
