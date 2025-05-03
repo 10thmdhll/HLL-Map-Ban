@@ -178,13 +178,23 @@ def create_ban_status_image(
             )
             dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
         except Exception:
-            dt_str = "1900-01-01T00:00-04:00"
+            dt_str = "Undecided"
     else:
-        dt_str = "1900-01-01T00:00-04:00"
+        dt_str = "Undecided"
     
+    # — Derive display names —
+    A = team_a_name or "Team A"
+    B = team_b_name or "Team B"
+    coin_winner = A if flip_winner == "team_a" else B if flip_winner == "team_b" else "TBD"
+    if host_key in ("team_a", "team_b"):
+        host = A if host_key == "team_a" else B
+    else:
+        host = host_key or "TBD"
+    current = A if current_turn == "team_a" else B if current_turn == "team_b" else "TBD"
+
     banner1 = f"Coin Flip Winner: {coin_winner}"
-    banner2 = f"Host: {host_key}    |    Match: {dt_str}"
-    banner3 = f"Current Turn: {current_turn}"
+    banner2 = f"Host: {host}    |    Match: {dt_str}"
+    banner3 = f"Current Turn: {current}"
     
     padding = 20
     line_spacer = 10
@@ -202,7 +212,7 @@ def create_ban_status_image(
     cols = 3  # Team A, Map name, Team B
     total_width = 900
     cell_w = total_width // cols
-    row_h = 40
+    row_h = 50
     img_h = header_h + rows * row_h + padding
 
     # — Create canvas —
@@ -222,7 +232,8 @@ def create_ban_status_image(
     grid_y0 = header_h
     square = "■"
     
-    for i, name in enumerate(maps):
+    for i, m in enumerate(maps):
+        name =m["name"]
         y0 = grid_y0 + i * row_h
         # Team A cell
         ta = bans[name]["team_a"]
@@ -402,7 +413,7 @@ async def match_create(
     channel_flip[ch]     = flip
     channel_decision[ch] = None
     match_turns[ch]      = flip
-    #match_times[ch]      = "1900-01-01T00:00-00:00"
+    match_times[ch]      = "Undecided"
     channel_host[ch]     = chost
     ongoing_bans[ch]     = {
         m["name"]: {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}}
@@ -426,7 +437,6 @@ async def match_create(
     # Build status embed
     A, B = team_a_name, team_b_name
     coin_winner = A if flip=="team_a" else B
-    host_key   = channel_host.get(ch)
     host_name  = channel_host[ch]
     tm_iso     = match_times.get(ch)
     tm_str     = (
@@ -689,7 +699,6 @@ async def match_decide(
     # 7) Build the status embed
     A = team_a_name; B = team_b_name
     coin_winner = A if channel_flip[ch]=="team_a" else B
-    host_key   = channel_host.get(ch)
     host_name  = channel_host[ch]
     mode       = channel_mode[ch]
     match_time = match_times.get(ch)
