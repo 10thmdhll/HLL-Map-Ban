@@ -674,7 +674,11 @@ async def on_app_command_error(
 # ─── Ready & Sync ─────────────────────────────────────────────────────────────
 @bot.event
 async def on_ready():
+    # Load/persist state as you already have…
+    guild = discord.Object(id=1366830976369557654)
+    synced = await bot.tree.sync(guild=guild)
+    print(f"Synced {len(synced)} commands to guild {guild.id}: {[c.name for c in synced]}")
+    print("Bot is ready.")
     load_state()
-    print("Bot ready.")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
