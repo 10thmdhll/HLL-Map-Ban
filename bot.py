@@ -55,7 +55,8 @@ def load_state() -> None:
     if not os.path.isfile(STATE_FILE):
         return
     try:
-        data = json.load(open(STATE_FILE))
+        with open(STATE_FILE) as f:
+            data = json.load(f)
     except json.JSONDecodeError:
         return
     ongoing_bans.update({int(k):v for k,v in data.get("ongoing_bans",{}).items()})
@@ -86,51 +87,15 @@ def save_state() -> None:
 
 # ─── Config Loaders & Helpers ──────────────────────────────────────────────────
 def load_teammap() -> dict:
-    return json.load(open(CONFIG["teammap_file"]))
+    with open(CONFIG["teammap_file"]) as f:
+        return json.load(f)
 
 def load_maplist() -> List[dict]:
-    return json.load(open(CONFIG["maplist_file"]))["maps"]
+    with open(CONFIG["maplist_file"]) as f:
+        return json.load(f)["maps"]
 
 def determine_ban_option(a: str, b: str, cfg: dict) -> str:
     return cfg.get("region_pairings", {}).get(a, {}).get(b, "ExtraBan")
-
-def build_banners(
-    mode: str,
-    flip_winner: Optional[str],
-    decision: Optional[str],
-    current: Optional[str],
-    match_time_iso: Optional[str],
-    final: bool
-) -> Tuple[str, str]:
-    global team_a_name, team_b_name
-
-    team_a = team_a_name or "Team A"
-    team_b = team_b_name or "Team B"
-
-    if final:
-        banner1 = "Final Map Locked"
-    elif mode == "ExtraBan":
-        banner1 = f"Extra Ban Winner: {team_a if flip_winner=='team_a' else team_b}"
-    else:
-        banner1 = f"Flip Winner: {team_a if flip_winner=='team_a' else team_b}"
-
-    if decision == "ban":
-        banner2 = f"Ban Turn: {team_a if current=='team_a' else team_b}"
-    elif decision == "host":
-        banner2 = f"Host Turn: {team_a if current=='team_a' else team_b}"
-    else:
-        banner2 = f"Current Turn: {team_a if current=='team_a' else team_b}"
-
-    if match_time_iso:
-        try:
-            dt = parser.isoparse(match_time_iso)
-            user_tz = pytz.timezone(CONFIG["user_timezone"])
-            local_dt = dt.astimezone(user_tz)
-            banner2 += "   |   " + local_dt.strftime("%Y-%m-%d %H:%M %Z")
-        except Exception:
-            pass
-
-    return banner1, banner2
 
 def remaining_combos(ch: int) -> List[Tuple[str,str,str]]:
     combos = []
@@ -144,12 +109,6 @@ def remaining_combos(ch: int) -> List[Tuple[str,str,str]]:
 def is_ban_complete(ch: int) -> bool:
     combos = remaining_combos(ch)
     return len(combos) == 2 and combos[0][0] == combos[1][0]
-
-async def respond_and_edit(interaction, img_path: str):
-    """Sends the initial message and saves message_id."""
-    await interaction.response.send_message(file=discord.File(img_path))
-    msg = await interaction.original_response()
-    return msg.id
 
 def create_ban_status_image(
     maps,
@@ -201,10 +160,13 @@ def create_ban_status_image(
     
     # — Measure banner heights —
     dummy = Image.new("RGB", (1,1))
-    draw = ImageDraw.Draw(dummy)
-    h1 = hdr_font.getsize(banner1)[1]
-    h2 = hdr_font.getsize(banner2)[1]
-    h3 = hdr_font.getsize(banner3)[1]
+    measure = ImageDraw.Draw(dummy)
+    bbox1 = measure.textbbox((0, 0), banner1, font=hdr_font)
+    bbox2 = measure.textbbox((0, 0), banner2, font=hdr_font)
+    bbox3 = measure.textbbox((0, 0), banner3, font=hdr_font)
+    h1 = bbox1[3] - bbox1[1]
+    h2 = bbox2[3] - bbox2[1]
+    h3 = bbox3[3] - bbox3[1]
     header_h = padding + h1 + line_spacer + h2 + line_spacer + h3 + padding
 
     # — Grid dimensions —
@@ -212,7 +174,7 @@ def create_ban_status_image(
     cols = 3  # Team A, Map name, Team B
     total_width = 900
     cell_w = total_width // cols
-    row_h = 50
+    row_h = (bbox1[3] - bbox1[1]) + padding
     img_h = header_h + rows * row_h + padding
 
     # — Create canvas —
@@ -244,7 +206,8 @@ def create_ban_status_image(
 
         # Map name cell (centered in middle column)
         mx = grid_x0 + cell_w
-        w_map = draw.textsize(name, font=row_font)[0]
+        bbox = measure.textbbox((0,0), name, font=row_font)
+        w_map = bbox[2] - bbox[0]
         draw.text((mx + (cell_w - w_map)/2, y0), name, font=row_font, fill="black")
 
         # Team B cell
@@ -358,7 +321,7 @@ async def side_autocomplete(
 
 async def cleanup_match(ch: int):
     for d in (
-        ongoing_bans, match_turns, channel_teams,
+        ongoing_bans, match_turns, channel_teams, match_times,
         channel_messages, channel_flip, channel_decision, channel_mode, channel_host
     ):
         d.pop(ch, None)
@@ -438,13 +401,19 @@ async def match_create(
     A, B = team_a_name, team_b_name
     coin_winner = A if flip=="team_a" else B
     host_name  = channel_host[ch]
-    tm_iso     = match_times.get(ch)
-    tm_str     = (
-        parser.isoparse(tm_iso)
-              .astimezone(pytz.timezone(CONFIG["user_timezone"]))
-              .strftime("%Y-%m-%d %H:%M %Z")
-        if tm_iso else "None"
-    )
+    
+    tm_iso = match_times.get(ch)
+    if tm_iso and tm_iso not in ("Undecided", "TBD"):
+        try:
+            dt = parser.isoparse(tm_iso).astimezone(
+                pytz.timezone(CONFIG["user_timezone"])
+            )
+            tm_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+        except Exception:
+            tm_str = "Undecided"
+    else:
+        tm_str = "Undecided"
+    
     curr_key   = match_turns[ch]
     curr_name  = A if curr_key=="team_a" else B
 
