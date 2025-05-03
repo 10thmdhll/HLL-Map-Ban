@@ -198,21 +198,18 @@ def create_ban_status_image(
     x0, y0, x1, y1 = meas.textbbox((0,0), banner2, font=hdr_font)
     w2, h2 = x1 - x0, y1 - y0
     
-    # Now compute overall image size, then create real canvas
+    # Compute overall image size
     header_height = h1 + h2 + pad * 2
-    img = Image.new("RGBA", (img_w, img_h), "white")
-    draw = ImageDraw.Draw(img)
-
-    # Grid dimensions
     cols = len(maps)
     rows = 2  # Allied, Axis
     cell_w = max(200, CONFIG["max_inline_width"] // max(cols, 1))
     cell_h = CONFIG["row_font_size"] * 2
 
+    # Now that header_height, cell_w and cell_h are known, define img_w/img_h
     img_w = cols * cell_w
     img_h = header_height + rows * cell_h
 
-    # Create image
+    # Create the actual canvas and draw object
     img = Image.new("RGBA", (img_w, img_h), "white")
     draw = ImageDraw.Draw(img)
 
