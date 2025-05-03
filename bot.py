@@ -180,8 +180,13 @@ def create_ban_status_image(
     )
 
     # Load fonts
-    hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["header_font_size"])
-    row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["row_font_size"])
+    try:
+        hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["header_font_size"])
+        row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["row_font_size"])
+    except OSError:
+        # Fallback to PIL's built-in font if your TTF isn't available
+        hdr_font = ImageFont.load_default()
+        row_font = ImageFont.load_default()
 
     # Measure banners
     pad = 20
