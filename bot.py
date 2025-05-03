@@ -686,14 +686,15 @@ async def match_decide(
     await interaction.response.defer(ephemeral=True)
     # Record decision
     channel_decision[ch] = choice
-    
-    # Set next turn based on choice
+    flip_key = channel_flip[ch]  # 'team_a' or 'team_b'
+    # If flip winner chooses to ban, they go first; if choose host, other goes first
     if choice == "ban":
-        # flip winner bans first
-        match_turns[ch] = "team_b" if flip == "team_a" else "team_a"  # internal key 'team_a' or 'team_b'
+        match_turns[ch] = flip_key
     else:
-        # host: the other team bans first
-        match_turns[ch] = "team_b" if flip == "team_a" else "team_a"
+        # host choice: other team bans first
+        match_turns[ch] = "team_b" if flip_key == "team_a" else "team_a"
+    save_state()
+    
     # Regenerate and update image
     img = create_ban_status_image(
         load_maplist(),
