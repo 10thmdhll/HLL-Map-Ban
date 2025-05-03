@@ -525,8 +525,13 @@ async def ban_map(
         final=False
     )
 
-    await update_status_message(ch, channel_messages[ch], img)
-    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    await interaction.edit_original_response(
+        file=discord.File(img),
+        embed=embed
+    )
+
+    # Then confirm privately
+    await interaction.followup.send("✅ Updated.", ephemeral=True)
       
 @bot.tree.command(
     name="match_time",
@@ -608,7 +613,12 @@ async def match_time_cmd(
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
     # 7) Edit the original image message with both image + embed
-    await update_status_message(ch, channel_messages[ch], img, embed)
+    await interaction.edit_original_response(
+        file=discord.File(img),
+        embed=embed
+    )
+
+    # Then confirm privately
     await interaction.followup.send("✅ Updated.", ephemeral=True)
 
     
@@ -693,7 +703,12 @@ async def match_decide(
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
 
     # 8) Edit the original image message with both image + embed
-    await update_status_message(ch, channel_messages[ch], img, embed)
+    await interaction.edit_original_response(
+        file=discord.File(img),
+        embed=embed
+    )
+
+    # Then confirm privately
     await interaction.followup.send("✅ Updated.", ephemeral=True)
 
 
