@@ -252,7 +252,14 @@ def create_ban_status_image(
         x0 = grid_x0
         x1 = x0 + half_w
         ta = bans[name]["team_a"]
-        color = "red" if "Allied" in ta["manual"] or "Allied" in ta["auto"] else "green"
+        
+        if "Allied" in tb["manual"]:
+            color = "red"
+        elif "Allied" in tb["auto"]:
+            color = "orange"
+        else:
+            color = "white"
+        
         draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
         text = "Allies"
         bbox = measure.textbbox((0,0), text, font=row_font)
@@ -263,7 +270,14 @@ def create_ban_status_image(
         # Left team (Team A) Axis cell
         x0 = grid_x0 + half_w
         x1 = grid_x0 + cell_w
-        color = "red" if "Axis" in ta["manual"] or "Axis" in ta["auto"] else "green"
+        
+        if "Axis" in tb["manual"]:
+            color = "red"
+        elif "Axis" in tb["auto"]:
+            color = "orange"
+        else:
+            color = "white"
+        
         draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
         text = "Axis"
         bbox = measure.textbbox((0,0), text, font=row_font)
@@ -284,7 +298,14 @@ def create_ban_status_image(
         x0 = grid_x0 + 2 * cell_w
         x1 = x0 + half_w
         tb = bans[name]["team_b"]
-        color = "red" if "Allied" in tb["manual"] or "Allied" in tb["auto"] else "green"
+        
+        if "Allied" in tb["manual"]:
+            color = "red"
+        elif "Allied" in tb["auto"]:
+            color = "orange"
+        else:
+            color = "white"
+        
         draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
         text = "Allies"
         bbox = measure.textbbox((0,0), text, font=row_font)
@@ -295,7 +316,14 @@ def create_ban_status_image(
         # Right team (Team B) Axis cell
         x0 = grid_x0 + 2 * cell_w + half_w
         x1 = x0 + half_w
-        color = "red" if "Axis" in tb["manual"] or "Axis" in tb["auto"] else "green"
+        
+        if "Axis" in tb["manual"]:
+            color = "red"
+        elif "Axis" in tb["auto"]:
+            color = "orange"
+        else:
+            color = "white"
+
         draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
         text = "Axis"
         bbox = measure.textbbox((0,0), text, font=row_font)
