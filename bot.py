@@ -202,9 +202,9 @@ def create_ban_status_image(
     # — Measure banner heights —
     dummy = Image.new("RGB", (1,1))
     draw = ImageDraw.Draw(dummy)
-    h1 = draw.textsize(banner1, font=hdr_font)[1]
-    h2 = draw.textsize(banner2, font=hdr_font)[1]
-    h3 = draw.textsize(banner3, font=hdr_font)[1]
+    h1 = hdr_font.getsize(banner1)[1]
+    h2 = hdr_font.getsize(banner2)[1]
+    h3 = hdr_font.getsize(banner3)[1]
     header_h = padding + h1 + line_spacer + h2 + line_spacer + h3 + padding
 
     # — Grid dimensions —
