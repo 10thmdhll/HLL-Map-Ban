@@ -526,7 +526,7 @@ async def ban_map(
     )
 
     await update_status_message(ch, channel_messages[ch], img)
-    await interaction.followup.send("✅ Ban recorded.", ephemeral=True)
+    await interaction.response.send_message("✅ Ban recorded.", ephemeral=True)
       
 @bot.tree.command(
     name="match_time",
@@ -568,7 +568,7 @@ async def match_time_cmd(
         match_times[ch] = dt.isoformat()
         save_state()
     except Exception as e:
-        return await interaction.followup.send(
+        return await interaction.response.send_message(
             f"❌ Invalid datetime: {e}", 
             ephemeral=True
         )
@@ -609,7 +609,7 @@ async def match_time_cmd(
 
     # 7) Edit the original image message with both image + embed
     await update_status_message(ch, channel_messages[ch], img, embed)
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    await interaction.response.send_message("✅ Updated.", ephemeral=True)
 
     
 @bot.tree.command(
@@ -694,7 +694,7 @@ async def match_decide(
 
     # 8) Edit the original image message with both image + embed
     await update_status_message(ch, channel_messages[ch], img, embed)
-    await interaction.followup.send("✅ Updated.", ephemeral=True)
+    await interaction.response.send_message("✅ Updated.", ephemeral=True)
 
 
 @bot.tree.command(
@@ -747,7 +747,7 @@ async def match_delete(interaction: discord.Interaction) -> None:
     save_state()
 
     # 6) Confirm deletion to the user
-    await interaction.followup.send(
+    await interaction.response.send_message(
         "✅ Match has been deleted and state cleared.", 
         ephemeral=True
     )
