@@ -187,12 +187,18 @@ def create_ban_status_image(
         # Fallback to PIL's built-in font if your TTF isn't available
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
-
-    # Measure banners
+        
+    # --- Measure text sizes using a temporary draw ---
     pad = 20
-    w1, h1 = draw.textsize(banner1, font=hdr_font)
-    w2, h2 = draw.textsize(banner2, font=hdr_font)
+    temp_img = Image.new("RGBA", (1,1))
+    meas = ImageDraw.Draw(temp_img)
+    w1, h1 = meas.textsize(banner1, font=hdr_font)
+    w2, h2 = meas.textsize(banner2, font=hdr_font)
+    
+    # Now compute overall image size, then create real canvas
     header_height = h1 + h2 + pad * 2
+    img = Image.new("RGBA", (img_w, img_h), "white")
+    draw = ImageDraw.Draw(img)
 
     # Grid dimensions
     cols = len(maps)
