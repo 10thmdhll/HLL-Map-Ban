@@ -539,7 +539,7 @@ async def ban_map(
         embed.add_field(name="Mode",          value=mode,          inline=True)
         embed.add_field(name="Match Time",    value=time_str,      inline=True)
         embed.add_field(name="Current Turn",  value=current_name,  inline=True)
-        embed.add_field(name="Stage",  "Map ban complete",  inline=False)
+        embed.add_field(name="Stage", value="Map ban complete",  inline=False)
     
         # Single acknowledge + edit
         await interaction.response.send_message(
@@ -598,7 +598,7 @@ async def ban_map(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
-    embed.add_field(name="Stage",  "Map ban ongoing",  inline=False)
+    embed.add_field(name="Stage", value="Map ban ongoing",  inline=False)
 
     await update_status_message(
         ch,
@@ -696,7 +696,7 @@ async def match_time_cmd(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
-    embed.add_field(name="Stage",  "Map ban complete, time updated",  inline=False)
+    embed.add_field(name="Stage", value="Map ban complete, time updated",  inline=False)
 
 
     # 7) Edit the original image message with both image + embed
@@ -795,7 +795,7 @@ async def match_decide(
     embed.add_field(name="Mode",          value=mode,          inline=True)
     embed.add_field(name="Match Time",    value=time_str,      inline=True)
     embed.add_field(name="Current Turn",  value=current_name,  inline=True)
-    embed.add_field(name="Stage",  "Starting",  inline=False)
+    embed.add_field(name="Stage", value="Starting",  inline=False)
 
 
     # 8) Edit the original image message with both image + embed
