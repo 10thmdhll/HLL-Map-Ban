@@ -467,7 +467,7 @@ async def match_create(
     ra = mode_cfg.get("team_regions", {}).get(team_a.name, "Unknown")
     rb = mode_cfg.get("team_regions", {}).get(team_b.name, "Unknown")
     mode = determine_ban_option(ra, rb, mode_cfg)
-    
+    print(mode)
     # Determine coin flip winner
     flip = random.choice(("team_a","team_b"))
     
