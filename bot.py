@@ -685,6 +685,7 @@ async def match_decide(
         return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
         
     channel_decision[ch] = choice
+    print(choice)
     
     other = "team_a"
     if winner=="team_a":
