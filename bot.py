@@ -171,8 +171,16 @@ def create_ban_status_image(
         row_font = ImageFont.load_default()
 
     # — Prepare banner lines —
-    dt = parser.isoparse(match_time_iso).astimezone(pytz.timezone(CONFIG["user_timezone"]))
-    dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    if match_time_iso:
+        try:
+            dt = parser.isoparse(match_time_iso).astimezone(
+                pytz.timezone(CONFIG["user_timezone"])
+            )
+            dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+        except Exception:
+            dt_str = "1900-01-01T00:00-04:00"
+    else:
+        dt_str = "1900-01-01T00:00-04:00"
     
     banner1 = f"Coin Flip Winner: {coin_winner}"
     banner2 = f"Host: {host_key}    |    Match: {dt_str}"
