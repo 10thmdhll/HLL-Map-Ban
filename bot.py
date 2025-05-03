@@ -597,7 +597,7 @@ async def ban_map(
     name="match_time",
     description="Set match date/time"
 )
-@app_commands.describe(time="ISO8601 datetime with timezone 2025-05-21T18:00:00-04:00")
+@app_commands.describe(time="ISO8601 datetime with timezone ex. 2025-05-21T18:00:00-04:00")
 async def match_time(
     interaction: discord.Interaction,
     time: str
