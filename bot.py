@@ -641,7 +641,7 @@ async def ban_map(
         # Then confirm privately
         msg = await interaction.followup.send("✅ Map ban confirmed.", ephemeral=True)
         asyncio.create_task(delete_later(msg, 5.0))
-        return
+        #return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
     await interaction.response.defer()
