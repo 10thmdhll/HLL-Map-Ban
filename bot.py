@@ -214,11 +214,40 @@ def create_ban_status_image(
     
     # — Draw grid rows —
     grid_x0 = padding
-    grid_y0 = header_h
+    
+    # — Draw column headers row —
+    header_row_y = header_h
+    
+    # Team A header (spanning first cell)
+    draw.rectangle([grid_x0, header_row_y, grid_x0 + cell_w, header_row_y + row_h], fill="lightgray", outline="black")
+    text = team_a_name or "Team A"
+    bbox = measure.textbbox((0,0), text, font=row_font)
+    w = bbox[2] - bbox[0]; h = bbox[3] - bbox[1]
+    draw.text((grid_x0 + (cell_w - w)/2, header_row_y + (row_h - h)/2), text, font=row_font, fill="black")
+    
+    # Maps header
+    mid_x = grid_x0 + cell_w
+    draw.rectangle([mid_x, header_row_y, mid_x + cell_w, header_row_y + row_h], fill="lightgray", outline="black")
+    text = "Maps"
+    bbox = measure.textbbox((0,0), text, font=row_font)
+    w = bbox[2] - bbox[0]; h = bbox[3] - bbox[1]
+    draw.text((mid_x + (cell_w - w)/2, header_row_y + (row_h - h)/2), text, font=row_font, fill="black")
+    
+    # Team B header
+    right_x = grid_x0 + 2 * cell_w
+    draw.rectangle([right_x, header_row_y, right_x + cell_w, header_row_y + row_h], fill="lightgray", outline="black")
+    text = team_b_name or "Team B"
+    bbox = measure.textbbox((0,0), text, font=row_font)
+    w = bbox[2] - bbox[0]; h = bbox[3] - bbox[1]
+    draw.text((right_x + (cell_w - w)/2, header_row_y + (row_h - h)/2), text, font=row_font, fill="black")
+    
+    # Adjust grid start below header row
+    grid_y0 = header_row_y + row_h
     half_w = cell_w // 2
     for i, m in enumerate(maps):
         name = m["name"]
         y0 = grid_y0 + i * row_h
+        
         # Left team (Team A) Allied cell
         x0 = grid_x0
         x1 = x0 + half_w
@@ -230,6 +259,7 @@ def create_ban_status_image(
         w = bbox[2] - bbox[0]
         h = bbox[3] - bbox[1]
         draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+        
         # Left team (Team A) Axis cell
         x0 = grid_x0 + half_w
         x1 = grid_x0 + cell_w
@@ -240,6 +270,7 @@ def create_ban_status_image(
         w = bbox[2] - bbox[0]
         h = bbox[3] - bbox[1]
         draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+        
         # Center map name cell
         x0 = grid_x0 + cell_w
         x1 = x0 + cell_w
@@ -248,6 +279,7 @@ def create_ban_status_image(
         w = bbox[2] - bbox[0]
         h = bbox[3] - bbox[1]
         draw.text((x0 + (cell_w - w)/2, y0 + (row_h - h)/2), name, font=row_font, fill="black")
+        
         # Right team (Team B) Allied cell
         x0 = grid_x0 + 2 * cell_w
         x1 = x0 + half_w
@@ -259,6 +291,7 @@ def create_ban_status_image(
         w = bbox[2] - bbox[0]
         h = bbox[3] - bbox[1]
         draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
+        
         # Right team (Team B) Axis cell
         x0 = grid_x0 + 2 * cell_w + half_w
         x1 = x0 + half_w
