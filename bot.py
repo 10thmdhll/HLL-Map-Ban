@@ -475,9 +475,9 @@ async def ban_map(
         tb = ongoing_bans.setdefault(ch, {})
         tb.setdefault(map_name, {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
         tk = match_turns[ch]
-        tb[map_name][tk]["manual"].append(side)
+        #tb[map_name][tk]["manual"].append(side)
         other = "team_b" if tk=="team_a" else "team_a"
-        tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
+        #tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
         #match_turns[ch] = other
         save_state()
 
