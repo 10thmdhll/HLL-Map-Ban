@@ -190,8 +190,8 @@ def create_ban_status_image(
 
     # Measure banners
     pad = 20
-    w1, h1 = hdr_font.getsize(banner1)
-    w2, h2 = hdr_font.getsize(banner2)
+    w1, h1 = draw.textsize(banner1, font=hdr_font)
+    w2, h2 = draw.textsize(banner2, font=hdr_font)
     header_height = h1 + h2 + pad * 2
 
     # Grid dimensions
