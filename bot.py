@@ -162,12 +162,12 @@ async def defer_and_followup(interaction, img_path: str, confirm: str = None):
         await interaction.followup.send(confirm, ephemeral=True)
         
 def create_ban_status_image(
-    maps: List[dict],
-    bans: Dict[str, Dict[str, List[str]]],
+    maps,
+    bans,
     mode: str,
     flip_winner: Optional[str],
     host_key: Optional[str],
-    decision: Optional[str],
+    decision_choice: Optional[str],
     current_turn: Optional[str],
     match_time_iso: Optional[str] = None,
     final: bool = False
@@ -418,13 +418,14 @@ async def match_create(
     save_state()
 
     # 3) Generate the initial status image
-    img_path = create_ban_status_image(
+    img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
         channel_mode[ch],
         channel_flip[ch],
-        channel_decision.get(ch),
-        match_turns[ch],
+        channel_host.get(ch),          # host_key (if you’re tracking host)
+        channel_decision.get(ch),      # decision_choice (likely None here)
+        match_turns[ch],               # ← make sure you pass current_turn
         match_time_iso=match_times.get(ch),
         final=False
     )
