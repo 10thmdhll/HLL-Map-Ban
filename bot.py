@@ -581,6 +581,7 @@ async def ban_map(
 
     if final_combo:
         # --- FINAL BRANCH: lock in and send in one shot ---
+        await interaction.response.defer()
         tb = ongoing_bans.setdefault(ch, {})
         tb.setdefault(map_name, {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}})
         tk = match_turns[ch]
@@ -640,7 +641,7 @@ async def ban_map(
         
         # Then confirm privately
         msg = await interaction.followup.send("✅ Map ban confirmed.", ephemeral=True)
-        #asyncio.create_task(delete_later(msg, 5.0))
+        asyncio.create_task(delete_later(msg, 5.0))
         return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
