@@ -685,7 +685,7 @@ async def match_decide(
         return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
         
     channel_decision[ch] = choice
-    match_turns[ch]      = channel_flip[ch] if choice=="ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
+    match_turns[ch]      = channel_flip[ch] if choice=="Ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
     save_state()
     
         # Map flip key to actual team name
@@ -693,7 +693,7 @@ async def match_decide(
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
-        None, None,
+        team_a_name, team_b_name,
         channel_mode[ch],
         flip_name,
         choice,
