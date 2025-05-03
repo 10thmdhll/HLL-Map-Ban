@@ -525,6 +525,20 @@ async def ban_map(
         final=False
     )
     
+    # 6) Build the status embed
+    A = team_a_name; B = team_b_name
+    coin_winner = A if channel_flip[ch]=="team_a" else B
+    host_name  = channel_host[ch]
+    mode       = channel_mode[ch]
+    match_time = match_times.get(ch)
+    if match_time:
+        dt = parser.isoparse(match_time).astimezone(pytz.timezone(CONFIG["user_timezone"]))
+        time_str = dt.strftime("%Y-%m-%d %H:%M %Z")
+    else:
+        time_str = "Undecided"
+    current_key = match_turns.get(ch)
+    current_name= A if current_key=="team_a" else B
+    
     embed = discord.Embed(title="Match Status")
     embed.add_field(name="Flip Winner",   value=coin_winner,   inline=True)
     embed.add_field(name="Map Host",      value=host_name,     inline=True)
