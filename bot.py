@@ -673,9 +673,12 @@ async def match_decide(
 ) -> None:
     """Handle the coin flip decision: 'ban' means flip winner bans first; 'host' means other hosts and bans second."""
     ch = interaction.channel_id
+    flip = channel_flip[ch]  # internal key 'team_a' or 'team_b'
     # Validate state
     if ch not in ongoing_bans or channel_flip.get(ch) is None or channel_decision.get(ch) is not None:
         return await interaction.response.send_message("❌ Invalid state.", ephemeral=True)
+    
+    wl = channel_teams[ch][0] if flip=="team_a" else channel_teams[ch][1]
     if wl not in [r.name for r in interaction.user.roles]:
         return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
        
@@ -683,7 +686,7 @@ async def match_decide(
     await interaction.response.defer(ephemeral=True)
     # Record decision
     channel_decision[ch] = choice
-    flip = channel_flip[ch]  # internal key 'team_a' or 'team_b'
+    
     # Set next turn based on choice
     if choice == "ban":
         # flip winner bans first
