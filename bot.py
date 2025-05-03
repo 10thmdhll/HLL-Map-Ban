@@ -666,43 +666,44 @@ async def match_time(
     name="match_decide",
     description="Winner chooses host or first ban"
 )
+@app_commands.describe(choice="Select 'ban' to ban first, or 'host' to choose hosting")
 async def match_decide(
     interaction: discord.Interaction,
-    choice: Literal["Ban","Host"]
+    choice: Literal["ban","host"]
 ) -> None:
-    await interaction.response.defer(ephemeral=True)
+    """Handle the coin flip decision: 'ban' means flip winner bans first; 'host' means other hosts and bans second."""
     ch = interaction.channel_id
-    if ch not in ongoing_bans or channel_flip[ch] is None or channel_decision[ch] is not None:
+    # Validate state
+    if ch not in ongoing_bans or channel_flip.get(ch) is None or channel_decision.get(ch) is not None:
         return await interaction.response.send_message("❌ Invalid state.", ephemeral=True)
-        
-    if channel_decision[ch] is not None:
-        return await interaction.response.send_message("❌ Already decided.", ephemeral=True)
-        
-    winner = channel_flip[ch]
-    wl = channel_teams[ch][0] if winner=="team_a" else channel_teams[ch][1]
-    
-    if wl not in [r.name for r in interaction.user.roles]:
-        return await interaction.response.send_message("❌ Only flip winner.", ephemeral=True)  
-        
+    # Acknowledge
+    await interaction.response.defer(ephemeral=True)
+    # Record decision
     channel_decision[ch] = choice
-    match_turns[ch]      = channel_flip[ch] if choice=="Ban" else ("team_b" if channel_flip[ch]=="team_a" else "team_a")
+    flip = channel_flip[ch]  # internal key 'team_a' or 'team_b'
+    # Set next turn based on choice
+    if choice == "ban":
+        # flip winner bans first
+        match_turns[ch] = flip
+    else:
+        # host: the other team bans first
+        match_turns[ch] = "team_b" if flip == "team_a" else "team_a"
     save_state()
-    
-        # Map flip key to actual team name
-    flip_name = team_a_name if channel_flip[ch] == "team_a" else team_b_name
+    # Regenerate and update image
     img = create_ban_status_image(
         load_maplist(),
         ongoing_bans[ch],
-        team_a_name, team_b_name,
+        None, None,
         channel_mode[ch],
-        flip_name,
+        channel_flip[ch],
         choice,
-        team_a_name if match_turns[ch] == "team_a" else team_b_name,
-        None,
+        match_turns[ch],
+        match_times.get(ch),
         False
     )
     await update_status_message(ch, None, img)
-    return await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
+    # Confirmation
+    await interaction.followup.send(f"✅ Decision recorded: {choice}", ephemeral=True)
 
 @bot.tree.command(
     name="match_delete",
