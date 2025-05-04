@@ -1012,7 +1012,7 @@ async def on_ready():
     # Load/persist state as you already have…
     guild = discord.Object(id=964975223646601296)
     synced = await bot.tree.sync(guild=guild)
-    print("Bot is ready.")
+    print("Bot is ready.") 
     load_state()
 
 bot.run(os.getenv("DISCORD_TOKEN"))
