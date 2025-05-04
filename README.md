@@ -5,8 +5,7 @@ A Discord bot that automates competitive map‐ban sequences for Hell Let Loose 
 - Region-based “Extra Ban” vs “Determine Host” logic
 - Coin-flip to decide first ban or host
 - Live ban-status images rendered via Pillow
-- Persistent state across restarts
-- Community poll at the end for everyone to vote on the match winner
+- Community poll at the end for everyone(must be able to see the map ban channel) to vote on the match winner
 
 ---
 
