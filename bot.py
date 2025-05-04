@@ -3,7 +3,7 @@ import json
 import random
 import asyncio
 from typing import List, Tuple, Optional, Literal, Dict
-
+from io import BytesIO
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -116,6 +116,21 @@ def determine_ban_option(
     # try reverse pairing
     return pairings.get(region_b, {}).get(region_a, "ExtraBan")
 
+def create_ban_image_bytes(
+    maps, bans, mode, flip_winner, host_key, decision_choice,
+    current_turn, match_time_iso=None, final=False
+) -> BytesIO:
+    # 1) Build your PIL Image exactly as before, but don’t save it to a file:
+    img = create_ban_status_image(   # assume you refactor your existing function body into one that returns Image
+        maps, bans, mode, flip_winner, host_key, decision_choice,
+        current_turn, match_time_iso, final
+    )
+
+    # 2) Dump it into a BytesIO buffer
+    buf = BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    buf.seek(0)
+    return buf
 
 def remaining_combos(ch: int) -> List[Tuple[str,str,str]]:
     combos = []
@@ -140,7 +155,7 @@ def create_ban_status_image(
     current_turn: Optional[str],
     match_time_iso: Optional[str] = None,
     final: bool = False
-) -> str:
+) -> Image:
     # — Load fonts with fallback —
     try:
         hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size_h"])
@@ -330,10 +345,8 @@ def create_ban_status_image(
         draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
 
 
-    # — Save and return —
-    out_path = os.path.join(os.getcwd(), CONFIG["output_image"])
-    img.save(out_path, optimize=True, compress_level=9)
-    return out_path
+    # — Return PIL Image —
+    return img
 
 # ─── Messaging Helper ─────────────────────────────────────────────────────────
 async def update_status_message(
@@ -346,7 +359,7 @@ async def update_status_message(
     if message_id:
         try:
             msg = await channel.fetch_message(message_id)
-            file = discord.File(image_path, filename=os.path.basename(image_path))
+            file = discord.File(image_path, filename=f"ban_status_{channel_id}.png")
             await msg.edit(attachments=[file], embed=embed)
         except Exception:
             # fallback: send a fresh message and store its ID
@@ -492,7 +505,7 @@ async def match_create(
     save_state()
 
     # Build the image and embed
-    img = create_ban_status_image(
+    buf = create_ban_image_bytes(
         maps=load_maplist(),
         bans=ongoing_bans[ch],
         mode=channel_mode[ch],
@@ -535,7 +548,7 @@ async def match_create(
 
     # **One** response: send image + embed, capture message ID
     await interaction.response.send_message(
-        file=discord.File(img),
+        file=discord.File(fp=buf, filename=f"ban_status_{ch}.png"),
         embed=embed
     )
     msg = await interaction.original_response()
@@ -592,7 +605,7 @@ async def ban_map(
         save_state()
 
 
-        img = create_ban_status_image(
+        buf = create_ban_image_bytes(
             maps=load_maplist(),
             bans=ongoing_bans[ch],
             mode=channel_mode[ch],
@@ -635,7 +648,7 @@ async def ban_map(
         await update_status_message(
             ch,
             channel_messages[ch],
-            img,
+            buf,
             embed=embed
         )
         
@@ -657,7 +670,7 @@ async def ban_map(
     match_turns[ch] = other
     save_state()
 
-    img = create_ban_status_image(
+    buf = create_ban_image_bytes(
         maps=load_maplist(),
         bans=ongoing_bans[ch],
         mode=channel_mode[ch],
@@ -700,7 +713,7 @@ async def ban_map(
     await update_status_message(
         ch,
         channel_messages[ch],
-        img,
+        buf,
         embed=embed
     )
 
@@ -757,7 +770,7 @@ async def match_time_cmd(
         return
         
     # 5) Rebuild the image (now with the new time included)
-    img = create_ban_status_image(
+    buf = create_ban_image_bytes(
         maps=load_maplist(),
         bans=ongoing_bans[ch],
         mode=channel_mode[ch],
@@ -802,7 +815,7 @@ async def match_time_cmd(
     await update_status_message(
         ch,
         channel_messages[ch],
-        img,
+        buf,
         embed=embed
     )
 
@@ -858,7 +871,7 @@ async def match_decide(
     save_state()
 
     # 6) Rebuild the updated status image
-    img = create_ban_status_image(
+    buf = create_ban_image_bytes(
         maps=load_maplist(),
         bans=ongoing_bans[ch],
         mode=channel_mode[ch],
@@ -903,7 +916,7 @@ async def match_decide(
     await update_status_message(
         ch,
         channel_messages[ch],
-        img,
+        buf,
         embed=embed
     )
 
