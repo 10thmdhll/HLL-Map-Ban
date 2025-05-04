@@ -352,23 +352,31 @@ def create_ban_status_image(
 async def update_status_message(
     channel_id: int,
     message_id: Optional[int],
-    image_path: str,
+    image_source: Union[str, BytesIO],
     embed: Optional[discord.Embed] = None
 ) -> None:
     channel = bot.get_channel(channel_id)
+    
+    # Prepare the discord.File object
+    if isinstance(image_source, BytesIO):
+        # In‐memory buffer → give it a filename
+        file = discord.File(fp=image_source, filename=f"ban_status_{channel_id}.png")
+    else:
+        # Filesystem path
+        file = discord.File(image_source, filename=os.path.basename(image_source))
+
     if message_id:
         try:
             msg = await channel.fetch_message(message_id)
-            file = discord.File(image_path, filename=f"ban_status_{channel_id}.png")
-            await msg.edit(attachments=[file], embed=embed)
+            # Use files=[…], not attachments
+            await msg.edit(files=[file], embed=embed)
         except Exception:
-            # fallback: send a fresh message and store its ID
-            new = await channel.send(file=discord.File(image_path), embed=embed)
+            # fallback: send a fresh message
+            new = await channel.send(file=file, embed=embed)
             channel_messages[channel_id] = new.id
             save_state()
     else:
-        # no existing message → send new
-        new = await channel.send(file=discord.File(image_path), embed=embed)
+        new = await channel.send(file=file, embed=embed)
         channel_messages[channel_id] = new.id
         save_state()
 
@@ -447,10 +455,6 @@ async def cleanup_match(ch: int):
     ):
         d.pop(ch, None)
     save_state()
-    try:
-        os.remove(CONFIG["output_image"])
-    except FileNotFoundError:
-        pass
         
 @bot.tree.command(
     name="match_create",
