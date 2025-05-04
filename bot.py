@@ -671,9 +671,6 @@ async def ban_map(
         await poll.add_reaction("A")
         await poll.add_reaction("B")
         return
-        
-        
-        return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
     await interaction.response.defer()
