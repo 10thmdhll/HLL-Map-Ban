@@ -663,11 +663,11 @@ async def ban_map(
         # — Post a public winner prediction poll —
         channel = bot.get_channel(ch)
         poll = await channel.send(
-            "**Winner Predictions**
-            React below to predict the match winner:
-            "A" for **" + team_a_name + "**
-            "B" for **" + team_b_name + "**"
-        )
+            "**Winner Predictions**\n"
+            "React below to predict the match winner:\n"
+            "A for **" + team_a_name + "**\n"
+            "B for **" + team_b_name + "**"
+)
         await poll.add_reaction("A")
         await poll.add_reaction("B")
         return
