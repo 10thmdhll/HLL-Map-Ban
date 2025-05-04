@@ -668,8 +668,8 @@ async def ban_map(
             "A for **" + team_a_name + "**\n"
             "B for **" + team_b_name + "**"
 )
-        await poll.add_reaction("A")
-        await poll.add_reaction("B")
+        await poll.add_reaction(":regional_indicator_a:")
+        await poll.add_reaction(":regional_indicator_b:")
         return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
