@@ -665,11 +665,11 @@ async def ban_map(
         poll = await channel.send(
             "**Winner Predictions**\n"
             "React below to predict the match winner:\n"
-            "A for **" + team_a_name + "**\n"
-            "B for **" + team_b_name + "**"
+            "🇦 for **" + team_a_name + "**\n"
+            "🇧 for **" + team_b_name + "**"
 )
-        await poll.add_reaction(":regional_indicator_a:")
-        await poll.add_reaction(":regional_indicator_b:")
+        await poll.add_reaction("🇦")
+        await poll.add_reaction("🇧")
         return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
