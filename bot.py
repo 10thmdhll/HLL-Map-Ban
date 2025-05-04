@@ -2,7 +2,7 @@ import os
 import json
 import random
 import asyncio
-from typing import List, Tuple, Optional, Literal, Dict
+from typing import List, Tuple, Optional, Literal, Dict, Union
 from io import BytesIO
 import discord
 from discord import app_commands
