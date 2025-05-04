@@ -659,6 +659,20 @@ async def ban_map(
         # Then confirm privately
         msg = await interaction.followup.send("✅ Map ban confirmed.", ephemeral=True)
         asyncio.create_task(delete_later(msg, 5.0))
+        
+        # — Post a public winner prediction poll —
+        channel = bot.get_channel(ch)
+        poll = await channel.send(
+            "**Winner Predictions**
+            React below to predict the match winner:
+            "A" for **" + team_a_name + "**
+            "B" for **" + team_b_name + "**"
+        )
+        await poll.add_reaction("A")
+        await poll.add_reaction("B")
+        return
+        
+        
         return
 
     # --- NORMAL BRANCH: defer, edit, follow‐up ---
