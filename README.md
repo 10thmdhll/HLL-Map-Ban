@@ -13,13 +13,11 @@ A Discord bot that automates competitive map‐ban sequences for Hell Let Loose 
 ## Features
 
 - **Slash commands**  
-  `/match_create`, `/ban_map`, `/match_decide`, `/match_delete`
+  `/match_create`, `/ban_map`, `/match_decide`, `/match_delete`, `/match_time`
 - **Region pairing**  
   Extra-ban or host-decision flows driven by a simple JSON config
 - **Live image updates**  
   Ban status chart with colored cells (red/orange/green) auto-resizes for Discord
-- **Persistent state**  
-  Saved to `state.json` so matches survive bot restarts
 - **Community poll**  
   Automatically posts a “Who will win?” poll when bans complete
 
@@ -49,36 +47,28 @@ Edit new .env file with discord bot token:
 
 Configuration
 All settings live at the top of bot.py in the CONFIG dictionary:
+`cp maplist_example.json maplist.json`
 
-CONFIG = {
-  "state_file":       "state.json",
-  "teammap_file":     "teammap.json",    # team→region + region×region→mode
-  "maplist_file":     "maplist.json",    # list of maps
-  "output_image":     "ban_status.png",
-  "max_inline_width": 800,
-  "quantize_colors":  64,
-  "compress_level":   9,
-  "optimize_png":     True,
-  "row_font_size":    168,
-  "header_font_size": 240,
-  "pad_x_factor":     0.5,
-  "pad_y_factor":     0.25,
-  "font_paths": [
-    "arialbd.ttf",
-    "DejaVuSans-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-  ]
-}
+`cp teammap_example.json teammap.json`
+
+Use the 2 files just created to complete the map list and region mappings.
+Example files can be kept for reference incase changes are required.
 
 teammap.json setup
 Team Regions: Should follow the "Team Name": "Reagion" format
 Region Pairings: Region vs region settings for "DetermineHost" or "ExtraBan"
 
+Options for region pairings are "ExtraBan" and "DetermineHost"
+ExtraBan will move directly to the coinflip and the winner will have the first ban.
+DetermineHost will require the coinflip winner to use /match_decide choice:(ban/host) prior to the banning process.
+	If ban: same behavior as winning the ExtraBan coinflip
+ 	If host: that team will pick the game server location and the first ban will pass to the other team.
+  
+Ensure all combinations are mapped correctly for the behavior you wish.
 `{
   "team_regions": {
-	"Esprit de Corps" : "NA",
-	"MS" : "EU",
-	"Climbers" : "CN"
+	"TEAM ROLE NAME IN DISCORD" : "NA",
+	"TEAM2 ROLE NAME IN DISCORD" : "EU"
 }
   "region_pairings": {
     "NA": {
@@ -87,122 +77,35 @@ Region Pairings: Region vs region settings for "DetermineHost" or "ExtraBan"
 	  "EU": "DetermineHost",
 	  "CN": "ExtraBan",
 	  "OCE": "ExtraBan"
-    },
-    "SA": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-	"EU": {
-      "NA": "DetermineHost",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-	"CN": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-	"OCE": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
+   	}
     }
-  }
-}`
-
-maplist.json
-Should follow: "Map Name" JSON format.  
-`{
-  "maps": [
-    {
-      "name": "Carentan – Day",
-      "options": {
-        "Allied": "Available",
-        "Axis": "Available"
-      }
-    },
-    {
-      "name": "Carentan – Night",
-      "options": {
-        "Allied": "Available",
-        "Axis": "Available"
-      }
-    }
-	]
-}`
+}
+    ...`
 
 Usage
 Start the bot (this syncs slash commands automatically):
+`cd HLL-Map-Ban`
+`source venv/bin/activate`
 `python bot.py`
 
 Create a match:
-
 /match_create
-  team_a:@Esprit de Corps
-  team_b:@MS
-  title:"Quarterfinal"
-  description:"Map veto for quarterfinal"
-
-Ban maps in alternating turns:
-
-/ban_map map_name:"Carentan – Day" side:Allied
-If mode is “DetermineHost”, the flip-winner runs:
-
-/match_decide choice:ban
-or
-/match_decide choice:host
-
-At final ban, bot will:
-
-Mark remaining cells as the final choice
-Update the image
-Post a poll:
-
-📊 Who will win the match?
-🅰️ MS
-🅱️ Esprit de Corps
-
+  team_a:@Role1
+  team_b:@Role2
 
 Delete a match and clear state:
 /match_delete
 
+Decide between first ban or server host based on pairings
+/match_decide choice:(ban/host)
 
-Command Reference
-Command	Options	Description
-/match_create	team_a, team_b, title, [description]	Create new match & coin-flip/host logic
-/ban_map	map_name, side	Ban a map side (auto-bans opposite side)
-/match_decide	choice ∈ {ban,host}	Flip-winner chooses first ban or hosting
-/match_delete	(none)	Delete current match from this channel
+Ban a map and side
+/ban_map map: side:
 
-All slash responses are ephemeral when appropriate to avoid channel clutter.
+Set match start time: (after map ban is complete)
+/match_time time: (example string 2025-05-25T19:00-04:00)
+	YYYY-MM-DDTHH:MM-TZDifferenceFromUTC
+ 	2025-05-25T19:00-04:00   5/25/2025 @ 7PM EDT
 
-File Structure
-
-HLL-Map-Ban/
-├── bot.py
-├── teammap.json
-├── maplist.json
-├── state.json          # generated
-├── ban_status.png      # generated
-├── requirements.txt
-├── .env                # contains DISCORD_TOKEN
-└── README.md
-
-Dependencies
--discord.py
--python-dotenv
--Pillow
-
-Install via:
-`pip install -r requirements.txt`
 License
 MIT © 
