@@ -458,7 +458,8 @@ async def cleanup_match(ch: int):
         
 @bot.tree.command(
     name="match_create",
-    description="Start a new map‐ban match"
+    description="Start a new map‐ban match",
+    guild=discord.Object(id=964975223646601296)
 )
 @app_commands.describe(
     team_a="Role for Team A",
@@ -560,7 +561,8 @@ async def match_create(
 
 @bot.tree.command(
     name="ban_map",
-    description="Ban a map for a given side"
+    description="Ban a map for a given side",
+    guild=discord.Object(id=964975223646601296)
 )
 @app_commands.describe(
     map_name="Map to ban",
@@ -737,7 +739,8 @@ async def ban_map(
       
 @bot.tree.command(
     name="match_time",
-    description="Set the scheduled match time"
+    description="Set the scheduled match time",
+    guild=discord.Object(id=964975223646601296)
 )
 @app_commands.describe(
     time="ISO-8601 datetime (with timezone) for the match -> ex. 2025-05-21T18:00:00-04:00"
@@ -838,7 +841,8 @@ async def match_time_cmd(
     
 @bot.tree.command(
     name="match_decide",
-    description="Choose whether the flip-winner bans first or hosts first if no Middle Ground Rule"
+    description="Choose whether the flip-winner bans first or hosts first if no Middle Ground Rule",
+    guild=discord.Object(id=964975223646601296)
 )
 @app_commands.describe(
     choice="If ‘ban’, flip-winner bans first; if ‘host’, flip-winner hosts and other side bans first"
@@ -938,7 +942,8 @@ async def match_decide(
 
 @bot.tree.command(
     name="match_delete",
-    description="End and remove the current match"
+    description="End and remove the current match",
+    guild=discord.Object(id=964975223646601296)
 )
 async def match_delete(interaction: discord.Interaction) -> None:
     ch = interaction.channel_id
@@ -1005,6 +1010,8 @@ async def on_app_command_error(
 @bot.event
 async def on_ready():
     # Load/persist state as you already have…
+    guild = discord.Object(id=964975223646601296)
+    synced = await bot.tree.sync(guild=guild)
     print("Bot is ready.")
     load_state()
 
