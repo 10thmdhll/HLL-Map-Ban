@@ -590,6 +590,7 @@ async def ban_map(
     side: str
 ) -> None:
     ch = interaction.channel_id
+    channel = bot.get_channel(channel_id)
     global team_a_name, team_b_name
     team_a_name, team_b_name = channel_teams[ch]
 
@@ -634,7 +635,7 @@ async def ban_map(
         other = "team_b" if tk=="team_a" else "team_a"
         #tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
         #match_turns[ch] = other
-        await save_state(ch)
+        await save_state(channel)
 
 
         buf = create_ban_image_bytes(
@@ -711,7 +712,7 @@ async def ban_map(
     other = "team_b" if tk=="team_a" else "team_a"
     tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
-    await save_state(ch)
+    await save_state(channel)
 
     buf = create_ban_image_bytes(
         maps=load_maplist(),
@@ -777,6 +778,7 @@ async def match_time_cmd(
     time: str
 ) -> None:
     ch = interaction.channel_id
+    channel = bot.get_channel(channel_id)
     global team_a_name, team_b_name
     team_a_name, team_b_name = channel_teams[ch]
 
@@ -972,7 +974,8 @@ async def match_decide(
 )
 async def match_delete(interaction: discord.Interaction) -> None:
     ch = interaction.channel_id
-
+    channel = bot.get_channel(channel_id)
+    
     # 1) Ensure there’s an active match
     if ch not in channel_messages:
         return await interaction.response.send_message(
@@ -1012,7 +1015,7 @@ async def match_delete(interaction: discord.Interaction) -> None:
         channel_host
     ):
         state_dict.pop(ch, None)
-    await save_state(ch)
+    await save_state(channel)
 
     # 6) Confirm deletion to the user
     msg = await interaction.followup.send(
