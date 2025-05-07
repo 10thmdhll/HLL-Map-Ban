@@ -54,7 +54,7 @@ channel_host:      dict[int, str]                            = {}
 
 state_locks: dict[int, asyncio.Lock] = {}
 
-def _get_state_file(ch: int) -> str:
+def get_state_file(ch: int) -> str:
     return f"state_{ch}.json"
 
 async def save_state(ch: int) -> None:
@@ -71,15 +71,15 @@ async def save_state(ch: int) -> None:
             "channel_mode":    channel_mode.get(ch),
             "channel_host":    channel_host.get(ch),
         }
-        tmp_path = _get_state_file(ch) + ".tmp"
+        tmp_path = get_state_file(ch) + ".tmp"
         with open(tmp_path, "w") as f:
             json.dump(payload, f, indent=2)
-        os.replace(tmp_path, _get_state_file(ch))
+        os.replace(tmp_path, get_state_file(ch))
 
 async def load_state(ch: int) -> None:
     lock = state_locks.setdefault(ch, asyncio.Lock())
     async with lock:
-        path = _get_state_file(ch)
+        path = get_state_file(ch)
         if not os.path.isfile(path):
             return
         try:
@@ -519,7 +519,6 @@ async def match_create(
         m["name"]: {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}}
         for m in load_maplist()
     }
-    await save_state(ch)
 
     # Build the image and embed
     buf = create_ban_image_bytes(
@@ -589,11 +588,11 @@ async def ban_map(
     map_name: str,
     side: str
 ) -> None:
-    ch = interaction.channel_id
-    channel = bot.get_channel(channel_id)
     global team_a_name, team_b_name
     team_a_name, team_b_name = channel_teams[ch]
 
+    ch = interaction.channel_id
+    await load_state(ch)
     # 1) Turn check
     if ch not in match_turns:
         return await interaction.response.send_message(
@@ -635,7 +634,7 @@ async def ban_map(
         other = "team_b" if tk=="team_a" else "team_a"
         #tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
         #match_turns[ch] = other
-        await save_state(channel)
+        await save_state(ch)
 
 
         buf = create_ban_image_bytes(
@@ -712,7 +711,7 @@ async def ban_map(
     other = "team_b" if tk=="team_a" else "team_a"
     tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
-    await save_state(channel)
+    await save_state(ch)
 
     buf = create_ban_image_bytes(
         maps=load_maplist(),
@@ -777,11 +776,10 @@ async def match_time_cmd(
     interaction: discord.Interaction,
     time: str
 ) -> None:
-    ch = interaction.channel_id
-    channel = bot.get_channel(channel_id)
     global team_a_name, team_b_name
     team_a_name, team_b_name = channel_teams[ch]
 
+    ch = interaction.channel_id
     # 1) Ensure there’s an active match and it’s past ban phase
     if ch not in ongoing_bans or not is_ban_complete(ch):
         return await interaction.response.send_message(
@@ -863,6 +861,8 @@ async def match_time_cmd(
         embed=embed
     )
 
+    await save_state(ch)
+    
     # Then confirm privately
     msg = await interaction.followup.send("✅ Updated.", ephemeral=True)
     asyncio.create_task(delete_later(msg, 5.0))
@@ -879,10 +879,10 @@ async def match_decide(
     interaction: discord.Interaction,
     choice: Literal["ban", "host"]
 ) -> None:
-    ch = interaction.channel_id
     global team_a_name, team_b_name
     team_a_name, team_b_name = channel_teams[ch]
 
+    ch = interaction.channel_id
     # 1) Ensure a match exists
     if ch not in channel_messages:
         return await interaction.response.send_message(
@@ -974,7 +974,6 @@ async def match_decide(
 )
 async def match_delete(interaction: discord.Interaction) -> None:
     ch = interaction.channel_id
-    channel = bot.get_channel(channel_id)
     
     # 1) Ensure there’s an active match
     if ch not in channel_messages:
@@ -1015,7 +1014,7 @@ async def match_delete(interaction: discord.Interaction) -> None:
         channel_host
     ):
         state_dict.pop(ch, None)
-    await save_state(channel)
+    await save_state(ch)
 
     # 6) Confirm deletion to the user
     msg = await interaction.followup.send(
