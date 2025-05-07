@@ -1035,6 +1035,7 @@ async def on_app_command_error(
 @bot.event
 async def on_ready():
     print("Bot is ready.")
+    await bot.tree.sync()
     for path in glob.glob("state_*.json"):
         ch = int(os.path.basename(path).split("_")[1].split(".")[0])
         await load_state(ch)
