@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 from dateutil import parser
 import pytz
+import glob, tempfile
 
 # ─── Configuration ───────────────────────────────────────────────────────────────
 CONFIG = {
@@ -20,9 +21,6 @@ CONFIG = {
     "output_image":  "ban_status.png",
     "user_timezone": "America/New_York",
     "max_inline_width": 800,
-    "quantize_colors":  64,
-    "compress_level":   9,
-    "optimize_png":     True,
     "font_size_h":      36,
     "font_size":        24,
     "font_paths": [
@@ -31,6 +29,13 @@ CONFIG = {
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     ]
 }
+
+# ─── Preload fonts once ─────────────────────────────────────────────────────────
+font_file = next((p for p in CONFIG["font_paths"] if os.path.isfile(p)), None)
+if not font_file:
+    raise RuntimeError(f"No valid font found in {CONFIG['font_paths']}")
+HDR_FONT = ImageFont.truetype(font_file, CONFIG["font_size_h"])
+ROW_FONT = ImageFont.truetype(font_file, CONFIG["font_size"])
 
 # ─── In-Memory State ─────────────────────────────────────────────────────────────
 # Global team names for current match
@@ -47,43 +52,52 @@ channel_decision:  dict[int, Optional[str]]                  = {}
 channel_mode:      dict[int, str]                            = {}
 channel_host:      dict[int, str]                            = {}
 
-# ─── Persistence Helpers ────────────────────────────────────────────────────────
-STATE_FILE = CONFIG["state_file"]
+state_locks: dict[int, asyncio.Lock] = {}
 
-def load_state() -> None:
-    if not os.path.isfile(STATE_FILE):
-        return
-    try:
-        with open(STATE_FILE) as f:
-            data = json.load(f)
-    except json.JSONDecodeError:
-        return
-    ongoing_bans.update({int(k):v for k,v in data.get("ongoing_bans",{}).items()})
-    match_turns.update({int(k):v for k,v in data.get("match_turns",{}).items()})
-    match_times.update({int(k):v for k,v in data.get("match_times",{}).items()})
-    channel_teams.update({int(k):tuple(v) for k,v in data.get("channel_teams",{}).items()})
-    channel_messages.update({int(k):v for k,v in data.get("channel_messages",{}).items()})
-    channel_flip.update({int(k):v for k,v in data.get("channel_flip",{}).items()})
-    channel_decision.update({int(k):v for k,v in data.get("channel_decision",{}).items()})
-    channel_mode.update({int(k):v for k,v in data.get("channel_mode",{}).items()})
-    channel_host.update({int(k): v for k,v in data.get("channel_host",{}).items()})
+def _get_state_file(ch: int) -> str:
+    return f"state_{ch}.json"
 
+async def save_state(ch: int) -> None:
+    lock = state_locks.setdefault(ch, asyncio.Lock())
+    async with lock:
+        payload = {
+            "ongoing_bans":    ongoing_bans[ch],
+            "match_turns":     match_turns[ch],
+            "match_times":     match_times[ch],
+            "channel_teams":   list(channel_teams[ch]),
+            "channel_messages": channel_messages.get(ch),
+            "channel_flip":    channel_flip.get(ch),
+            "channel_decision": channel_decision.get(ch),
+            "channel_mode":    channel_mode.get(ch),
+            "channel_host":    channel_host.get(ch),
+        }
+        tmp_path = _get_state_file(ch) + ".tmp"
+        with open(tmp_path, "w") as f:
+            json.dump(payload, f, indent=2)
+        os.replace(tmp_path, _get_state_file(ch))
 
-def save_state() -> None:
-    payload = {
-        "ongoing_bans":     {str(k):v for k,v in ongoing_bans.items()},
-        "match_turns":      {str(k):v for k,v in match_turns.items()},
-        "match_times":      {str(k):v for k,v in match_times.items()},
-        "channel_teams":    {str(k):list(v) for k,v in channel_teams.items()},
-        "channel_messages": {str(k):v for k,v in channel_messages.items()},
-        "channel_flip":     {str(k):v for k,v in channel_flip.items()},
-        "channel_decision": {str(k):v for k,v in channel_decision.items()},
-        "channel_mode":     {str(k):v for k,v in channel_mode.items()},
-        "channel_host": { str(k): v for k,v in channel_host.items() }
-    }
-    with open(STATE_FILE, "w") as f:
-        json.dump(payload, f, indent=2)
-
+async def load_state(ch: int) -> None:
+    lock = state_locks.setdefault(ch, asyncio.Lock())
+    async with lock:
+        path = _get_state_file(ch)
+        if not os.path.isfile(path):
+            return
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            return
+        ongoing_bans[ch]       = data.get("ongoing_bans", {})
+        match_turns[ch]        = data.get("match_turns")
+        match_times[ch]        = data.get("match_times")
+        channel_teams[ch]      = tuple(data.get("channel_teams", []))
+        if data.get("channel_messages") is not None:
+            channel_messages[ch] = data["channel_messages"]
+        channel_flip[ch]       = data.get("channel_flip")
+        channel_decision[ch]   = data.get("channel_decision")
+        channel_mode[ch]       = data.get("channel_mode")
+        channel_host[ch]       = data.get("channel_host")
+        
 # ─── Config Loaders & Helpers ──────────────────────────────────────────────────
 def load_teammap() -> dict:
     with open(CONFIG["teammap_file"]) as f:
@@ -158,8 +172,8 @@ def create_ban_status_image(
 ) -> Image:
     # — Load fonts with fallback —
     try:
-        hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size_h"])
-        row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size"])
+        hdr_font = HDR_FONT 
+        row_font = ROW_FONT
     except OSError:
         hdr_font = ImageFont.load_default()
         row_font = ImageFont.load_default()
@@ -374,11 +388,11 @@ async def update_status_message(
             # fallback: send a fresh message
             new = await channel.send(file=file, embed=embed)
             channel_messages[channel_id] = new.id
-            save_state()
+            await save_state(ch)
     else:
         new = await channel.send(file=file, embed=embed)
         channel_messages[channel_id] = new.id
-        save_state()
+        await save_state(ch)
 
 async def delete_later(msg: discord.Message, delay: float) -> None:
     await asyncio.sleep(delay)
@@ -454,7 +468,7 @@ async def cleanup_match(ch: int):
         channel_messages, channel_flip, channel_decision, channel_mode, channel_host
     ):
         d.pop(ch, None)
-    save_state()
+    await save_state(ch)
         
 @bot.tree.command(
     name="match_create",
@@ -473,7 +487,7 @@ async def match_create(
     team_a_name, team_b_name = team_a.name, team_b.name
 
     # Initialize state
-    load_state()
+    await load_state(ch)
     ch = interaction.channel_id
     
     # Determine mode based on team_regions mapping
@@ -505,7 +519,7 @@ async def match_create(
         m["name"]: {"team_a":{"manual":[],"auto":[]},"team_b":{"manual":[],"auto":[]}}
         for m in load_maplist()
     }
-    save_state()
+    await save_state(ch)
 
     # Build the image and embed
     buf = create_ban_image_bytes(
@@ -556,7 +570,7 @@ async def match_create(
     )
     msg = await interaction.original_response()
     channel_messages[ch] = msg.id
-    save_state()   
+    await save_state(ch)
 
 @bot.tree.command(
     name="ban_map",
@@ -593,6 +607,22 @@ async def ban_map(
     # 2) Pre‐compute remaining combos
     combos = remaining_combos(ch)
     final_combo = (len(combos) == 2 and combos[0][0] == combos[1][0])
+    
+    # 2a) Prevent double-bans or invalid bans
+    combos = remaining_combos(ch)
+    # all sides still allowed for this map
+    valid_sides = [ side for m, _, side in combos if m == map_name ]
+    if not valid_sides:
+        return await interaction.response.send_message(
+            f"❌ `{map_name}` is not available for ban or already fully banned.",
+            ephemeral=True
+        )
+    if side not in valid_sides:
+        return await interaction.response.send_message(
+            f"❌ `{side}` cannot ban `{map_name}` right now.",
+            ephemeral=True
+        )
+    
 
     if final_combo:
         # --- FINAL BRANCH: lock in and send in one shot ---
@@ -604,7 +634,7 @@ async def ban_map(
         other = "team_b" if tk=="team_a" else "team_a"
         #tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
         #match_turns[ch] = other
-        save_state()
+        await save_state(ch)
 
 
         buf = create_ban_image_bytes(
@@ -681,7 +711,7 @@ async def ban_map(
     other = "team_b" if tk=="team_a" else "team_a"
     tb[map_name][other]["auto"].append("Axis" if side=="Allied" else "Allied")
     match_turns[ch] = other
-    save_state()
+    await save_state(ch)
 
     buf = create_ban_image_bytes(
         maps=load_maplist(),
@@ -772,7 +802,7 @@ async def match_time_cmd(
     try:
         dt = parser.isoparse(time).astimezone(pytz.utc)
         match_times[ch] = dt.isoformat()
-        save_state()
+        await save_state(ch)
     except Exception as e:
         msg = await interaction.followup.send(
             f"❌ Invalid datetime: {e}", 
@@ -879,7 +909,7 @@ async def match_decide(
         # flip-winner hosts, so the other team bans first
         match_turns[ch] = "team_b" if flip_key == "team_a" else "team_a"
 
-    save_state()
+    await save_state(ch)
 
     # 6) Rebuild the updated status image
     buf = create_ban_image_bytes(
@@ -982,7 +1012,7 @@ async def match_delete(interaction: discord.Interaction) -> None:
         channel_host
     ):
         state_dict.pop(ch, None)
-    save_state()
+    await save_state(ch)
 
     # 6) Confirm deletion to the user
     msg = await interaction.followup.send(
@@ -1004,8 +1034,9 @@ async def on_app_command_error(
 # ─── Ready & Sync ─────────────────────────────────────────────────────────────
 @bot.event
 async def on_ready():
-    # Load/persist state as you already have…
     print("Bot is ready.")
-    load_state()
+    for path in glob.glob("state_*.json"):
+        ch = int(os.path.basename(path).split("_")[1].split(".")[0])
+        await load_state(ch)
 
 bot.run(os.getenv("DISCORD_TOKEN"))
