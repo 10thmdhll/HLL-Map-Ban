@@ -370,6 +370,7 @@ async def update_status_message(
     embed: Optional[discord.Embed] = None
 ) -> None:
     channel = bot.get_channel(channel_id)
+    ch = interaction.channel_id
     
     # Prepare the discord.File object
     if isinstance(image_source, BytesIO):
