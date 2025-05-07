@@ -370,7 +370,6 @@ async def update_status_message(
     embed: Optional[discord.Embed] = None
 ) -> None:
     channel = bot.get_channel(channel_id)
-    ch = interaction.channel_id
     
     # Prepare the discord.File object
     if isinstance(image_source, BytesIO):
@@ -393,7 +392,7 @@ async def update_status_message(
     else:
         new = await channel.send(file=file, embed=embed)
         channel_messages[channel_id] = new.id
-        await save_state(ch)
+        await save_state(channel)
 
 async def delete_later(msg: discord.Message, delay: float) -> None:
     await asyncio.sleep(delay)
