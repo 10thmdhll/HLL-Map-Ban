@@ -487,8 +487,8 @@ async def match_create(
     team_a_name, team_b_name = team_a.name, team_b.name
 
     # Initialize state
-    await load_state(ch)
     ch = interaction.channel_id
+    await load_state(ch)
     
     # Determine mode based on team_regions mapping
     mode_cfg = load_teammap()
