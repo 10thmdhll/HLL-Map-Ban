@@ -1,5 +1,4 @@
-bot_backup.py
 .env
 maplist.json
 teammap.json
-state_orig.json
+config.py

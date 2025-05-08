@@ -571,6 +571,27 @@ async def match_create(
     channel_messages[ch] = msg.id
     await save_state(ch)
 
+@tree.command(name="select_ban_mode")
+@app_commands.describe(option="Choose ban mode for this match")
+@app_commands.choices(option=[
+    app_commands.Choice(name="Final Ban", value="final"),
+    app_commands.Choice(name="Double Ban", value="double"),
+])
+async def select_ban_mode(interaction: discord.Interaction, option: str):
+    ch = interaction.channel.id
+    await load_state(ch)
+    if channel_flip.get(ch) is None:
+        return await interaction.response.send_message(
+            "❌ Coin flip must be done before selecting ban mode.", ephemeral=True)
+    channel_mode[ch] = option
+    await save_state(ch)
+    if option == "final":
+        msg = "Ban mode set to **Final Ban**. The coin flip winner will ban last."
+    else:
+        msg = "Ban mode set to **Double Ban**. The team that goes second in the ban order will ban twice."
+    await interaction.response.send_message(msg, ephemeral=True)
+
+
 @bot.tree.command(
     name="ban_map",
     description="Ban a map for a given side"
