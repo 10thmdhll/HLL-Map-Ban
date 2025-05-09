@@ -11,7 +11,7 @@ os.makedirs(STATE_DIR, exist_ok=True)
 
 # In-memory state containers
 state_locks: dict[int, asyncio.Lock] = {}
-going_events: dict[int, dict] = {}
+ongoing_events: dict[int, dict] = {}
 
 
 def _state_file(channel_id: int) -> str:
