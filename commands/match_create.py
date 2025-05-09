@@ -85,7 +85,7 @@ async def match_create(
     try:
         with open(maplist_path, 'r') as f:
             data = json.load(f)
-        # Handle both { "maps":[ … ] } and legacy [ [map,order,side], … ] formats
+        
         if isinstance(data, dict) and "maps" in data:
             maps = [entry["name"] for entry in data["maps"]]
         elif isinstance(data, list):
@@ -102,9 +102,9 @@ async def match_create(
     try:
         with open(teamlist_path, 'r') as f:
             data = json.load(f)
-        # Handle both { "maps":[ … ] } and legacy [ [map,order,side], … ] formats
+        
         if isinstance(data, dict) and "team_regions" in data:
-            regions = [entry["team_regions"] for entry in data["team_regions"]]
+            regions = [entry["name"] for entry in data["team_regions"]]
         elif isinstance(data, list):
             regions = sorted({c[0] for c in data})
         else:
