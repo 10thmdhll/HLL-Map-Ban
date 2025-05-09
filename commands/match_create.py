@@ -1,6 +1,6 @@
 import uuid
-datetime
-discord
+import datetime
+import discord
 from discord import app_commands
 import state
 
