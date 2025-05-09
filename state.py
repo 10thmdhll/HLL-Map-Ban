@@ -13,6 +13,7 @@ os.makedirs(STATE_DIR, exist_ok=True)
 # ─── Per-channel state containers and locks ─────────────────────────────────────
 state_locks: dict[int, asyncio.Lock] = {}
 ongoing_bans: dict[int, dict]      = {}
+channel_roles: dict[int, tuple[int,int]] = {}
 match_turns: dict[int, list]      = {}
 match_times: dict[int, list]      = {}
 channel_teams: dict[int, tuple]    = {}
@@ -35,6 +36,7 @@ async def save_state(ch: int) -> None:
     async with lock:
         payload = {
             "ongoing_bans": ongoing_bans.get(ch, {}),
+            "channel_roles": dict[int, tuple[int,int]] = {},
             "match_turns": match_turns.get(ch, []),
             "match_times": match_times.get(ch, []),
             "channel_teams": list(channel_teams.get(ch, [])),
@@ -62,6 +64,7 @@ async def load_state(ch: int) -> None:
             logger.warning("Corrupted or invalid JSON in state file %s: %s", path, e)
             return
         ongoing_bans[ch]     = data.get("ongoing_bans", {})
+        channel_roles[ch]    = data.get("channel_roles", {})
         match_turns[ch]      = data.get("match_turns", [])
         match_times[ch]      = data.get("match_times", [])
         channel_teams[ch]    = tuple(data.get("channel_teams", []))
