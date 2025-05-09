@@ -69,6 +69,7 @@ async def match_create(
     base_dir = pathlib.Path(__file__).parent.parent
     maplist_path = base_dir / "maplist.json"
     
+    maps = []
     try:
         with open(teammap_path, 'r') as f:
             data = json.load(f)
