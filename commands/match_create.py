@@ -7,6 +7,7 @@ import pathlib
 import logging
 from discord import app_commands
 import state
+import helpers
 
 logger = logging.getLogger(__name__)
 
