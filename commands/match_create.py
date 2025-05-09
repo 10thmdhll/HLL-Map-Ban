@@ -79,7 +79,9 @@ async def match_create(
             maps = sorted({ c[0] for c in data })
         else:
             raise ValueError(f"Unexpected maplist format: {type(data)}")
-
+    except:
+        raise ValueError(f"Unexpected maplist format: {type(data)}")
+        
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
     await state.save_state(channel_id)
