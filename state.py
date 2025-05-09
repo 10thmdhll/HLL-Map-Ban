@@ -1,9 +1,11 @@
 import os
 import json
 import asyncio
-from helpers import remaining_combos
-from datetime import datetime
-from typing import List, Tuple, Optional, Literal, Dict, Union
+
+# Directory to store per-channel state
+STATE_DIR = "state"
+# Ensure the directory exists
+os.makedirs(STATE_DIR, exist_ok=True)
 
 # ─── Per-channel state containers and locks ─────────────────────────────────────
 state_locks: dict[int, asyncio.Lock] = {}
@@ -19,7 +21,11 @@ channel_host: dict[int, int]       = {}
 
 
 def _get_state_file(ch: int) -> str:
-    return f"state_{ch}.json"
+    """
+    Returns the full path for this channel's state file.
+    """
+    filename = f"state_{ch}.json"
+    return os.path.join(STATE_DIR, filename)
 
 async def save_state(ch: int) -> None:
     lock = state_locks.setdefault(ch, asyncio.Lock())
@@ -35,10 +41,10 @@ async def save_state(ch: int) -> None:
             "channel_mode": channel_mode.get(ch),
             "channel_host": channel_host.get(ch),
         }
-        tmp = _get_state_file(ch) + ".tmp"
-        with open(tmp, "w") as f:
+        tmp_path = _get_state_file(ch) + ".tmp"
+        with open(tmp_path, "w") as f:
             json.dump(payload, f, indent=2)
-        os.replace(tmp, _get_state_file(ch))
+        os.replace(tmp_path, _get_state_file(ch))
 
 async def load_state(ch: int) -> None:
     lock = state_locks.setdefault(ch, asyncio.Lock())
@@ -46,8 +52,12 @@ async def load_state(ch: int) -> None:
         path = _get_state_file(ch)
         if not os.path.isfile(path):
             return
-        with open(path) as f:
-            data = json.load(f)
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            # Optionally log warning here
+            return
         ongoing_bans[ch]     = data.get("ongoing_bans", {})
         match_turns[ch]      = data.get("match_turns", [])
         match_times[ch]      = data.get("match_times", [])
@@ -59,7 +69,12 @@ async def load_state(ch: int) -> None:
         channel_mode[ch]     = data.get("channel_mode")
         channel_host[ch]     = data.get("channel_host")
 
-# Optional helper to list all state files
-
 def list_state_files() -> list[str]:
-    return [f for f in os.listdir() if f.startswith("state_") and f.endswith(".json")]
+    """
+    Return list of all state file paths in the STATE_DIR.
+    """
+    files = []
+    for fname in os.listdir(STATE_DIR):
+        if fname.startswith("state_") and fname.endswith(".json"):
+            files.append(os.path.join(STATE_DIR, fname))
+    return files
