@@ -49,3 +49,27 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
 
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
+    
+async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
+    # 1) Fetch the bot’s original embed message
+    msg = await channel.fetch_message(message_id)
+    if not msg.embeds:
+        raise RuntimeError("No embed found on that message")
+
+    # 2) Clone the existing embed
+    embed = msg.embeds[0]
+    
+    # 3) Find the index of the field you want to update
+    field_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Ban Mode"),
+        None
+    )
+    if field_index is None:
+        # If it doesn’t exist yet, append it instead
+        embed.add_field(name="Ban Mode", value=new_choice, inline=False)
+    else:
+        # 4) Mutate that field in-place
+        embed.set_field_at(field_index, name="Ban Mode", value=new_choice, inline=False)
+
+    # 5) Push the edit back to Discord
+    await msg.edit(embed=embed)
