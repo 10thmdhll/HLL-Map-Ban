@@ -70,15 +70,15 @@ async def match_create(
     maplist_path = base_dir / "maplist.json"
     
     try:
-        with open(maplist_path, 'r') as f:
-            combos = json.load(f)
-            print("Loaded combos from %s: %r", maplist_path, combos)
-            print("Derived map list: %r", maps)
-        maps = sorted({c[0] for c in combos})
-        embed.add_field(name="Available Maps",value=", ".join(maps),inline=False)
-    except Exception as e:
-        logger.error("Failed to load maps from %s: %s", maplist_path, e)
-        embed.add_field(name="Available Maps",value="Failed to load maps",inline=False)
+        with open(teammap_path, 'r') as f:
+            data = json.load(f)
+        # Handle both { "maps":[ … ] } and legacy [ [map,order,side], … ] formats
+        if isinstance(data, dict) and "maps" in data:
+            maps = [ entry["name"] for entry in data["maps"] ]
+        elif isinstance(data, list):
+            maps = sorted({ c[0] for c in data })
+        else:
+            raise ValueError(f"Unexpected maplist format: {type(data)}")
 
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
