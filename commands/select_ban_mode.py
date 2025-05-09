@@ -1,28 +1,25 @@
+import datetime
 import discord
 from discord import app_commands
-from state import load_state, save_state, channel_teams, channel_mode
+import state
 
 @app_commands.command(name="select_ban_mode")
-@app_commands.describe(option="Choose ban mode for this match")
-@app_commands.choices(option=[
-    app_commands.Choice(name="Final Ban", value="final"),
-    app_commands.Choice(name="Double Ban", value="double"),
-])
+@app_commands.describe(option="Choose ban mode: final or double")
 async def select_ban_mode(interaction: discord.Interaction, option: str):
-    ch = interaction.channel.id
-    await load_state(ch)
-
-    # Ensure match exists and coin flip done
-    if ch not in channel_teams:
-        return await interaction.response.send_message(
-            "❌ No match created. Use /match_create first.", ephemeral=True
-        )
-    if channel_decision.get(ch) is None:
-        return await interaction.response.send_message(
-            "❌ Coin flip not set. Coin flip occurs in /match_create.", ephemeral=True
-        )
-
-    # Set mode
-    channel_mode[ch] = option
-    await save_state(ch)
-    await interaction.response.send_message(f"✅ Ban mode set to '{option}'.", ephemeral=True)
+    """Select ban mode or hosting choice after coin flip."""
+    channel_id = interaction.channel.id
+    await state.load_state(channel_id)
+    ongoing = state.ongoing_events.setdefault(channel_id, {})
+    ongoing["host_or_mode_choice"] = {
+        "chosen_option": option,
+        "chosen_by": interaction.user.id,
+        "timestamp": datetime.datetime.utcnow().isoformat() + 'Z'
+    }
+    # Determine host_role or ban_mode field
+    if option == "host":
+        ongoing["host_role"] = interaction.user.id
+    else:
+        ongoing["ban_mode"] = option
+        ongoing["ban_mode_picker"] = interaction.user.id
+    await state.save_state(channel_id)
+    await interaction.response.send_message(f"Option '{option}' recorded.")

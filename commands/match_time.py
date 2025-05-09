@@ -1,20 +1,16 @@
 import discord
 from discord import app_commands
-from state import load_state, match_times
+import state
+from helpers import format_timestamp
 
 @app_commands.command(name="match_time")
 async def match_time(interaction: discord.Interaction):
-    """
-    Shows a list of timestamps for each ban/turn in the match.
-    """
-    ch = interaction.channel.id
-    await load_state(ch)
-    times = match_times.get(ch, [])
-    if not times:
-        return await interaction.response.send_message(
-            "⏱ No bans recorded yet.", ephemeral=True
-        )
-    formatted = "\n".join(f"{i+1}: {t}" for i, t in enumerate(times))
-    await interaction.response.send_message(
-        f"⏱** Ban timestamps:**\n{formatted}", ephemeral=False
-    )
+    """List all ban timestamps for this match."""
+    channel_id = interaction.channel.id
+    await state.load_state(channel_id)
+    ongoing = state.ongoing_events.get(channel_id, {})
+    bans = ongoing.get("bans", [])
+    if not bans:
+        return await interaction.response.send_message("No bans recorded.")
+    lines = [f"{b['side']} banned {b['map']} at {format_timestamp(b['timestamp'])}" for b in bans]
+    await interaction.response.send_message("\n".join(lines))

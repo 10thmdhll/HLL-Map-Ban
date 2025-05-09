@@ -1,63 +1,70 @@
 {
-  "team_regions": {
-    "Esprit de Corps" : "NA",
-	"MS" : "EU",
-	"Climbers" : "CN",
-	"Fallschirmjager" : "CN",
-	"BOTN" : "NA",
-	"Vanguarda" : "SA",
-	"La Compania Maldita" : "EU",
-	"Ocelots" : "OCE",
-	"BAIN" : "SA",
-	"3AC" : "NA",
-	"MIB" : "SA",
-	"Ronin" : "SA",
-	"The Lucky Strikes" : "NA",
-	"Legion Condor" : "SA",
-	"PATHFINDERS" : "NA",
-	"Syndicate" : "NA",
-	"GLOW" : "NA",
-	"Helios" : "NA",
-	"BEE DIVISION" : "EU",
-	"Chimera" : "OCE",
-	"TOG" : "NA",
-	"CHAD" : "NA"
-  },
-  "region_pairings": {
-    "NA": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "DetermineHost",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-    "SA": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-	"EU": {
-      "NA": "DetermineHost",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-	"CN": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    },
-	"OCE": {
-      "NA": "ExtraBan",
-	  "SA": "ExtraBan",
-	  "EU": "ExtraBan",
-	  "CN": "ExtraBan",
-	  "OCE": "ExtraBan"
-    }
-  }
+	"team_regions": 
+	{
+		"3AC" : "NA",
+		"BAIN" : "SA",
+		"BEE DIVISION" : "EU",
+		"BOTN" : "NA",
+		"CHAD" : "NA",
+		"Chimera" : "OCE",
+		"Climbers" : "CN",
+		"Esprit de Corps" : "NA",
+		"Fallschirmjager" : "CN",
+		"GLOW" : "NA",
+		"Helios" : "NA",
+		"La Compania Maldita" : "EU",
+		"Legion Condor" : "SA",
+		"MIB" : "SA",
+		"MS" : "EU",
+		"Ocelots" : "OCE",
+		"PATHFINDERS" : "NA",
+		"Ronin" : "SA",
+		"Syndicate" : "NA",
+		"The Lucky Strikes" : "NA",
+		"TOG" : "NA",
+		"Vanguarda" : "SA"
+	},
+	"region_pairings": 
+	{
+		"NA": 
+		{
+			"NA": "Ban",
+			"SA": "Ban",
+			"EU": "Host",
+			"CN": "Ban",
+			"OCE": "Ban"
+		},
+		"SA": 
+		{
+			"NA": "Ban",
+			"SA": "Ban",
+			"EU": "Ban",
+			"CN": "Ban",
+			"OCE": "Ban"
+		},
+		"EU": 
+		{
+			"NA": "Host",
+			"SA": "Ban",
+			"EU": "Ban",
+			"CN": "Ban",
+			"OCE": "Ban"
+		},
+		"CN": 
+		{
+			"NA": "Ban",
+			"SA": "Ban",
+			"EU": "Ban",
+			"CN": "Ban",
+			"OCE": "Ban"
+		},
+		"OCE": 
+		{
+			"NA": "Ban",
+			"SA": "Ban",
+			"EU": "Ban",
+			"CN": "Ban",
+			"OCE": "Ban"
+		}
+	}
 }
