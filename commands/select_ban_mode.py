@@ -15,23 +15,30 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
-    ongoing["host_or_mode_choice"] = {
+    # record the choice in state…
+    ongoing["ban_mode"] = {
         "chosen_option": option,
         "chosen_by": interaction.user.id,
         "timestamp": datetime.datetime.utcnow().isoformat() + 'Z'
     }
-    # Determine host_role or ban_mode field
-    if option == "host":
-        ongoing["host_role"] = interaction.user.id
-    else:
-        ongoing["ban_mode"] = option
-        ongoing["ban_mode_picker"] = interaction.user.id
+    ongoing["ban_mode" if option != "host" else "host_role"] = interaction.user.id
     await state.save_state(channel_id)
-    
-    msg = await interaction.channel.send(embed=embed)
-    ongoing["embed_message_id"] = msg.id
-    await state.save_state(channel_id)
-    
-    await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
-    
-    await interaction.response.send_message(f"Option '{option}' recorded.")
+
+    # get the message ID of the embed posted in /match_create
+    embed_msg_id = ongoing.get("embed_message_id")
+    if not embed_msg_id:
+        return await interaction.response.send_message(
+            "❌ No status embed found to update.", ephemeral=True
+        )
+
+    # update only the Host/Mode Choice field on that embed
+    await update_host_mode_choice_embed(
+        interaction.channel,
+        embed_msg_id,
+        option.capitalize()  # or however you want to display it
+    )
+
+    # confirm to the user
+    await interaction.response.send_message(
+        f"✅ Option '{option}' recorded.", ephemeral=True
+    )
