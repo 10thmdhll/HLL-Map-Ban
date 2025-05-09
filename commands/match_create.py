@@ -7,7 +7,7 @@ import pathlib
 import logging
 from discord import app_commands
 import state
-import helpers
+from helpers import update_host_mode_choice_embed
 
 logger = logging.getLogger(__name__)
 
