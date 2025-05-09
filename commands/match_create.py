@@ -95,10 +95,32 @@ async def match_create(
     except Exception as e:
         logger.error("Failed loading maps from %s: %s", maplist_path, e)
 
-    # Add the Available Maps field (or error fallback)
+    # Load Regions
+    teamlist_path = base_dir / "teammap.json"
+    
+    regions = []
+    try:
+        with open(teamlist_path, 'r') as f:
+            data = json.load(f)
+        # Handle both { "maps":[ … ] } and legacy [ [map,order,side], … ] formats
+        if isinstance(data, dict) and "team_regions" in data:
+            regions = [entry["team_regions"] for entry in data["team_regions"]]
+        elif isinstance(data, list):
+            regions = sorted({c[0] for c in data})
+        else:
+            raise ValueError(f"Unexpected teammap format: {type(data)}")
+    except Exception as e:
+        logger.error("Failed loading teams from %s: %s", teamlist_path, e)
+    
+    # Add the embed
     embed.add_field(
-        name="Available Maps",
-        value=", ".join(maps) if maps else "Error loading maps",
+        name="Regions",
+        value=", ".join(regions) if regions else "Error loading regions",
+        inline=False
+    )
+    embed.add_field(
+        name="Current step status:",
+        value="Match Created" ,
         inline=False
     )
 
