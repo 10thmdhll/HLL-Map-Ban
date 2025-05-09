@@ -6,6 +6,10 @@ from helpers import update_host_mode_choice_embed
 
 @app_commands.command(name="select_ban_mode")
 @app_commands.describe(option="Choose ban mode: final or double")
+@app_commands.choices(option=[
+    app_commands.Choice(name="Ban Mode - You pick the Double or Final ban setting.  Other team will pick host.", value="ban"),
+    app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Double or Final ban setting.", value="host"),
+])
 async def select_ban_mode(interaction: discord.Interaction, option: str):
     """Select ban mode or hosting choice after coin flip."""
     channel_id = interaction.channel.id
