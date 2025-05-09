@@ -124,7 +124,7 @@ async def match_create(
     if decision == "Ban":
         embed.add_field(name="Next step:",value="CF Winner: select_ban_mode" ,inline=False)
     else:
-        embed.add_field(name="Next step:",value="CF Winner: select_ban_mode" ,inline=False)
+        embed.add_field(name="Next step:",value="CF Winner: select_host_mode" ,inline=False)
 
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
