@@ -2,6 +2,7 @@ import datetime
 import discord
 from discord import app_commands
 import state
+from helpers import update_host_mode_choice_embed
 
 @app_commands.command(name="select_ban_mode")
 @app_commands.describe(option="Choose ban mode: final or double")
