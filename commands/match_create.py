@@ -136,11 +136,6 @@ async def match_create(
         value=f"{role_a.name}: {region_a}\n{role_b.name}: {region_b}",
         inline=False
     )
-    embed.edit_field(
-        name="Host Mode Choice",
-        value=decision,
-        inline=False
-    )
     
     embed.add_field(
         name="Current step status:",
