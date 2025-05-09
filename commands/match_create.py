@@ -4,6 +4,7 @@ import os
 import json
 import discord
 import pathlib
+import logging
 from discord import app_commands
 import state
 
@@ -21,7 +22,7 @@ async def match_create(
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
-
+    logger = logging.getLogger(__name__)
     # Metadata
     ongoing["match_id"] = str(uuid.uuid4())
     ongoing["created_at"] = datetime.utcnow().isoformat() + 'Z'
