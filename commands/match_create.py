@@ -67,12 +67,12 @@ async def match_create(
 
     # Load maps
     base_dir = pathlib.Path(__file__).parent.parent
-    teammap_path = base_dir / "teammap.json"
+    maplist_path = base_dir / "maplist.json"
     
     try:
-        with open(teammap_path, 'r') as f:
+        with open(maplist_path, 'r') as f:
             combos = json.load(f)
-            print("Loaded combos from %s: %r", teammap_path, combos)
+            print("Loaded combos from %s: %r", maplist_path, combos)
             print("Derived map list: %r", maps)
         maps = sorted({c[0] for c in combos})
         embed.add_field(name="Available Maps",value=", ".join(maps),inline=False)
