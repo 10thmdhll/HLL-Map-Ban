@@ -6,21 +6,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Directory for per-channel state files
-STATE_DIR = "state"
+STATE_DIR = "state"  # ensure this directory exists
 os.makedirs(STATE_DIR, exist_ok=True)
 
 # In-memory state containers
 state_locks: dict[int, asyncio.Lock] = {}
-ongoing_events: dict[int, dict] = {}
+going_events: dict[int, dict] = {}
 
 
 def _state_file(channel_id: int) -> str:
     """Return the path to this channel's state file."""
-    return os.path.join(STATE_DIR, f"state_{channel_id}.json")(channel_id: int) -> str:
-    """Return the path to this channel's state file."""
     return os.path.join(STATE_DIR, f"state_{channel_id}.json")
 
 async def load_state(channel_id: int) -> None:
+    """Load or initialize state for a channel."""
     lock = state_locks.setdefault(channel_id, asyncio.Lock())
     async with lock:
         path = _state_file(channel_id)
@@ -35,6 +34,7 @@ async def load_state(channel_id: int) -> None:
             ongoing_events[channel_id] = {}
 
 async def save_state(channel_id: int) -> None:
+    """Persist channel state to disk atomically."""
     lock = state_locks.setdefault(channel_id, asyncio.Lock())
     async with lock:
         path = _state_file(channel_id)
@@ -45,7 +45,9 @@ async def save_state(channel_id: int) -> None:
 
 
 def list_state_files() -> list[str]:
-    """Return all state file paths."""
-    return [os.path.join(STATE_DIR, fname)
-            for fname in os.listdir(STATE_DIR)
-            if fname.startswith("state_") and fname.endswith(".json")]
+    """List all existing state file paths."""
+    return [
+        os.path.join(STATE_DIR, fname)
+        for fname in os.listdir(STATE_DIR)
+        if fname.startswith("state_") and fname.endswith(".json")
+    ]

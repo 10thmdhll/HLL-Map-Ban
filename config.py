@@ -8,7 +8,6 @@ if not DISCORD_TOKEN:
     raise RuntimeError("DISCORD_TOKEN not set in environment")
 
 CONFIG = {
-    # Paths to search for fonts
     "font_paths": [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "./assets/fonts/DejaVuSans.ttf",
