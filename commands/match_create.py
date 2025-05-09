@@ -68,6 +68,7 @@ async def match_create(
         value=f"<@&{chooser.id}>",
         inline=False
     )
+    embed.add_field(name"Host/Mode Choice", value= "TBD", inline=True)
     embed.add_field(name="Ban Mode", value="TBD", inline=True)
     embed.add_field(name="Host", value="TBD", inline=True)
     embed.add_field(
@@ -136,8 +137,8 @@ async def match_create(
         value=f"{role_a.name}: {region_a}\n{role_b.name}: {region_b}",
         inline=False
     )
-    embed.add_field(
-        name="Auto Decision",
+    embed.edit_field(
+        name="Host/Mode Choice",
         value=decision,
         inline=False
     )
@@ -151,6 +152,8 @@ async def match_create(
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
     await state.save_state(channel_id)
+    
+    await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],decision)
 
     # Acknowledge privately
     await interaction.response.send_message(
