@@ -16,7 +16,7 @@ bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
 # Register commands
-from commands.match_create import 
+from commands.match_create import match_create
 from commands.select_host_mode import select_host_mode
 from commands.select_ban_mode import select_ban_mode
 from commands.ban_map import ban_map
