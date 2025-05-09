@@ -58,11 +58,23 @@ async def match_create(
 
     # Build and send embed
     embed = discord.Embed(title="Match Status", color=discord.Color.blue())
-    embed.add_field(name="Teams", value=f"<@&{role_a.id}> vs <@&{role_b.id}>", inline=False)
-    embed.add_field(name="Coin Flip Winner", value=f"<@&{chooser.id}>", inline=False)
+    embed.add_field(
+        name="Teams",
+        value=f"<@&{role_a.id}> vs <@&{role_b.id}>",
+        inline=False
+    )
+    embed.add_field(
+        name="Coin Flip Winner",
+        value=f"<@&{chooser.id}>",
+        inline=False
+    )
     embed.add_field(name="Ban Mode", value="TBD", inline=True)
     embed.add_field(name="Host", value="TBD", inline=True)
-    embed.add_field(name="Scheduled Time", value=ongoing["scheduled_time"], inline=False)
+    embed.add_field(
+        name="Scheduled Time",
+        value=ongoing["scheduled_time"],
+        inline=False
+    )
     embed.add_field(name="Casters", value="TBD", inline=False)
 
     # Load maps
@@ -71,21 +83,31 @@ async def match_create(
     
     maps = []
     try:
-        with open(teammap_path, 'r') as f:
+        with open(maplist_path, 'r') as f:
             data = json.load(f)
         # Handle both { "maps":[ … ] } and legacy [ [map,order,side], … ] formats
         if isinstance(data, dict) and "maps" in data:
-            maps = [ entry["name"] for entry in data["maps"] ]
+            maps = [entry["name"] for entry in data["maps"]]
         elif isinstance(data, list):
-            maps = sorted({ c[0] for c in data })
+            maps = sorted({c[0] for c in data})
         else:
             raise ValueError(f"Unexpected maplist format: {type(data)}")
-    except:
-        raise ValueError(f"Unexpected maplist format: {type(data)}")
-        
+    except Exception as e:
+        logger.error("Failed loading maps from %s: %s", maplist_path, e)
+
+    # Add the Available Maps field (or error fallback)
+    embed.add_field(
+        name="Available Maps",
+        value=", ".join(maps) if maps else "Error loading maps",
+        inline=False
+    )
+
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
     await state.save_state(channel_id)
 
     # Acknowledge privately
-    await interaction.response.send_message("Match created and status posted.", ephemeral=True)
+    await interaction.response.send_message(
+        "Match created and status posted.",
+        ephemeral=True
+    )
