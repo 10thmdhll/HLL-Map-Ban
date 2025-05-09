@@ -1,4 +1,6 @@
-# Shared utility functions
+from datetime import datetime
+from typing import List, Tuple
+from state import ongoing_events
 
 def format_timestamp(ts: str) -> str:
     from datetime import datetime
@@ -10,7 +12,7 @@ def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
     Return list of (map, team_key, side) combinations still available for ban.
     Assumes ongoing_events[ch] stores a dict of maps to {'team_a': {'manual':[], 'auto':[]}, 'team_b': {...}}.
     """
-    combos: list[Tuple[str, str, str]] = []
+    combos: List[Tuple[str, str, str]] = []
     channel_data = ongoing_events.get(ch, {})
     for m, tb in channel_data.items():
         for team_key in ("team_a", "team_b"):
