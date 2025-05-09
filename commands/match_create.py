@@ -95,29 +95,44 @@ async def match_create(
     except Exception as e:
         logger.error("Failed loading maps from %s: %s", maplist_path, e)
 
-    # Load Regions
+    # ─── Load and assign regions to each team ────────────────────────────────
     teamlist_path = base_dir / "teammap.json"
-    
-    regions = []
+    region_lookup: dict[int, str] = {}
     try:
-        with open(teamlist_path, 'r') as f:
+        with open(teamlist_path, "r") as f:
             data = json.load(f)
-        
-        if isinstance(data, dict) and "team_regions" in data:
-            regions = [entry["name"] for entry in data["team_regions"]]
-        elif isinstance(data, list):
-            regions = sorted({c[0] for c in data})
-        else:
+
+        # Expecting { "team_regions": [ { "role_id": 123, "region": "NA" }, … ] }
+        if not (isinstance(data, dict) and "team_regions" in data):
             raise ValueError(f"Unexpected teammap format: {type(data)}")
+
+        for entry in data["team_regions"]:
+            rid = int(entry["role_id"])
+            region_lookup[rid] = entry["region"]
+
     except Exception as e:
-        logger.error("Failed loading teams from %s: %s", teamlist_path, e)
+        logger.error("Failed loading team regions from %s: %s", teamlist_path, e)
+
+    # pull each team’s region, default to "Unknown"
+    region_a = region_lookup.get(role_a.id, "Unknown")
+    region_b = region_lookup.get(role_b.id, "Unknown")
+    ongoing["regions"] = {"team_a": region_a, "team_b": region_b}
+
+    # compare for cross‐region or same‐region
+    if region_a == "Unknown" or region_b == "Unknown":
+        region_comparison = "Unknown team mapping."
+    elif region_a == region_b:
+        region_comparison = "Same Region"
+    else:
+        region_comparison = "Cross-Region"
+
+    embed.add_field(name="Team Regions",
+                    value=f"Team A: {region_a}\nTeam B: {region_b}",
+                    inline=False)
+    embed.add_field(name="Region Comparison",
+                    value=region_comparison,
+                    inline=False)
     
-    # Add the embed
-    embed.add_field(
-        name="Regions",
-        value=", ".join(regions) if regions else "Error loading regions",
-        inline=False
-    )
     embed.add_field(
         name="Current step status:",
         value="Match Created" ,
