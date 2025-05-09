@@ -66,6 +66,7 @@ async def match_create(
     try:
         with open(TEAMMAP_PATH) as f:
             combos = json.load(f)
+        print(maps)
         maps = sorted({c[0] for c in combos})
         embed.add_field(name="Available Maps", value=", ".join(maps), inline=False)
     except Exception:
