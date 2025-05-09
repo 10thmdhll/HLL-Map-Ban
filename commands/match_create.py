@@ -115,7 +115,7 @@ async def match_create(
     embed.add_field(name="Teams",value=f"<@&{role_a.id}> vs <@&{role_b.id}>",inline=True)
     embed.add_field(name="Team Regions",value=f"{role_a.name}: {region_a}\n{role_b.name}: {region_b}",inline=False)
     embed.add_field(name="Coin Flip Winner",value=f"<@&{chooser.id}>",inline=True)
-    embed.add_field(name"Host Mode Choice",value=decision,inline=False)
+    embed.add_field(name"Host Mode Choice",value=f"{decision}",inline=False)
     embed.add_field(name="Ban Mode", value="TBD", inline=True)
     embed.add_field(name="Host", value="TBD", inline=True)
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
