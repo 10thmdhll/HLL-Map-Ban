@@ -1,5 +1,4 @@
 import os
-import glob
 import discord
 from discord import app_commands
 from config import DISCORD_TOKEN
@@ -17,7 +16,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
-load_dotenv()
+
 # ─── Register Slash Commands ───────────────────────────────────────────────────
 tree.add_command(select_ban_mode)
 tree.add_command(ban_map)
@@ -40,7 +39,8 @@ async def on_ready():
     # Sync with Discord and load persisted state
     await tree.sync()
     for path in list_state_files():
-        ch = int(path.split("_")[1].split(".")[0])
+        # Extract channel ID from filename: state_<channel>.json
+        ch = int(os.path.basename(path).split('_')[1].split('.')[0])
         await load_state(ch)
     print("Bot is ready.")
 
