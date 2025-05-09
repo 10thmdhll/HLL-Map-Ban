@@ -4,6 +4,7 @@ from config import DISCORD_TOKEN
 import state
 # Import command handlers to register them
 import commands.match_create
+import commands.select_host_mode
 import commands.select_ban_mode
 import commands.ban_map
 import commands.match_time
@@ -15,13 +16,15 @@ bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
 # Register commands
-from commands.match_create import match_create
+from commands.match_create import 
+from commands.select_host_mode import select_host_mode
 from commands.select_ban_mode import select_ban_mode
 from commands.ban_map import ban_map
 from commands.match_time import match_time
 from commands.cleanup_match import cleanup_match
 
 tree.add_command(match_create)
+tree.add_command(select_host_mode)
 tree.add_command(select_ban_mode)
 tree.add_command(ban_map)
 tree.add_command(match_time)
