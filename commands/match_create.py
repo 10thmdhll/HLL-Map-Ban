@@ -3,6 +3,7 @@ import uuid
 import os
 import json
 import discord
+import pathlib
 from discord import app_commands
 import state
 
@@ -62,15 +63,17 @@ async def match_create(
     embed.add_field(name="Casters", value="TBD", inline=False)
 
     # Load maps
-    TEAMMAP_PATH = os.path.join(os.getcwd(), "teammap.json")
+    base_dir = pathlib.Path(__file__).parent.parent
+    teammap_path = base_dir / "teammap.json"
+    
     try:
-        with open(TEAMMAP_PATH) as f:
+        with open(teammap_path, 'r') as f:
             combos = json.load(f)
-        print(maps)
         maps = sorted({c[0] for c in combos})
-        embed.add_field(name="Available Maps", value=", ".join(maps), inline=False)
-    except Exception:
-        embed.add_field(name="Available Maps", value="Error loading maps", inline=False)
+        embed.add_field(..., ", ".join(maps), inline=False)
+    except Exception as e:
+        logger.error("Failed to load maps from %s: %s", teammap_path, e)
+        embed.add_field(..., "Error loading maps", inline=False)
 
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
