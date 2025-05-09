@@ -68,7 +68,6 @@ async def match_create(
         value=f"<@&{chooser.id}>",
         inline=False
     )
-    embed.add_field(name"Host Mode Choice", value= "TBD", inline=True)
     embed.add_field(name="Ban Mode", value="TBD", inline=True)
     embed.add_field(name="Host", value="TBD", inline=True)
     embed.add_field(
