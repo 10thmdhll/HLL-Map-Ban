@@ -25,15 +25,6 @@ tree.add_command(cleanup_match)
 tree.add_command(match_delete)
 tree.add_command(match_time)
 
-@bot.tree.error
-async def on_app_command_error(
-    interaction: discord.Interaction,
-    error: Exception
-) -> None:
-    if isinstance(error, discord.errors.NotFound):
-        return
-    raise error
-
 @bot.event
 async def on_ready():
     # Sync with Discord and load persisted state
