@@ -57,27 +57,6 @@ async def match_create(
 
     await state.save_state(channel_id)
 
-    # Build and send embed
-    embed = discord.Embed(title="Match Status", color=discord.Color.blue())
-    embed.add_field(
-        name="Teams",
-        value=f"<@&{role_a.id}> vs <@&{role_b.id}>",
-        inline=False
-    )
-    embed.add_field(
-        name="Coin Flip Winner",
-        value=f"<@&{chooser.id}>",
-        inline=False
-    )
-    embed.add_field(name="Ban Mode", value="TBD", inline=True)
-    embed.add_field(name="Host", value="TBD", inline=True)
-    embed.add_field(
-        name="Scheduled Time",
-        value=ongoing["scheduled_time"],
-        inline=False
-    )
-    embed.add_field(name="Casters", value="TBD", inline=False)
-
     # Load maps
     base_dir = pathlib.Path(__file__).parent.parent
     maplist_path = base_dir / "maplist.json"
@@ -104,14 +83,14 @@ async def match_create(
         with open(teammap_path, "r") as f:
             data = json.load(f)
 
-        # 1) Build role-name → region map from "team_regions"
+        # Build role-name → region map from "team_regions"
         # File shape: { "team_regions": [ { "name": "3AC", "options": { "region": "NA" } }, … ] }
         for entry in data.get("team_regions", []):
             name = entry["name"]
             region = entry["options"]["region"]
             region_lookup[name] = region
 
-        # 2) Build region_pairings lookup
+        # Build region_pairings lookup
         # File shape: { "region_pairings": [ { "name": "NA", "options": { "EU": "Host", … } }, … ] }
         for rp in data.get("region_pairings", []):
             src = rp["name"]
@@ -120,35 +99,37 @@ async def match_create(
     except Exception as e:
         logger.error("Failed loading teammap.json (%s): %s", teammap_path, e)
 
-    # 3) Map your Discord roles to regions by matching on role.name
+    # Map your Discord roles to regions by matching on role.name
     region_a = region_lookup.get(role_a.name, "Unknown")
     region_b = region_lookup.get(role_b.name, "Unknown")
     ongoing["regions"] = {"team_a": region_a, "team_b": region_b}
 
-    # 4) Determine host/ban decision from region_pairings
+    # Determine host/ban decision from region_pairings
     decision = "TBD"
     if region_a in host_rules:
         decision = host_rules[region_a].get(region_b, "TBD")
     ongoing["host_or_mode_choice"] = decision
 
-    # 5) Add fields to the embed
-    embed.add_field(
-        name="Team Regions",
-        value=f"{role_a.name}: {region_a}\n{role_b.name}: {region_b}",
-        inline=False
-    )
+    # Build and send embed
+    embed = discord.Embed(title="Match Status", color=discord.Color.blue())
+    embed.add_field(name="Teams",value=f"<@&{role_a.id}> vs <@&{role_b.id}>",inline=True)
+    embed.add_field(name="Team Regions",value=f"{role_a.name}: {region_a}\n{role_b.name}: {region_b}",inline=False)
+    embed.add_field(name="Coin Flip Winner",value=f"<@&{chooser.id}>",inline=True)
+    embed.add_field(name"Host Mode Choice",value=decision,inline=False)
+    embed.add_field(name="Ban Mode", value="TBD", inline=True)
+    embed.add_field(name="Host", value="TBD", inline=True)
+    embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
+    embed.add_field(name="Casters", value="TBD", inline=False)
     
-    embed.add_field(
-        name="Current step status:",
-        value="Match Created" ,
-        inline=False
-    )
+    embed.add_field(name="Current step status:",value="Match Created" ,inline=False)
+    if decision == "Ban":
+        embed.add_field(name="Next step:",value="CF Winner: /select_ban_mode" ,inline=False)
+    else:
+        embed.add_field(name="Next step:",value="CF Winner: /" ,inline=False)
 
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
     await state.save_state(channel_id)
-    
-    await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],decision)
 
     # Acknowledge privately
     await interaction.response.send_message(
