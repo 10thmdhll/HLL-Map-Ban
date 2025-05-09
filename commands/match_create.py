@@ -95,43 +95,52 @@ async def match_create(
     except Exception as e:
         logger.error("Failed loading maps from %s: %s", maplist_path, e)
 
-    # ─── Load and assign regions to each team ────────────────────────────────
-    teamlist_path = base_dir / "teammap.json"
-    region_lookup: dict[int, str] = {}
+    # Load regions
+    teammap_path = base_dir / "teammap.json"
+    region_lookup: dict[str, str] = {}
+    host_rules: dict[str, dict[str, str]] = {}
     try:
-        with open(teamlist_path, "r") as f:
+        with open(teammap_path, "r") as f:
             data = json.load(f)
 
-        # Expecting { "team_regions": [ { "role_id": 123, "region": "NA" }, … ] }
-        if not (isinstance(data, dict) and "team_regions" in data):
-            raise ValueError(f"Unexpected teammap format: {type(data)}")
+        # 1) Build role-name → region map from "team_regions"
+        # File shape: { "team_regions": [ { "name": "3AC", "options": { "region": "NA" } }, … ] }
+        for entry in data.get("team_regions", []):
+            name = entry["name"]
+            region = entry["options"]["region"]
+            region_lookup[name] = region
 
-        for entry in data["team_regions"]:
-            rid = int(entry["role_id"])
-            region_lookup[rid] = entry["region"]
+        # 2) Build region_pairings lookup
+        # File shape: { "region_pairings": [ { "name": "NA", "options": { "EU": "Host", … } }, … ] }
+        for rp in data.get("region_pairings", []):
+            src = rp["name"]
+            host_rules[src] = rp["options"]
 
     except Exception as e:
-        logger.error("Failed loading team regions from %s: %s", teamlist_path, e)
+        logger.error("Failed loading teammap.json (%s): %s", teammap_path, e)
 
-    # pull each team’s region, default to "Unknown"
+    # 3) Map your Discord roles to regions by matching on role.name
     region_a = region_lookup.get(role_a.name, "Unknown")
     region_b = region_lookup.get(role_b.name, "Unknown")
     ongoing["regions"] = {"team_a": region_a, "team_b": region_b}
 
-    # compare for cross‐region or same‐region
-    if region_a == "Unknown" or region_b == "Unknown":
-        region_comparison = "Unknown team mapping."
-    elif region_a == region_b:
-        region_comparison = "Same Region"
-    else:
-        region_comparison = "Cross-Region"
+    # 4) Determine host/ban decision from region_pairings
+    decision = "TBD"
+    if region_a in host_rules:
+        decision = host_rules[region_a].get(region_b, "TBD")
+    ongoing["host_or_mode_choice"] = decision
 
-    embed.add_field(name="Team Regions",
-                    value=f"Team A: {region_a}\nTeam B: {region_b}",
-                    inline=False)
-    embed.add_field(name="Region Comparison",
-                    value=region_comparison,
-                    inline=False)
+    # 5) Add fields to the embed
+    embed.add_field(
+        name="Team Regions",
+        value=f"{role_a.name}: {region_a}\n{role_b.name}: {region_b}",
+        inline=False
+    )
+    embed.add_field(
+        name="Auto Decision",
+        value=decision,
+        inline=False
+    )
     
     embed.add_field(
         name="Current step status:",
