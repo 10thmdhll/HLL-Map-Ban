@@ -77,7 +77,7 @@ async def match_create(
         maps = sorted({c[0] for c in combos})
         embed.add_field(name="Available Maps",value=", ".join(maps),inline=False)
     except Exception as e:
-        logger.error("Failed to load maps from %s: %s", teammap_path, e)
+        logger.error("Failed to load maps from %s: %s", maplist_path, e)
         embed.add_field(name="Available Maps",value="Failed to load maps",inline=False)
 
     msg = await interaction.channel.send(embed=embed)
