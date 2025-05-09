@@ -120,12 +120,11 @@ async def match_create(
     embed.add_field(name="Host", value="TBD", inline=True)
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
-    
     embed.add_field(name="Current step status:",value="Match Created" ,inline=False)
     if decision == "Ban":
-        embed.add_field(name="Next step:",value="CF Winner: /select_ban_mode" ,inline=False)
+        embed.add_field(name="Next step:",value="CF Winner: select_ban_mode" ,inline=False)
     else:
-        embed.add_field(name="Next step:",value="CF Winner: /" ,inline=False)
+        embed.add_field(name="Next step:",value="CF Winner: select_ban_mode" ,inline=False)
 
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
