@@ -114,8 +114,8 @@ async def match_create(
         logger.error("Failed loading team regions from %s: %s", teamlist_path, e)
 
     # pull each team’s region, default to "Unknown"
-    region_a = region_lookup.get(role_a.id, "Unknown")
-    region_b = region_lookup.get(role_b.id, "Unknown")
+    region_a = region_lookup.get(role_a.name, "Unknown")
+    region_b = region_lookup.get(role_b.name, "Unknown")
     ongoing["regions"] = {"team_a": region_a, "team_b": region_b}
 
     # compare for cross‐region or same‐region
