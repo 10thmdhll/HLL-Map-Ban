@@ -1,70 +1,217 @@
 {
 	"team_regions": 
-	{
-		"3AC" : "NA",
-		"BAIN" : "SA",
-		"BEE DIVISION" : "EU",
-		"BOTN" : "NA",
-		"CHAD" : "NA",
-		"Chimera" : "OCE",
-		"Climbers" : "CN",
-		"Esprit de Corps" : "NA",
-		"Fallschirmjager" : "CN",
-		"GLOW" : "NA",
-		"Helios" : "NA",
-		"La Compania Maldita" : "EU",
-		"Legion Condor" : "SA",
-		"MIB" : "SA",
-		"MS" : "EU",
-		"Ocelots" : "OCE",
-		"PATHFINDERS" : "NA",
-		"Ronin" : "SA",
-		"Syndicate" : "NA",
-		"The Lucky Strikes" : "NA",
-		"TOG" : "NA",
-		"Vanguarda" : "SA"
-	},
-	"region_pairings": 
-	{
-		"NA": 
-		{
-			"NA": "Ban",
-			"SA": "Ban",
-			"EU": "Host",
-			"CN": "Ban",
-			"OCE": "Ban"
+	[
+		{	
+			"name": "3AC",
+			"options": 
+			{
+				"region": "NA"
+			}
 		},
-		"SA": 
 		{
-			"NA": "Ban",
-			"SA": "Ban",
-			"EU": "Ban",
-			"CN": "Ban",
-			"OCE": "Ban"
+			"name": "BAIN",
+			"options": 
+			{
+				"region": "SA"
+			}
 		},
-		"EU": 
-		{
-			"NA": "Host",
-			"SA": "Ban",
-			"EU": "Ban",
-			"CN": "Ban",
-			"OCE": "Ban"
+	    {
+			"name": "BEE DIVISION",
+			"options": 
+			{
+				"region": "EU"
+			}
 		},
-		"CN": 
 		{
-			"NA": "Ban",
-			"SA": "Ban",
-			"EU": "Ban",
-			"CN": "Ban",
-			"OCE": "Ban"
+			"name": "BOTN",
+			"options": 
+			{
+				"region": "NA"
+			}
 		},
-		"OCE": 
+	    {
+			"name": "CHAD",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+	    {
+			"name": "Chimera",
+			"options": 
+			{
+				"region": "OCE"
+			}
+		},
 		{
-			"NA": "Ban",
-			"SA": "Ban",
-			"EU": "Ban",
-			"CN": "Ban",
-			"OCE": "Ban"
+			"name": "Climbers",
+			"options": 
+			{
+				"region": "CN"
+			}
+		},
+	    {
+			"name": "Esprit de Corps",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+		{
+			"name": "Fallschirmjager",
+			"options": 
+			{
+				"region": "CN"
+			}
+		},
+	    {
+			"name": "GLOW",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+		{
+			"name": "Helios",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+	    {
+			"name": "La Compania Maldita",
+			"options": 
+			{
+				"region": "EU"
+			}
+		},
+		{
+			"name": "Legion Condor",
+			"options": 
+			{
+				"region": "SA"
+			}
+		},
+	    {
+			"name": "MIB",
+			"options": 
+			{
+				"region": "SA"
+			}
+		},
+		{
+			"name": "MS",
+			"options": 
+			{
+				"region": "EU"
+			}
+		},
+	    {
+			"name": "Ocelots",
+			"options": 
+			{
+				"region": "OCE"
+			}
+		},
+	    {
+			"name": "PATHFINDERS",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+	    {
+			"name": "Ronin",
+			"options": 
+			{
+				"region": "SA"
+			}
+		},
+		{
+			"name": "Syndicate",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+		{
+			"name": "The Lucky Strikes",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+		{
+			"name": "TOG",
+			"options": 
+			{
+				"region": "NA"
+			}
+		},
+		{
+			"name": "Vanguarda",
+			"options": 
+			{
+				"region": "SA"
+			}
 		}
-	}
+	],
+	"region_pairings":
+	[
+		{
+			"name": "NA",
+			"options":
+			{
+				"NA": "Ban",
+				"SA": "Ban",
+				"EU": "Host",
+				"OCE": "Ban",
+				"CN": "Ban"
+			}
+		},
+		{
+			"name": "SA",
+			"options":
+			{
+				"NA": "Ban",
+				"SA": "Ban",
+				"EU": "Ban",
+				"OCE": "Ban",
+				"CN": "Ban"
+			}
+		},
+		{
+			"name": "EU",
+			"options":
+			{
+				"NA": "Host",
+				"SA": "Ban",
+				"EU": "Ban",
+				"OCE": "Ban",
+				"CN": "Ban"
+			}
+		},
+		{
+			"name": "OCE",
+			"options":
+			{
+				"NA": "Ban",
+				"SA": "Ban",
+				"EU": "Ban",
+				"OCE": "Ban",
+				"CN": "Ban"
+			}
+		},
+		{
+			"name": "CN",
+			"options":
+			{
+				"NA": "Ban",
+				"SA": "Ban",
+				"EU": "Ban",
+				"OCE": "Ban",
+				"CN": "Ban"
+			}
+		}
+	]
 }
