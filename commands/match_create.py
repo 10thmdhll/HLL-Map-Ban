@@ -72,8 +72,8 @@ async def match_create(
     try:
         with open(teammap_path, 'r') as f:
             combos = json.load(f)
-            logger.debug("Loaded combos from %s: %r", teammap_path, combos)
-            logger.debug("Derived map list: %r", maps)
+            print("Loaded combos from %s: %r", teammap_path, combos)
+            print("Derived map list: %r", maps)
         maps = sorted({c[0] for c in combos})
         embed.add_field(name="Available Maps",value=", ".join(maps),inline=False)
     except Exception as e:
