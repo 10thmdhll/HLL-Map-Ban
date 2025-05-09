@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List, Tuple
 from state import ongoing_events
+import discord
+from discord import TextChannel
 
 def format_timestamp(ts: str) -> str:
     from datetime import datetime
@@ -25,7 +27,6 @@ def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
     return combos
     
 async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
-    import discord
     # 1) Fetch the bot’s original embed message
     msg = await channel.fetch_message(message_id)
     if not msg.embeds:
