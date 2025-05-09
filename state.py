@@ -1,8 +1,11 @@
 import os
 import json
 import asyncio
+import logging
 
-# Directory to store per-channel state
+logger = logging.getLogger(__name__)
+
+# Directory to store per-channel state\ n
 STATE_DIR = "state"
 # Ensure the directory exists
 os.makedirs(STATE_DIR, exist_ok=True)
@@ -56,7 +59,7 @@ async def load_state(ch: int) -> None:
             with open(path) as f:
                 data = json.load(f)
         except json.JSONDecodeError:
-            # Optionally log warning here
+            logger.warning("Corrupted or invalid JSON in state file %s: %s", path, e)
             return
         ongoing_bans[ch]     = data.get("ongoing_bans", {})
         match_turns[ch]      = data.get("match_turns", [])
