@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from state import load_state, save_state, channel_decision, channel_mode
+from state import load_state, save_state, channel_teams, channel_mode
 
 @app_commands.command(name="select_ban_mode")
 @app_commands.describe(option="Choose ban mode for this match")
@@ -13,8 +13,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     await load_state(ch)
 
     # Ensure match exists and coin flip done
-    from state import channel_teams
-    if ch not in channel_teams or not channel_teams[ch]:
+    if ch not in channel_teams:
         return await interaction.response.send_message(
             "❌ No match created. Use /match_create first.", ephemeral=True
         )

@@ -1,6 +1,9 @@
 import os
 import json
 import asyncio
+from helpers import remaining_combos
+from datetime import datetime
+from typing import List, Tuple, Optional, Literal, Dict, Union
 
 # ─── Per-channel state containers and locks ─────────────────────────────────────
 state_locks: dict[int, asyncio.Lock] = {}
