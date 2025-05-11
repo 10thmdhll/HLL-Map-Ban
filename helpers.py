@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Tuple
-from state import ongoing_events
+import state
 import discord
 from discord import TextChannel
 
