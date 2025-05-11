@@ -126,11 +126,11 @@ async def update_current_turn_embed(
 
     embed = msg.embeds[0]
     # Find or append the 'Current Turn' field
-    idx = next((i for i,f in enumerate(embed.fields) if f.name == "Current Turn"), None)
+    idx = next((i for i,f in enumerate(embed.fields) if f.name == "Current Turn:"), None)
     mention = f"<@&{next_role_id}>"
     if idx is None:
-        embed.add_field(name="Current Turn", value=mention, inline=False)
+        embed.add_field(name="Current Turn:", value=mention, inline=False)
     else:
-        embed.set_field_at(idx, name="Current Turn", value=mention, inline=False)
+        embed.set_field_at(idx, name="Current Turn:", value=mention, inline=False)
 
     await msg.edit(embed=embed)
