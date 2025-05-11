@@ -109,6 +109,10 @@ async def match_create(
     if region_a in host_rules:
         decision = host_rules[region_a].get(region_b, "TBD")
     ongoing["host_or_mode_choice"] = decision
+    
+    if decision == "Ban":
+        ongoing["Host"] = "Middle Ground Rules"
+        
 
     # Build and send embed
     embed = discord.Embed(title="Match Status", color=discord.Color.blue())
