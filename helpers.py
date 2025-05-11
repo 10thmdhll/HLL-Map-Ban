@@ -104,7 +104,7 @@ async def flip_turn(channel_id: int) -> int:
     await state.save_state(channel_id)
     
     # 5) Fetch the bot’s original embed message
-    msg = await channel.fetch_message(message_id)
+    msg = await interaction.channel.fetch_message(message_id)
     if not msg.embeds:
         raise RuntimeError("No embed found on that message")
 
