@@ -66,10 +66,10 @@ async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id:
     )
     if field_index is None:
         # If it doesn’t exist yet, append it instead
-        embed.add_field(name="Ban Mode", value=new_choice, inline=False)
+        embed.add_field(name="Ban Mode", value=new_choice, inline=True)
     else:
         # 4) Mutate that field in-place
-        embed.set_field_at(field_index, name="Ban Mode", value=new_choice, inline=False)
+        embed.set_field_at(field_index, name="Ban Mode", value=new_choice, inline=True)
 
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
