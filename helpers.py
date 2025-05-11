@@ -73,3 +73,34 @@ async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id:
 
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
+    
+async def flip_turn(channel_id: int) -> int:
+    """
+    Advance the current_turn_index to the next team (wraps around),
+    save state, and return the new turn index.
+    """
+    # 1) Load the latest state
+    await state.load_state(channel_id)
+    ongoing = state.ongoing_events.setdefault(channel_id, {})
+
+    # 2) Compute next index (0 → 1 → 0 → …)
+    teams = ongoing.get("teams", [])
+    if len(teams) < 2:
+        raise RuntimeError("Cannot flip turn: 'teams' is not set or has fewer than 2 entries")
+
+    current = ongoing.get("current_turn_index", 0)
+    new_turn = (current + 1) % len(teams)
+    ongoing["current_turn_index"] = new_turn
+
+    # 3) Optionally record in your update history
+    history = ongoing.setdefault("update_history", [])
+    history.append({
+        "event": "turn_flipped",
+        "new_turn_index": new_turn,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    })
+
+    # 4) Persist it
+    await state.save_state(channel_id)
+
+    return new_turn
