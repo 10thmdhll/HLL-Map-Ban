@@ -128,7 +128,7 @@ async def match_create(
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
     embed.add_field(name="Current step status:",value="Match Created" ,inline=False)
-    embed.add_field(name="Current Turn:",value=ongoing["current_turn_index"],inline=False)
+    embed.add_field(name="Current Turn:",value=f"<@&{ongoing["current_turn_index"]}>",inline=False)
     if decision == "Ban":
         embed.add_field(name="Next step:",value="CF Winner: select_ban_mode" ,inline=False)
     else:
