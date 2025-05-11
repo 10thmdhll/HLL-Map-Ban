@@ -102,5 +102,28 @@ async def flip_turn(channel_id: int) -> int:
 
     # 4) Persist it
     await state.save_state(channel_id)
+    
+    # 5) Fetch the bot’s original embed message
+    msg = await channel.fetch_message(message_id)
+    if not msg.embeds:
+        raise RuntimeError("No embed found on that message")
+
+    # 6) Clone the existing embed
+    embed = msg.embeds[0]
+    
+    # 3) Find the index of the field you want to update
+    field_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Current Turn"),
+        None
+    )
+    if field_index is None:
+        # If it doesn’t exist yet, append it instead
+        embed.add_field(name="Current Turn", value=f"<@&{new_turn}>", inline=False)
+    else:
+        # 4) Mutate that field in-place
+        embed.set_field_at(field_index, name="Current Turn", value=f"<@&{new_turn}>", inline=False)
+
+    # 5) Push the edit back to Discord
+    await msg.edit(embed=embed)
 
     return new_turn
