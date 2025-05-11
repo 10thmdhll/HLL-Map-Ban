@@ -47,7 +47,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
         )
 
     # update only the Host/Mode Choice field on that embed
-    flip_turn(ch)
+    flip_turn(channel_id)
     await update_ban_mode_choice_embed(
         interaction.channel,
         embed_msg_id,
