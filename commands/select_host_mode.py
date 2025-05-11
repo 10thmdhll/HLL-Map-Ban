@@ -2,7 +2,7 @@ import datetime
 import discord
 from discord import app_commands
 import state
-from helpers import update_host_mode_choice_embed
+from helpers import update_host_mode_choice_embed, flip_turn
 
 @app_commands.command(name="select_host_mode")
 @app_commands.describe(option="Choose host option: ban or host")
