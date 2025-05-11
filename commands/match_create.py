@@ -40,13 +40,13 @@ async def match_create(
         "timestamp": datetime.utcnow().isoformat() + 'Z'
     }
 
+    ongoing.update({"current_turn_index": chooser.id})
     # Initialize other fields
     ongoing.update({
         "host_or_mode_choice": None,
         "host_role": None,
         "ban_mode": None,
         "bans": [],
-        "current_turn_index": 0,
         "scheduled_time": "TBD",
         "casters": {"team_a": None, "team_b": None},
         "additional_casters": [],
@@ -114,6 +114,8 @@ async def match_create(
         ongoing["Host"] = "Middle Ground Rules"
     else:
         ongoing["Host"] = "TBD"
+        
+    
 
     # Build and send embed
     embed = discord.Embed(title="Match Status", color=discord.Color.blue())
@@ -126,6 +128,7 @@ async def match_create(
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
     embed.add_field(name="Current step status:",value="Match Created" ,inline=False)
+    embed.add_field(name="Current Turn:",value=ongoing["current_turn_index"],inline=False)
     if decision == "Ban":
         embed.add_field(name="Next step:",value="CF Winner: select_ban_mode" ,inline=False)
     else:
