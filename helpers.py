@@ -79,11 +79,9 @@ async def flip_turn(channel_id: int) -> int:
     Advance the current_turn_index to the next team (wraps around),
     save state, and return the new turn index.
     """
-    # 1) Load the latest state
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
 
-    # 2) Compute next index (0 → 1 → 0 → …)
     teams = ongoing.get("teams", [])
     if len(teams) < 2:
         raise RuntimeError("Cannot flip turn: 'teams' is not set or has fewer than 2 entries")
@@ -92,7 +90,7 @@ async def flip_turn(channel_id: int) -> int:
     new_turn = (current + 1) % len(teams)
     ongoing["current_turn_index"] = new_turn
 
-    # 3) Optionally record in your update history
+    # record history
     history = ongoing.setdefault("update_history", [])
     history.append({
         "event": "turn_flipped",
@@ -100,30 +98,39 @@ async def flip_turn(channel_id: int) -> int:
         "timestamp": datetime.utcnow().isoformat() + "Z"
     })
 
-    # 4) Persist it
     await state.save_state(channel_id)
+    return new_turn
     
-    # 5) Fetch the bot’s original embed message
-    msg = await interaction.channel.fetch_message(message_id)
+async def update_current_turn_embed(
+    channel: discord.TextChannel,
+    message_id: int,
+    new_turn_index: int
+) -> None:
+    """
+    Fetch the existing status embed by message_id, find the 'Current Turn' field,
+    and update it to point to the correct team role mention.
+    """
+    # Load the latest state to resolve which role ID corresponds to this turn
+    await state.load_state(channel.id)
+    ongoing = state.ongoing_events[channel.id]
+    teams = ongoing.get("teams", [])
+    if new_turn_index >= len(teams):
+        return  # sanity check
+
+    next_role_id = teams[new_turn_index]
+
+    # Fetch and edit the embed
+    msg = await channel.fetch_message(message_id)
     if not msg.embeds:
         raise RuntimeError("No embed found on that message")
 
-    # 6) Clone the existing embed
     embed = msg.embeds[0]
-    
-    # 3) Find the index of the field you want to update
-    field_index = next(
-        (i for i, f in enumerate(embed.fields) if f.name == "Current Turn"),
-        None
-    )
-    if field_index is None:
-        # If it doesn’t exist yet, append it instead
-        embed.add_field(name="Current Turn", value=f"<@&{new_turn}>", inline=False)
+    # Find or append the 'Current Turn' field
+    idx = next((i for i,f in enumerate(embed.fields) if f.name == "Current Turn"), None)
+    mention = f"<@&{next_role_id}>"
+    if idx is None:
+        embed.add_field(name="Current Turn", value=mention, inline=False)
     else:
-        # 4) Mutate that field in-place
-        embed.set_field_at(field_index, name="Current Turn", value=f"<@&{new_turn}>", inline=False)
+        embed.set_field_at(idx, name="Current Turn", value=mention, inline=False)
 
-    # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
-
-    return new_turn

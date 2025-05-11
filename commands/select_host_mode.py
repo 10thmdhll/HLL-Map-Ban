@@ -2,7 +2,7 @@ import datetime
 import discord
 from discord import app_commands
 import state
-from helpers import update_host_mode_choice_embed, flip_turn
+from helpers import update_host_mode_choice_embed, flip_turn, update_current_turn_embed
 
 @app_commands.command(name="select_host_mode")
 @app_commands.describe(option="Choose host option: ban or host")
@@ -51,7 +51,10 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         ongoing["ban_mode"] = option
         ongoing["ban_mode_picker"] = interaction.user.id
 
-    await flip_turn(channel_id)
+    new_turn = await flip_turn(channel_id)
+    embed_msg_id = ongoing.get("embed_message_id")
+    await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
+
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
     await state.save_state(channel_id)
