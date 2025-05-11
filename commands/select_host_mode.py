@@ -51,7 +51,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         ongoing["ban_mode"] = option
         ongoing["ban_mode_picker"] = interaction.user.id
 
-    flip_turn(channel_id)
+    await flip_turn(channel_id)
     msg = await interaction.channel.send(embed=embed)
     ongoing["embed_message_id"] = msg.id
     await state.save_state(channel_id)
