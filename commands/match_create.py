@@ -122,7 +122,7 @@ async def match_create(
     embed.add_field(name="Coin Flip Winner",value=f"<@&{chooser.id}>",inline=True)
     embed.add_field(name="Host Mode Choice",value=f"{decision}",inline=False)
     embed.add_field(name="Ban Mode", value="TBD", inline=True)
-    embed.add_field(name="Host", value=ongoing["Host"]", inline=True)
+    embed.add_field(name="Host", value=ongoing["Host"], inline=True)
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
     embed.add_field(name="Current step status:",value="Match Created" ,inline=False)
