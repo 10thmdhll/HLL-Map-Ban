@@ -19,6 +19,20 @@ async def ban_map(
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
 
+    # Determine whose turn it is
+    turn_idx = ongoing["current_turn_index"]
+    team_roles = ongoing["teams"]  # [role_a_id, role_b_id]
+    # even turns → team A, odd turns → team B
+    expected_role_id = team_roles[0] if turn_idx % 2 == 0 else team_roles[1]
+
+    # Check if the invoking user has that role
+    if expected_role_id not in [r.id for r in interaction.user.roles]:
+        role_mention = f"<@&{expected_role_id}>"
+        return await interaction.response.send_message(
+            f"❌ It’s {role_mention}’s turn, you can’t do that right now.",
+            ephemeral=True
+        )
+
     # Determine remaining combos
     rem = remaining_combos(channel_id)
     # Validate chosen combo is available
