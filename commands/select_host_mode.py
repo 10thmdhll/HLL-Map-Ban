@@ -18,7 +18,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("Host")
-    if choice_data != "TBD":
+    if (choice_data == "host" or choice_date == "ban"):
         # if it’s a dict, pull out the field; if it’s just a string, use it directly
         if isinstance(choice_data, dict):
             prev = choice_data.get("chosen_option")
