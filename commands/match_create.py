@@ -41,6 +41,7 @@ async def match_create(
     }
 
     ongoing.update({"current_turn_index": chooser.id})
+    ongoing.update({"update_history": value=f"Coinflip winner: <@&{chooser.id}>"})
     # Initialize other fields
     ongoing.update({
         "host_or_mode_choice": None,
@@ -50,7 +51,6 @@ async def match_create(
         "scheduled_time": "TBD",
         "casters": {"team_a": None, "team_b": None},
         "additional_casters": [],
-        "update_history": [],
         "predictions_poll": None,
         "embed_message_id": None
     })
@@ -127,6 +127,7 @@ async def match_create(
     embed.add_field(name="Host", value=ongoing["Host"], inline=True)
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
+    embed.add_field(name="Update History:", value=ongoing["update_history"],inline=False)
     embed.add_field(name="Current step status:",value="Match Created" ,inline=False)
     embed.add_field(name="Current Turn:",value=f"<@&{ongoing["current_turn_index"]}>",inline=False)
     if decision == "Ban":
