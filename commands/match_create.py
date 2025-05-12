@@ -41,7 +41,7 @@ async def match_create(
     }
 
     ongoing.update({"current_turn_index": chooser.id})
-    ongoing.update({"update_history": value=f"Coinflip winner: <@&{chooser.id}>"})
+    ongoing.update({"update_history": f"Coinflip winner: <@&{chooser.id}>"})
     # Initialize other fields
     ongoing.update({
         "host_or_mode_choice": None,
