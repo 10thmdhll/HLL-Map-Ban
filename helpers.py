@@ -40,13 +40,18 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
         (i for i, f in enumerate(embed.fields) if f.name == "Host"),
         None
     )
+    
+    history_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Update History:"), None
+    )
+    
     if field_index is None:
         # If it doesn’t exist yet, append it instead
         embed.add_field(name="Host", value=new_choice, inline=False)
     else:
         # 4) Mutate that field in-place
         embed.set_field_at(field_index, name="Host", value=new_choice, inline=True)
-        embed.append(field_index, name="Update History:", value=f"CF Winner choice: {new_choice}", inline=False)
+        embed.set_field_at(history_index, name="Update History:", value={history_index} + f"/nCF Winner choice: {new_choice}", inline=False)
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
     
