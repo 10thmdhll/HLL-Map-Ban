@@ -17,12 +17,19 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     ongoing = state.ongoing_events.setdefault(channel_id, {})
     
     # ─── Prevent re-selection ───────────────────────────────────────────
-    prev = ongoing.get("host_or_mode_choice", {}).get("chosen_option")
-    if prev:
-        return await interaction.response.send_message(
-            f"❌ Host/Ban mode is already set to **{prev}**.",
-            ephemeral=True
-        )
+    choice_data = ongoing.get("host_or_mode_choice")
+    if choice_data:
+        # if it’s a dict, pull out the field; if it’s just a string, use it directly
+        if isinstance(choice_data, dict):
+            prev = choice_data.get("chosen_option")
+        else:
+            prev = choice_data
+
+        if prev:
+            return await interaction.response.send_message(
+                f"❌ Host/Ban mode is already set to **{prev}**.",
+                ephemeral=True
+            )
     
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
