@@ -90,13 +90,16 @@ async def flip_turn(channel_id: int) -> int:
     new_turn = (current + 1) % len(teams)
     ongoing["current_turn_index"] = new_turn
 
-    # record history
-    history = ongoing.setdefault("update_history", [])
+    # ─── Safely append to update_history ─────────────────────────────────
+    history = ongoing.get("update_history")
+    if not isinstance(history, list):
+        history = []
     history.append({
         "event": "turn_flipped",
         "new_turn_index": new_turn,
         "timestamp": datetime.utcnow().isoformat() + "Z"
     })
+    ongoing["update_history"] = history
 
     await state.save_state(channel_id)
     return new_turn
