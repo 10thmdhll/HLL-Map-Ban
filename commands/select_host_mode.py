@@ -14,6 +14,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     """Select ban mode or hosting choice after coin flip."""
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
+    ongoing = state.ongoing_events.setdefault(channel_id, {})
     
     # ─── Prevent re-selection ───────────────────────────────────────────
     prev = ongoing.get("host_or_mode_choice", {}).get("chosen_option")
@@ -22,8 +23,6 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
             f"❌ Host/Ban mode is already set to **{prev}**.",
             ephemeral=True
         )
-    
-    ongoing = state.ongoing_events.setdefault(channel_id, {})
     
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
