@@ -46,7 +46,7 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     )
     
     next_step_index = next(
-        (i for i, f in enumerate(embed.fields) if f.name == "Next step:"), None
+        (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None
     ) 
     
     if field_index is None:
@@ -63,9 +63,8 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
                            value=new_val,
                            inline=False)
                            
-        prev = embed.fields[next_step_index].value or ""
         new_val2 = "Current turn role: select_ban_mode"
-        embed.set_field_at(history_index,
+        embed.set_field_at(next_step_index,
                            name="Next step:",
                            value=new_val2,
                            inline=False)
