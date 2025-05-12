@@ -58,14 +58,14 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
         embed.set_field_at(field_index, name="Host", value=new_choice, inline=True)
         
     if history_index is None:
-        embed.add_field(name="Update History:",value=f"<@&{ct_role}> choice: {new_choice}",inline=False)
+        embed.add_field(name="Update History:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
         prev = embed.fields[history_index].value or ""    
-        new_val = prev + "\n" + f"<@&{ct_role}> choice: {new_choice}"
+        new_val = prev + "\n" + f"{ct_role} choice: {new_choice}"
         embed.set_field_at(history_index,name="Update History:",value=new_val,inline=False)
      
     if next_step_index is None:
-        embed.add_field(name="Next Step:",value=f"<@&{ct_role}> choice: {new_choice}",inline=False)
+        embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
         new_val2 = "Current turn role: select_ban_mode"
         embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
@@ -104,14 +104,14 @@ async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id:
         embed.set_field_at(field_index, name="Ban Mode", value=new_choice, inline=True)
         
     if history_index is None:
-        embed.add_field(name="Update History:",value=f"<@&{ct_role}> choice: {new_choice}",inline=False)
+        embed.add_field(name="Update History:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
         prev = embed.fields[history_index].value or ""    
-        new_val = prev + "\n" + f"<@&{ct_role}> choice: {new_choice}"
+        new_val = prev + "\n" + f"{ct_role} choice: {new_choice}"
         embed.set_field_at(history_index,name="Update History:",value=new_val,inline=False)
      
     if next_step_index is None:
-        embed.add_field(name="Next Step:",value=f"<@&{ct_role}> choice: {new_choice}",inline=False)
+        embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
         new_val2 = "Current turn role: map_ban"
         embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
