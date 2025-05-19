@@ -48,6 +48,7 @@ async def match_create(
         "host_role": None,
         "ban_mode": None,
         "bans": [],
+        "firstban": True,
         "scheduled_time": "TBD",
         "casters": {"team_a": None, "team_b": None},
         "additional_casters": [],
