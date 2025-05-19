@@ -11,11 +11,25 @@ from helpers import update_ban_mode_choice_embed, flip_turn, update_current_turn
     app_commands.Choice(name="Double Ban Mode - You pick the first two bans.  Other team will pick the final ban.", value="double"),
 ])
 async def select_ban_mode(interaction: discord.Interaction, option: str):
-    """Select ban mode or hosting choice after coin flip."""
+    """Select ban mode after coin flip."""
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
     
+    # ─── Prevent re-selection ───────────────────────────────────────────
+    choice_data = ongoing.get("Ban Mode")
+    if (choice_data == "double" or choice_data == "final"):
+        # if it’s a dict, pull out the field; if it’s just a string, use it directly
+        if isinstance(choice_data, dict):
+            prev = choice_data.get("chosen_option")
+        else:
+            prev = choice_data
+
+        if prev:
+            return await interaction.response.send_message(
+                f"❌ Ban mode is already set to **{prev}**.",
+                ephemeral=True
+            )
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
     team_roles = ongoing["teams"]  # [role_a_id, role_b_id]
@@ -30,34 +44,22 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
             ephemeral=True
         )
         
-    # record the choice in state…
     ongoing["ban_mode"] = {
         "chosen_option": option,
         "chosen_by": interaction.user.id,
         "timestamp": datetime.datetime.utcnow().isoformat() + 'Z'
     }
-    ongoing["ban_mode" if option != "host" else "host_role"] = interaction.user.id
+    
+    new_turn = interaction.user.id
+    
+    if option == "final":
+        new_turn = await flip_turn(channel_id)
+    
     await state.save_state(channel_id)
 
     # get the message ID of the embed posted in /match_create
     embed_msg_id = ongoing.get("embed_message_id")
-    if not embed_msg_id:
-        return await interaction.response.send_message(
-            "❌ No status embed found to update.", ephemeral=True
-        )
-
-    # update only the Host/Mode Choice field on that embed
-    new_turn = await flip_turn(channel_id)
-    embed_msg_id = ongoing.get("embed_message_id")
     await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
-
-    await update_ban_mode_choice_embed(
-        interaction.channel,
-        embed_msg_id,
-        option.capitalize()  # or however you want to display it
-    )
-
-    # confirm to the user
-    await interaction.response.send_message(
-        f"✅ Option '{option}' recorded.", ephemeral=True
-    )
+    await update_ban_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
+    
+    await interaction.response.send_message(f"✅ Option '{option}' recorded.")
