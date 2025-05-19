@@ -42,7 +42,7 @@ async def ban_map(
         )
 
     # First Ban gets double
-    if (ongoing["firstban"] == True:
+    if (ongoing["firstban"] == True):
         bans = ongoing.setdefault("bans", [])
         ts = datetime.utcnow().isoformat() + 'Z'
         bans.append({"map": map_name, "side": side, "timestamp": ts})
