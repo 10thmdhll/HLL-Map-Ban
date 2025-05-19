@@ -182,3 +182,36 @@ async def update_current_turn_embed(
         embed.set_field_at(idx, name="Current Turn:", value=mention, inline=False)
 
     await msg.edit(embed=embed)
+    
+async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
+    # 1) Fetch the bot’s original embed message
+    msg = await channel.fetch_message(message_id)
+    if not msg.embeds:
+        raise RuntimeError("No embed found on that message")
+
+    # 2) Clone the existing embed
+    embed = msg.embeds[0]
+    
+    ct_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Current Turn:"), None)
+ 
+    ct_role = embed.fields[ct_index].value
+    
+    history_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Update History:"), None)
+            
+    if history_index is None:
+        embed.add_field(name="Update History:",value=f"{ct_role} choice: {new_choice}",inline=False)
+    else:
+        prev = embed.fields[history_index].value or ""    
+        new_val = prev + "\n" + f"{ct_role} choice: {new_choice}"
+        embed.set_field_at(history_index,name="Update History:",value=new_val,inline=False)
+     
+    if next_step_index is None:
+        embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
+    else:
+        new_val2 = "Current turn role: map_ban"
+        embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
+
+    # 5) Push the edit back to Discord
+    await msg.edit(embed=embed)

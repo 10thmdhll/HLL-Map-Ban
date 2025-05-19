@@ -2,7 +2,7 @@ from datetime import datetime
 import discord
 from discord import app_commands
 import state
-from helpers import format_timestamp, remaining_combos
+from helpers import format_timestamp, remaining_combos, update_ban_embed
 
 @app_commands.command(name="ban_map")
 @app_commands.describe(
@@ -41,8 +41,35 @@ async def ban_map(
             f"❌ Invalid ban: {map_name} ({side}) is not available.", ephemeral=True
         )
 
+    # First Ban gets double
+    if (ongoing["firstban"] == True:
+        bans = ongoing.setdefault("bans", [])
+        ts = datetime.utcnow().isoformat() + 'Z'
+        bans.append({"map": map_name, "side": side, "timestamp": ts})
+        
+        tb = ongoing.setdefault(map_name, {"team_a": {"manual": [], "auto": []}, "team_b": {"manual": [], "auto": []}})
+        
+        await state.save_state(channel_id)
+        await interaction.response.send_message(
+        f"{side} banned {map_name} at {format_timestamp(ts)} as double ban option.")
+        
+        # get the message ID of the embed posted in /match_create
+        embed_msg_id = ongoing.get("embed_message_id")
+        if not embed_msg_id:
+            return await interaction.response.send_message(
+                "❌ No status embed found to update.", ephemeral=True
+            )
+        
+        await update_ban_embed(
+            interaction.channel,
+            embed_msg_id,
+            f"{side} banned {map_name} at {format_timestamp(ts)} as double ban option."
+        )
+        
+        ongoing["firstban"] = False
+        return
+    
     # Record ban
-    bans = ongoing.setdefault("bans", [])
     ts = datetime.utcnow().isoformat() + 'Z'
     bans.append({"map": map_name, "side": side, "timestamp": ts})
     ongoing["current_turn_index"] = len(bans) - 1
@@ -60,3 +87,11 @@ async def ban_map(
     await state.save_state(channel_id)
     await interaction.response.send_message(
         f"{side} banned {map_name} at {format_timestamp(ts)}.")
+        
+    new_turn = await flip_turn(channel_id)
+    embed_msg_id = ongoing.get("embed_message_id")
+    await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
+    
+    await update_ban_embed(interaction.channel,embed_msg_id,
+            f"{side} banned {map_name} at {format_timestamp(ts)} as ban option."
+        )
