@@ -11,7 +11,7 @@ from helpers import update_host_mode_choice_embed, flip_turn, update_current_tur
     app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Double or Final ban setting.", value="host"),
 ])
 async def select_host_mode(interaction: discord.Interaction, option: str):
-    """Select ban mode or hosting choice after coin flip."""
+    """Select hosting choice after coin flip."""
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
