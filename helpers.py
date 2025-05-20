@@ -435,36 +435,38 @@ async def load_maplist() -> List[dict]:
     with open("maplist.json") as f:
         return json.load(f)["maps"]
         
-async def map_autocomplete(interaction: discord.Interaction, current: str) -> List[Choice[str]]:
-    # load any recorded combos
+async def map_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[Choice[str]]:
     combos = remaining_combos(interaction.channel.id)
-
-    if not combos:
-        # no bans yet → suggest all maps
-        full = [m["name"] for m in await load_maplist()]
-    else:
-        # only suggest maps that still have slots
-        full = sorted({m for m, _, _ in combos})
-
+    # extract unique map names
+    maps = sorted({m for m, _, _ in combos})
+    # fallback: if nobody’s banned yet, show all maps from JSON
+    if not maps:
+        maps = [m["name"] for m in await load_maplist()]
     return [
-        Choice(name=nm, value=nm)
-        for nm in full
-        if current.lower() in nm.lower()
+        Choice(name=m, value=m)
+        for m in maps
+        if current.lower() in m.lower()
     ][:50]
 
-async def side_autocomplete(interaction: discord.Interaction, current: str) -> List[Choice[str]]:
-    sel = getattr(interaction.namespace, "map_name", None)
-    if not sel:
+async def side_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[Choice[str]]:
+    sel_map = getattr(interaction.namespace, "map_name", None)
+    if not sel_map:
         return []
-
     combos = remaining_combos(interaction.channel.id)
-    sides = [side for m, _, side in combos if m == sel]
-
+    # get only sides for the chosen map
+    sides = [side for m, _, side in combos if m == sel_map]
+    # fallback if first ban
     if not sides:
         sides = ["Allied", "Axis"]
-
+    unique = sorted(set(sides))
     return [
         Choice(name=s, value=s)
-        for s in sorted(set(sides))
+        for s in unique
         if current.lower() in s.lower()
     ][:50]
