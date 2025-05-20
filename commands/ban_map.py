@@ -63,7 +63,8 @@ async def ban_map(
             f"Banned {map_name} - {side} at {format_timestamp(ts)} as double ban option."
         )
         
-        ongoing["firstban"] = False
+        ongoing.update({"firstban"} : False)
+        await state.save_state(channel_id)
         return
     
     # Determine remaining combos
