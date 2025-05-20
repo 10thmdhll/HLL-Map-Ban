@@ -426,36 +426,36 @@ async def load_maplist() -> List[dict]:
     with open(CONFIG["maplist_file"]) as f:
         return json.load(f)["maps"]
         
-async def map_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-) -> List[app_commands.Choice[str]]:
+async def map_autocomplete(interaction: discord.Interaction, current: str) -> List[Choice[str]]:
+    # load any recorded combos
     combos = remaining_combos(interaction.channel.id)
-    # extract unique map names
-    maps = sorted({m for m, _, _ in combos})
-    # filter by what the user has typed so far
-    suggestions = [
-        Choice(name=m, value=m)
-        for m in maps
-        if current.lower() in m.lower()
-    ]
-    return suggestions[:50]
 
-async def side_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-) -> list[Choice[str]]:
-    # what map did they already pick?
-    sel_map = getattr(interaction.namespace, "map_name", None)
-    if not sel_map:
+    if not combos:
+        # no bans yet → suggest all maps
+        full = [m["name"] for m in await load_maplist()]
+    else:
+        # only suggest maps that still have slots
+        full = sorted({m for m, _, _ in combos})
+
+    return [
+        Choice(name=nm, value=nm)
+        for nm in full
+        if current.lower() in nm.lower()
+    ][:50]
+
+async def side_autocomplete(interaction: discord.Interaction, current: str) -> List[Choice[str]]:
+    sel = getattr(interaction.namespace, "map_name", None)
+    if not sel:
         return []
-    # find all sides for that map still open
+
     combos = remaining_combos(interaction.channel.id)
-    sides = [side for m, _, side in combos if m == sel_map]
-    unique = sorted(set(sides))
-    suggestions = [
+    sides = [side for m, _, side in combos if m == sel]
+
+    if not sides:
+        sides = ["Allied", "Axis"]
+
+    return [
         Choice(name=s, value=s)
-        for s in unique
+        for s in sorted(set(sides))
         if current.lower() in s.lower()
-    ]
-    return suggestions[:50]
+    ][:50]
