@@ -94,12 +94,9 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
     
-    channel_id = interaction.channel.id
-    await state.load_state(channel_id)
-    ongoing = state.ongoing_events.get(channel_id)
     if new_choice == "host":
-        new_turn = await flip_turn(message_id)
-        await update_current_turn_embed(interaction.channel, msg, new_turn)
+        new_turn = await flip_turn(channel)
+        await update_current_turn_embed(channel, msg, new_turn)
     
 async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
     # 1) Fetch the bot’s original embed message
