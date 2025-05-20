@@ -59,9 +59,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     
     await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
     await state.save_state(channel_id)
-    
-    new_turn = await flip_turn(channel_id)
-    
+        
     embed_msg_id = ongoing.get("embed_message_id")
     await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
         
