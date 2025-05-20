@@ -58,13 +58,11 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     
     teams_val = embed.fields[tm_index].value
     role_mentions = [part.strip() for part in teams_val.split(" vs ")]
-    current_mention = f"<@&{ct_role}>"
+    current_mention = ct_role
     other_mention = (
         role_mentions[1]
         if role_mentions[0] == current_mention
         else role_mentions[0]
-)
-    other_role_id = int(other_mention.strip("<@&>"))
     
     if new_choice == "host":
         new_host = ct_role
