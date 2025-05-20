@@ -69,7 +69,7 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     if new_choice == "host":
         new_host = ct_role
     if new_choice == "ban":
-        new_host = other_role_id
+        new_host = other_mention
             
     if field_index is None:
         # If it doesn’t exist yet, append it instead
