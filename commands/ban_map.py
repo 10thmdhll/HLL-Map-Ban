@@ -92,11 +92,11 @@ async def ban_map(
     await state.save_state(channel_id)
     await interaction.response.send_message(
         f"<@&{expected_role_id}> banned {map_name} - {side} at {format_timestamp(ts)}.")
-        
+    
+    await update_ban_embed(interaction.channel,embed_msg_id,
+            f"{expected_role_id} banned {map_name} - {side} at {format_timestamp(ts)} as ban option."
+        )
+    
     new_turn = await flip_turn(channel_id)
     embed_msg_id = ongoing.get("embed_message_id")
     await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
-    
-    await update_ban_embed(interaction.channel,embed_msg_id,
-            f"<@&{expected_role_id}> banned {map_name} - {side} at {format_timestamp(ts)} as ban option."
-        )
