@@ -31,15 +31,6 @@ tree.add_command(ban_map)
 tree.add_command(match_time)
 tree.add_command(cleanup_match)
 
-@bot.event
-async def on_ready():
-    await tree.sync()
-    # Load persisted state for all channels
-    for path in state.list_state_files():
-        channel_id = int(path.split('_')[1].split('.')[0])
-        await state.load_state(channel_id)
-    print("Bot is ready.")
-
 @self.tree.error
     async def on_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
         # catch cooldowns
@@ -52,6 +43,15 @@ async def on_ready():
             )
         # re-raise unhandled errors
         raise error
+        
+@bot.event
+async def on_ready():
+    await tree.sync()
+    # Load persisted state for all channels
+    for path in state.list_state_files():
+        channel_id = int(path.split('_')[1].split('.')[0])
+        await state.load_state(channel_id)
+    print("Bot is ready.")
         
 if __name__ == "__main__":
     bot.run(DISCORD_TOKEN)
