@@ -1,6 +1,7 @@
 from datetime import datetime
 import discord
 from discord import app_commands
+from discord.app_commands import Choice
 import state
 from helpers import format_timestamp, remaining_combos, update_ban_embed, create_ban_image_bytes, map_autocomplete, side_autocomplete
 
