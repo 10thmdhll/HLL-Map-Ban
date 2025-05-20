@@ -214,50 +214,14 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
 
-def create_ban_status_image(
-    maps,
-    bans,
-    mode: str,
-    flip_winner: Optional[str],
-    host_key: Optional[str],
-    decision_choice: Optional[str],
-    current_turn: Optional[str],
-    match_time_iso: Optional[str] = None,
-    final: bool = False
-) -> Image:
-    # — Load fonts with fallback —
-    try:
-        hdr_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size_h"])
-        row_font = ImageFont.truetype(CONFIG["font_paths"][0], CONFIG["font_size"])
-    except OSError:
-        hdr_font = ImageFont.load_default()
-        row_font = ImageFont.load_default()
-
-    # — Prepare banner lines —
-    if match_time_iso:
-        try:
-            dt = parser.isoparse(match_time_iso).astimezone(
-                pytz.timezone(CONFIG["user_timezone"])
-            )
-            dt_str = dt.strftime("%Y-%m-%d %H:%M %Z")
-        except Exception:
-            dt_str = "Undecided"
-    else:
-        dt_str = "Undecided"
-    
+def create_ban_status_image(maps,bans) -> Image:
     # — Derive display names —
     A = team_a_name or "Team A"
     B = team_b_name or "Team B"
-    coin_winner = A if flip_winner == "team_a" else B if flip_winner == "team_b" else "TBD"
-    if host_key in ("team_a", "team_b"):
-        host = A if host_key == "team_a" else B
-    else:
-        host = host_key or "TBD"
+    
     current = A if current_turn == "team_a" else B if current_turn == "team_b" else "TBD"
     decision = decision_choice or "None"
-    banner1 = f"Coin Flip Winner: {coin_winner} | Decision: {decision}"
-    banner2 = f"Host: {host}    |    Match: {dt_str}"
-    banner3 = f"Current Turn: {current}"
+    banner1 = f"Current Turn: {current}"
     
     padding = 20
     line_spacer = 10
@@ -266,12 +230,9 @@ def create_ban_status_image(
     dummy = Image.new("RGB", (1,1))
     measure = ImageDraw.Draw(dummy)
     bbox1 = measure.textbbox((0, 0), banner1, font=hdr_font)
-    bbox2 = measure.textbbox((0, 0), banner2, font=hdr_font)
-    bbox3 = measure.textbbox((0, 0), banner3, font=hdr_font)
     h1 = bbox1[3] - bbox1[1]
-    h2 = bbox2[3] - bbox2[1]
-    h3 = bbox3[3] - bbox3[1]
-    header_h = padding + h1 + line_spacer + h2 + line_spacer + h3 + padding
+
+    header_h = padding + h1 + line_spacer
 
     # — Grid dimensions —
     rows = len(maps)
@@ -291,8 +252,6 @@ def create_ban_status_image(
     draw.text((padding, y), banner1, font=hdr_font, fill="black")
     y += h1 + line_spacer
     draw.text((padding, y), banner2, font=hdr_font, fill="black")
-    y += h2 + line_spacer
-    draw.text((padding, y), banner3, font=hdr_font, fill="black")
     
     # — Draw grid rows —
     grid_x0 = padding
@@ -418,14 +377,10 @@ def create_ban_status_image(
     return img
     
 def create_ban_image_bytes(
-    maps, bans, mode, flip_winner, host_key, decision_choice,
-    current_turn, match_time_iso=None, final=False
+    maps, bans
 ) -> BytesIO:
     # 1) Build your PIL Image exactly as before, but don’t save it to a file:
-    img = create_ban_status_image(   # assume you refactor your existing function body into one that returns Image
-        maps, bans, mode, flip_winner, host_key, decision_choice,
-        current_turn, match_time_iso, final
-    )
+    img = create_ban_status_image(maps, bans)
 
     # 2) Dump it into a BytesIO buffer
     buf = BytesIO()
@@ -454,7 +409,7 @@ async def map_autocomplete(
         # filter by input
         if current.lower() not in name.lower():
             continue
-        tb = ongoing_bans.get(ch, {}).get(name)
+        tb = ongoing.get(ch, {}).get(name)
         # if no bans yet, map is available
         if tb is None:
             choices.append(app_commands.Choice(name=name, value=name))
@@ -481,7 +436,7 @@ async def side_autocomplete(
     sel_map = getattr(interaction.namespace, 'map_name', None)
     if not sel_map or ch not in ongoing_bans:
         return []
-    tb = ongoing_bans[ch].get(sel_map, {})
+    tb = ongoing[ch].get(sel_map, {})
     team_key = match_turns.get(ch)
     if not tb or not team_key:
         return []
