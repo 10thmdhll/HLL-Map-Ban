@@ -5,7 +5,7 @@ import discord
 from io import BytesIO
 import config
 from PIL import Image, ImageDraw, ImageFont
-from discord import TextChannel
+from discord import TextChannel, app_commands
 
 def format_timestamp(ts: str) -> str:
     from datetime import datetime
