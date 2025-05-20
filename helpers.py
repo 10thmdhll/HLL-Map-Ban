@@ -15,20 +15,26 @@ def format_timestamp(ts: str) -> str:
     return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
     
 def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
-    """
-    Return list of (map, team_key, side) combinations still available for ban.
-    Assumes ongoing_events[ch] stores a dict of maps to {'team_a': {'manual':[], 'auto':[]}, 'team_b': {...}}.
-    """
     combos: List[Tuple[str, str, str]] = []
     channel_data = state.ongoing_events.get(ch, {})
+
     for m, tb in channel_data.items():
+        # only process entries that look like your map objects
+        if (
+            not isinstance(tb, dict)
+            or "team_a" not in tb
+            or "team_b" not in tb
+        ):
+            continue
+
         for team_key in ("team_a", "team_b"):
             team_data = tb.get(team_key, {})
             manual = team_data.get("manual", [])
-            auto = team_data.get("auto", [])
+            auto   = team_data.get("auto", [])
             for side in ("Allied", "Axis"):
                 if side not in manual and side not in auto:
                     combos.append((m, team_key, side))
+
     return combos
     
 async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
