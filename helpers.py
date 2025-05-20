@@ -6,6 +6,8 @@ from discord import app_commands
 from discord.app_commands import Choice
 from io import BytesIO
 import config
+import json
+
 from PIL import Image, ImageDraw, ImageFont
 from discord import TextChannel, app_commands
 
@@ -419,11 +421,11 @@ def create_ban_image_bytes(
     return buf
 
 async def load_teammap() -> dict:
-    with open(CONFIG["teammap_file"]) as f:
+    with open("teammap.json") as f:
         return json.load(f)
 
 async def load_maplist() -> List[dict]:
-    with open(CONFIG["maplist_file"]) as f:
+    with open("maplist.json") as f:
         return json.load(f)["maps"]
         
 async def map_autocomplete(interaction: discord.Interaction, current: str) -> List[Choice[str]]:
