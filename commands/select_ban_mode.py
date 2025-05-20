@@ -52,16 +52,16 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     
     await update_ban_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
     
-    new_turn = interaction.user.id
+    #new_turn = interaction.user.id
     
-    if option == "final":
-        new_turn = await flip_turn(channel_id)
+    #if option == "final":
+     #   new_turn = await flip_turn(channel_id)
     
     await state.save_state(channel_id)
 
     # get the message ID of the embed posted in /match_create
-    embed_msg_id = ongoing.get("embed_message_id")
-    await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
+    #embed_msg_id = ongoing.get("embed_message_id")
+   # await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
     
     
     await interaction.response.send_message(f"✅ Option '{option}' recorded.")
