@@ -63,6 +63,7 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
         role_mentions[1]
         if role_mentions[0] == current_mention
         else role_mentions[0]
+        )
     
     if new_choice == "host":
         new_host = ct_role
