@@ -2,12 +2,16 @@ from datetime import datetime
 import discord
 from discord import app_commands
 import state
-from helpers import format_timestamp, remaining_combos, update_ban_embed, create_ban_image_bytes
+from helpers import format_timestamp, remaining_combos, update_ban_embed, create_ban_image_bytes, map_autocomplete, side_autocomplete
 
 @app_commands.command(name="ban_map")
 @app_commands.describe(
     map_name="Map to ban",
     side="Team side identifier"
+)
+@app_commands.autocomplete(
+    map_name=map_autocomplete,
+    side=side_autocomplete
 )
 async def ban_map(
     interaction: discord.Interaction,
