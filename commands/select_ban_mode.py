@@ -52,7 +52,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     
     await update_ban_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
     
-    printf(option)
+    print(option)
     
     if option == "final":
         new_turn = await flip_turn(channel_id)
