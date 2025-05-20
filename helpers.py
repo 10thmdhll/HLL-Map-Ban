@@ -95,8 +95,8 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     await msg.edit(embed=embed)
     
     if new_choice == "host":
-        new_turn = await flip_turn(channel)
-        await update_current_turn_embed(channel, msg, new_turn)
+        new_turn = await flip_turn(channel.id)
+        await update_current_turn_embed(channel.id, msg, new_turn)
     
 async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
     # 1) Fetch the bot’s original embed message
