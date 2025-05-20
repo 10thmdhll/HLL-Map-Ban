@@ -2,7 +2,7 @@ from datetime import datetime
 import discord
 from discord import app_commands
 import state
-from helpers import format_timestamp, remaining_combos, update_ban_embed
+from helpers import format_timestamp, remaining_combos, update_ban_embed, create_ban_image_bytes
 
 @app_commands.command(name="ban_map")
 @app_commands.describe(
