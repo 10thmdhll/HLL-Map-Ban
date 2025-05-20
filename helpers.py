@@ -452,22 +452,32 @@ async def map_autocomplete(interaction, current: str) -> list[Choice[str]]:
     ][:25]
 
 
-async def side_autocomplete(interaction, current: str) -> list[Choice[str]]:
-    sel = getattr(interaction.namespace, "map_name", None)
-    if not sel:
+async def side_autocomplete(interaction, current: str) -> List[Choice[str]]:
+    ch      = interaction.channel.id
+    sel_map = getattr(interaction.namespace, "map_name", None)
+    if not sel_map:
         return []
 
-    combos = remaining_combos(interaction.channel.id)
-    # find sides for this map
-    sides = [side for m, _, side in combos if m == sel]
+    # figure out whose turn
+    state_data   = state.ongoing_events.get(ch, {})
+    turn_idx     = state_data.get("current_turn_index", 0)
+    team_key     = "team_a" if turn_idx % 2 == 0 else "team_b"
 
-    if not sides:
-        # first‐ban fallback: both sides always available
-        sides = ["Allied", "Axis"]
+    # only look at that team's slots for this map
+    tb           = state_data.get(sel_map, {})
+    team_data    = tb.get(team_key, {"manual": [], "auto": []})
+    manual       = team_data.get("manual", [])
+    auto         = team_data.get("auto", [])
 
-    unique = sorted(set(sides))
+    # any side not in either list is still open
+    open_sides   = [s for s in ("Allied", "Axis") if s not in manual and s not in auto]
+
+    # if somehow you have neither banning list yet, offer both
+    if not open_sides:
+        open_sides = ["Allied", "Axis"]
+
     return [
         Choice(name=s, value=s)
-        for s in unique
+        for s in open_sides
         if current.lower() in s.lower()
     ][:25]
