@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands
+from discord.app_commands import Choice
 from config import DISCORD_TOKEN
 import state
 # Import command handlers to register them
