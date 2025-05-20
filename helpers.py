@@ -56,7 +56,7 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     tm_index = next(
         (i for i, f in enumberate(embed.fields) if f.name == "Teams"), None)
     
-    other_role = tm_index[0] if ct_role == tm_index[0] tm_index[1]
+    other_role = tm_index[0] if ct_role == tm_index[0] else tm_index[1]
     
     if new_choice == "host":
         new_host = ct_role
