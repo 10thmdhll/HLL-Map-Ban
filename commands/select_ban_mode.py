@@ -7,8 +7,8 @@ from helpers import update_ban_mode_choice_embed, flip_turn, update_current_turn
 @app_commands.command(name="select_ban_mode")
 @app_commands.describe(option="Choose ban mode: final or double")
 @app_commands.choices(option=[
-    app_commands.Choice(name="Final Ban Mode - You pick the final ban but go second.  Other team will pick first twice.", value="final"),
-    app_commands.Choice(name="Double Ban Mode - You pick the first two bans.  Other team will pick the final ban.", value="double"),
+    app_commands.Choice(name="Final Ban Mode - You pick the final ban but go second.  Other team will pick first twice.", value="Final"),
+    app_commands.Choice(name="Double Ban Mode - You pick the first two bans.  Other team will pick the final ban.", value="Double"),
 ])
 async def select_ban_mode(interaction: discord.Interaction, option: str):
     """Select ban mode after coin flip."""
@@ -18,7 +18,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("Ban Mode")
-    if (choice_data == "double" or choice_data == "final"):
+    if (choice_data == "Double" or choice_data == "Final"):
         # if it’s a dict, pull out the field; if it’s just a string, use it directly
         if isinstance(choice_data, dict):
             prev = choice_data.get("chosen_option")
@@ -52,7 +52,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     
     await update_ban_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
 
-    if option == "final":
+    if option == "Final":
         new_turn = await flip_turn(channel_id)
         embed_msg_id = ongoing.get("embed_message_id")
         await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
