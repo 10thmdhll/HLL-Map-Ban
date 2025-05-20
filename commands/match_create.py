@@ -75,6 +75,15 @@ async def match_create(
             raise ValueError(f"Unexpected maplist format: {type(data)}")
     except Exception as e:
         logger.error("Failed loading maps from %s: %s", maplist_path, e)
+        
+    # ─── Initialize each map’s ban-state 
+    for m in maps:
+        ongoing.setdefault(
+            m,
+            {"team_a": {"manual": [], "auto": []},
+             "team_b": {"manual": [], "auto": []}}
+        )
+    await state.save_state(channel_id)
 
     # Load regions
     teammap_path = base_dir / "teammap.json"
