@@ -108,6 +108,6 @@ async def ban_map(
             f"Ban: {map_name} {side} at {format_timestamp(ts)}"
         )
         new_turn = await flip_turn(channel_id)
-        await update_current_turn_embed(
-            interaction.channel, embed_id, new_turn
-        )
+        await update_current_turn_embed(interaction.channel, embed_id, new_turn)
+        await state.save_state(channel_id)
+        
