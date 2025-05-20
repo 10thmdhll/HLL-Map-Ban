@@ -53,12 +53,24 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     next_step_index = next(
         (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
     
+    tm_index = next(
+        (i for i, f in enumberate(embed.fields) if f.name == "Teams"), None)
+    
+    
+    if new_choice == "host":
+        new_host = ct_role
+    if new_choice == "ban":
+        new_host = (
+            if tm_index[0] == ct_role:
+                tm_index[1]
+            else tm_index[0])
+            
     if field_index is None:
         # If it doesn’t exist yet, append it instead
-        embed.add_field(name="Host", value=new_choice, inline=False)
+        embed.add_field(name="Host", value=new_host, inline=False)
     else:
         # 4) Mutate that field in-place
-        embed.set_field_at(field_index, name="Host", value=new_choice, inline=True)
+        embed.set_field_at(field_index, name="Host", value=new_host, inline=True)
         
     if history_index is None:
         embed.add_field(name="Update History:",value=f"{ct_role} choice: {new_choice}",inline=False)
