@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import List, Tuple, Optional
 import state
 import discord
+from discord import app_commands
+from discord.app_commands import Choice
 from io import BytesIO
 import config
 from PIL import Image, ImageDraw, ImageFont
