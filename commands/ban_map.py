@@ -38,14 +38,6 @@ async def ban_map(
             ephemeral=True
         )
 
-    # Determine remaining combos
-    rem = remaining_combos(channel_id)
-    # Validate chosen combo is available
-    if (map_name, side) not in [(m, s) for m, _, s in rem]:
-        return await interaction.response.send_message(
-            f"❌ Invalid ban: {map_name} ({side}) is not available.", ephemeral=True
-        )
-
     # First Ban gets double
     if (ongoing["firstban"] == True):
         bans = ongoing.setdefault("bans", [])
@@ -74,6 +66,14 @@ async def ban_map(
         ongoing["firstban"] = False
         return
     
+    # Determine remaining combos
+    rem = remaining_combos(channel_id)
+    # Validate chosen combo is available
+    if (map_name, side) not in [(m, s) for m, _, s in rem]:
+        return await interaction.response.send_message(
+            f"❌ Invalid ban: {map_name} ({side}) is not available.", ephemeral=True
+        )
+        
     # Record ban
     ts = datetime.utcnow().isoformat() + 'Z'
     bans.append({"map": map_name, "side": side, "timestamp": ts})
