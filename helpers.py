@@ -222,7 +222,12 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
 
     # 2) Clone the existing embed
     embed = msg.embeds[0]
-     
+    
+    ct_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Current Turn:"), None)
+ 
+    ct_role = embed.fields[ct_index].value
+    
     history_index = next(
         (i for i, f in enumerate(embed.fields) if f.name == "Update History:"), None)
             
