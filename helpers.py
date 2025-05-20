@@ -155,10 +155,6 @@ async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id:
     await msg.edit(embed=embed)
     
 async def flip_turn(channel_id: int) -> int:
-    """
-    Advance the current_turn_index to the next team (wraps around),
-    save state, and return the new turn index.
-    """
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
 
