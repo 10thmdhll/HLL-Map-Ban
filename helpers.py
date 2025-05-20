@@ -3,6 +3,7 @@ from typing import List, Tuple
 import state
 import discord
 import BytesIO
+import config
 from PIL import Image, ImageDraw, ImageFont
 from discord import TextChannel
 
@@ -431,3 +432,62 @@ def create_ban_image_bytes(
     img.save(buf, format="PNG", optimize=True)
     buf.seek(0)
     return buf
+
+async def load_teammap() -> dict:
+    with open(CONFIG["teammap_file"]) as f:
+        return json.load(f)
+
+async def load_maplist() -> List[dict]:
+    with open(CONFIG["maplist_file"]) as f:
+        return json.load(f)["maps"]
+        
+async def map_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[app_commands.Choice[str]]:
+    """Only suggest maps that still have ban slots remaining."""
+    ch = interaction.channel_id
+    maps = load_maplist()
+    choices: List[app_commands.Choice[str]] = []
+    for m in maps:
+        name = m["name"]
+        # filter by input
+        if current.lower() not in name.lower():
+            continue
+        tb = ongoing_bans.get(ch, {}).get(name)
+        # if no bans yet, map is available
+        if tb is None:
+            choices.append(app_commands.Choice(name=name, value=name))
+            continue
+        # check if any ban slot remains (either team hasn't banned both sides)
+        open_slot = False
+        for team_key in ("team_a", "team_b"):
+            for side in ("Allied", "Axis"):
+                if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
+                    open_slot = True
+                    break
+            if open_slot:
+                break
+        if open_slot:
+            choices.append(app_commands.Choice(name=name, value=name))
+    return choices[:50]
+
+async def side_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+) -> List[app_commands.Choice[str]]:
+    """Only suggest sides still available for the selected map and turn."""
+    ch = interaction.channel_id
+    sel_map = getattr(interaction.namespace, 'map_name', None)
+    if not sel_map or ch not in ongoing_bans:
+        return []
+    tb = ongoing_bans[ch].get(sel_map, {})
+    team_key = match_turns.get(ch)
+    if not tb or not team_key:
+        return []
+    choices: List[app_commands.Choice[str]] = []
+    for side in ("Allied", "Axis"):
+        if side not in tb[team_key]["manual"] and side not in tb[team_key]["auto"]:
+            if current.lower() in side.lower():
+                choices.append(app_commands.Choice(name=side, value=side))
+    return choices[:50]
