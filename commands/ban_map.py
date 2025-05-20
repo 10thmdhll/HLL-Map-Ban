@@ -64,7 +64,8 @@ async def ban_map(
             tb[other_key]["auto"].append(opp_side)
 
         ongoing["firstban"] = False
-
+        await state.save_state(channel_id)
+        
         await interaction.response.send_message(
             f"🚩 Double‐ban **{map_name} {side}** at {format_timestamp(ts)}."
         )
@@ -94,7 +95,8 @@ async def ban_map(
     # record as an auto‐ban on the other side
     if opp_side not in tb[other_key]["auto"]:
         tb[other_key]["auto"].append(opp_side)
-
+        
+    await state.save_state(channel_id)
     await interaction.response.send_message(
         f"✅ Ban recorded: **{map_name} {side}** at {format_timestamp(ts)}."
     )
