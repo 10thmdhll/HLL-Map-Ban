@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Tuple
 import state
 import discord
-import BytesIO
+from io import BytesIO
 import config
 from PIL import Image, ImageDraw, ImageFont
 from discord import TextChannel
