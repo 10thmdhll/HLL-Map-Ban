@@ -228,6 +228,12 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
  
     ct_role = embed.fields[ct_index].value
     
+    next_step_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
+    
+    tm_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Teams"), None)
+    
     history_index = next(
         (i for i, f in enumerate(embed.fields) if f.name == "Update History:"), None)
             
@@ -235,7 +241,7 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
         embed.add_field(name="Update History:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
         prev = embed.fields[history_index].value or ""    
-        new_val = prev + "\n" + f"{ct_role} choice: {new_choice}"
+        new_val = prev + "\n" + f"<@&{ct_role}> choice: {new_choice}"
         embed.set_field_at(history_index,name="Update History:",value=new_val,inline=False)
      
     if next_step_index is None:
