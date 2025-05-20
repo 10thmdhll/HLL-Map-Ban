@@ -77,6 +77,7 @@ async def ban_map(
         
     # Record ban
     ts = datetime.utcnow().isoformat() + 'Z'
+    bans = ongoing["bans"]
     bans.append({"map": map_name, "side": side, "timestamp": ts})
     ongoing["current_turn_index"] = len(bans) - 1
 
