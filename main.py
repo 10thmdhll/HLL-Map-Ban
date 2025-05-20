@@ -40,5 +40,18 @@ async def on_ready():
         await state.load_state(channel_id)
     print("Bot is ready.")
 
+@self.tree.error
+    async def on_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        # catch cooldowns
+        if isinstance(error, app_commands.CommandOnCooldown):
+            retry = error.retry_after
+            # tell the user how long they’ve got to wait
+            return await interaction.response.send_message(
+                f"⏳ That command is on cooldown. Try again in {retry:.1f}s.",
+                ephemeral=True
+            )
+        # re-raise unhandled errors
+        raise error
+        
 if __name__ == "__main__":
     bot.run(DISCORD_TOKEN)
