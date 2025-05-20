@@ -68,9 +68,9 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     other_role = interaction.guild.get_role(other_role_id)
     
     if new_choice == "host":
-        new_host = ct_role
+        new_host = ct_role.id
     if new_choice == "ban":
-        new_host = other_role
+        new_host = other_role_id
             
     if field_index is None:
         # If it doesn’t exist yet, append it instead
