@@ -19,16 +19,16 @@ def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
     channel_data = state.ongoing_events.get(ch, {})
 
     for m, tb in channel_data.items():
-        # only process entries that look like your map objects
-        if (
-            not isinstance(tb, dict)
-            or "team_a" not in tb
-            or "team_b" not in tb
-        ):
+        # Skip anything that isn't a map-like dict
+        if not isinstance(tb, dict):
+            continue
+        team_a = tb.get("team_a")
+        team_b = tb.get("team_b")
+        if not (isinstance(team_a, dict) and isinstance(team_b, dict)):
             continue
 
         for team_key in ("team_a", "team_b"):
-            team_data = tb.get(team_key, {})
+            team_data = tb[team_key]
             manual = team_data.get("manual", [])
             auto   = team_data.get("auto", [])
             for side in ("Allied", "Axis"):
