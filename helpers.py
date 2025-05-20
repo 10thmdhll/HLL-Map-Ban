@@ -39,6 +39,20 @@ def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
 
     return combos
     
+def _chunk_history_lines(lines: List[str], max_chars: int = 1024) -> List[str]:
+    chunks: List[str] = []
+    current = ""
+    for line in lines:
+        # +1 for the newline
+        if current and len(current) + len(line) + 1 > max_chars:
+            chunks.append(current)
+            current = line
+        else:
+            current = f"{current}\n{line}" if current else line
+    if current:
+        chunks.append(current)
+    return chunks
+    
 async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
     # 1) Fetch the bot’s original embed message
     msg = await channel.fetch_message(message_id)
@@ -266,7 +280,7 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
     old_lines.append(new_line)
 
     # chunk into ≤1024-char blocks
-    chunks = _chunk_history_lines(old_lines)
+    chunks = chunk_history_lines(old_lines)
 
     # remove ALL old history fields (from back to front)
     for idx in reversed(history_indices):
