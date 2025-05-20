@@ -54,9 +54,18 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
         (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
     
     tm_index = next(
-        (i for i, f in enumberate(embed.fields) if f.name == "Teams"), None)
+        (i for i, f in enumerate(embed.fields) if f.name == "Teams"), None)
     
-    other_role = tm_index[0] if ct_role == tm_index[0] else tm_index[1]
+    teams_val = embed.fields[tm_index].value
+    role_mentions = [part.strip() for part in teams_val.split(" vs ")]
+    current_mention = f"<@&{ct_role.id}>"
+    other_mention = (
+        role_mentions[1]
+        if role_mentions[0] == current_mention
+        else role_mentions[0]
+)
+    other_role_id = int(other_mention.strip("<@&>"))
+    other_role = interaction.guild.get_role(other_role_id)
     
     if new_choice == "host":
         new_host = ct_role
