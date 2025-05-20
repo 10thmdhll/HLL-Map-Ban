@@ -20,7 +20,7 @@ def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
     Assumes ongoing_events[ch] stores a dict of maps to {'team_a': {'manual':[], 'auto':[]}, 'team_b': {...}}.
     """
     combos: List[Tuple[str, str, str]] = []
-    channel_data = ongoing_events.get(ch, {})
+    channel_data = state.ongoing_events.get(ch, {})
     for m, tb in channel_data.items():
         for team_key in ("team_a", "team_b"):
             team_data = tb.get(team_key, {})
