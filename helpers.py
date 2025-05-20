@@ -250,6 +250,33 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
         new_val2 = "Current turn role: map_ban"
         embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
 
+    # find all existing history fields
+    history_indices = [
+        i for i, f in enumerate(embed.fields)
+        if f.name.startswith("Update History")
+    ]
+
+    # pull old lines
+    old_lines: List[str] = []
+    for idx in history_indices:
+        old_lines.extend(embed.fields[idx].value.split("\n"))
+
+    # append the new line
+    new_line = f"{datetime.utcnow().strftime('%H:%M:%S')} – {new_choice}"
+    old_lines.append(new_line)
+
+    # chunk into ≤1024-char blocks
+    chunks = _chunk_history_lines(old_lines)
+
+    # remove ALL old history fields (from back to front)
+    for idx in reversed(history_indices):
+        embed.remove_field(idx)
+
+    # insert new chunked history fields
+    for i, chunk in enumerate(chunks, start=1):
+        name = "Update History" if i == 1 else f"Update History ({i})"
+        embed.add_field(name=name, value=chunk, inline=False)
+
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
 
