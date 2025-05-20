@@ -48,7 +48,7 @@ async def ban_map(
         
         await state.save_state(channel_id)
         await interaction.response.send_message(
-        f"<@&{expected_role_id}> banned {map_name} - {side} at {format_timestamp(ts)} as double ban option.")
+        f"Banned {map_name} - {side} at {format_timestamp(ts)} as double ban option.")
         
         # get the message ID of the embed posted in /match_create
         embed_msg_id = ongoing.get("embed_message_id")
@@ -60,7 +60,7 @@ async def ban_map(
         await update_ban_embed(
             interaction.channel,
             embed_msg_id,
-            f"<@&{expected_role_id}> banned {map_name} - {side} at {format_timestamp(ts)} as double ban option."
+            f"Banned {map_name} - {side} at {format_timestamp(ts)} as double ban option."
         )
         
         ongoing["firstban"] = False
@@ -91,10 +91,10 @@ async def ban_map(
 
     await state.save_state(channel_id)
     await interaction.response.send_message(
-        f"<@&{expected_role_id}> banned {map_name} - {side} at {format_timestamp(ts)}.")
+        f"Banned {map_name} - {side} at {format_timestamp(ts)}.")
     
     await update_ban_embed(interaction.channel,embed_msg_id,
-            f"{expected_role_id} banned {map_name} - {side} at {format_timestamp(ts)} as ban option."
+            f"Banned {map_name} - {side} at {format_timestamp(ts)} as ban option."
         )
     
     new_turn = await flip_turn(channel_id)
