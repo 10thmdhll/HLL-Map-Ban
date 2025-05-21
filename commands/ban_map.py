@@ -170,7 +170,7 @@ async def ban_map(
     maps = [m["name"] for m in await load_maplist()]
     
     await send_remaining_maps_embed(
-        interaction.channel,
+        channel_id,
         maps,
         ongoing,
         team_names=(role_a, role_b)
