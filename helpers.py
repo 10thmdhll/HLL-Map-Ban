@@ -517,11 +517,34 @@ async def send_remaining_maps_embed(
     state_data: dict,
     team_names: tuple[str, str] = ("Team A", "Team B")
 ):
-    """
-    Deletes any previous grid_msg, rebuilds the combo‐grid image,
-    updates the main status embed, then sends one new grid message.
-    """
     embed_id    = state_data["embed_message_id"]
+    status_msg = None
+    
+    # 1) Try to fetch the existing embed
+    if embed_id:
+        try:
+            status_msg = await channel.fetch_message(embed_id)
+        except discord.NotFound:
+            # it was deleted: clear out the old reference so we know to rebuild
+            state_data.pop("embed_message_id", None)
+            await state.save_state(channel.id)
+            
+    # 2) If we don't have a status_msg, rebuild & send it
+    if status_msg is None:
+        # Reconstruct the embed from state_data
+        embed = discord.Embed(title="Match Status", color=discord.Color.blue())
+        # (fill in all your fields from state_data here, exactly like in match_create)
+        teams = state_data["teams"]
+        embed.add_field(
+            name="Teams",
+            value=f"<@&{teams[0]}> vs <@&{teams[1]}>",
+            inline=True
+        )
+        # … add Scheduled Time, Coin Flip, Host, etc. …
+        status_msg = await channel.send(embed=embed)
+        state_data["embed_message_id"] = status_msg.id
+        await state.save_state(channel.id)
+            
     grid_msg_id = state_data.get("grid_msg_id")
 
     # ─── Delete the old grid message ───────────────────────────────
