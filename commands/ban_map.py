@@ -108,7 +108,7 @@ async def ban_map(
 
         # 2) Clone the existing embed
         embed = msg.embeds[0]
-            next_step_index = next(
+        next_step_index = next(
             (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
             return
         
