@@ -99,26 +99,27 @@ async def ban_map(
         )
     
     if len(rem) <= 3:
-        await interaction.followup.send("Ban Phase Complete")
-        
-        # 1) Fetch the bot’s original embed message
-        msg = await channel_id.fetch_message(message_id)
+        await interaction.followup.send("🚩 Ban phase complete.", ephemeral=True)
+
+        # load the original status embed
+        embed_id = ongoing.get("embed_message_id")
+        if not embed_id:
+            return
+        msg = await interaction.channel.fetch_message(embed_id)
+
         if not msg.embeds:
             raise RuntimeError("No embed found on that message")
 
-        # 2) Clone the existing embed
+        # 2) Update only the “Next Step” field
         embed = msg.embeds[0]
-        next_step_index = next(
-            (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
-        
-        next_step_index = next(
-        (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None)
-        
-        if next_step_index is None:
-            embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
+        idx = next((i for i, f in enumerate(embed.fields)
+                    if f.name == "Next Step:"), None)
+        label = "Next Step:"
+        value = "Set match time and casters"
+        if idx is None:
+            embed.add_field(name=label, value=value, inline=False)
         else:
-            new_val2 = "Current turn role: set time and casters"
-            embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
+            embed.set_field_at(idx, name=label, value=value, inline=False)
         await msg.edit(embed=embed)
         return
         
