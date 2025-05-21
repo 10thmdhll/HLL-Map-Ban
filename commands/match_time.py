@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 import state
 from helpers import format_timestamp, update_mt_embed
-import pytz
+from datetime import datetime
 
 @app_commands.command(name="match_time",description="Set the scheduled time")
 @app_commands.describe(
