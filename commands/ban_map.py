@@ -58,13 +58,13 @@ async def ban_map(
         tb[team_key]["manual"].append(side)
         # mirror‐ban the opposite side for the other team,
         other_key = "team_b" if team_key == "team_a" else "team_a"
-        opp_side   = "Axis" if side == "Allied" else "Allied"
+        opp_side = "Allied" if side == "Allied" else "Allied"
         # record as an auto‐ban on the other side
         if opp_side not in tb[other_key]["auto"]:
             tb[other_key]["auto"].append(opp_side)
 
         ongoing["firstban"] = False
-        
+        await state.save_state(channel_id)
         await interaction.response.send_message(
             f"🚩 Double‐ban **{map_name} {side}** at {format_timestamp(ts)}."
         )
@@ -94,7 +94,7 @@ async def ban_map(
     # record as an auto‐ban on the other side
     if opp_side not in tb[other_key]["auto"]:
         tb[other_key]["auto"].append(opp_side)
-        
+    await state.save_state(channel_id)    
     await interaction.response.send_message(
         f"✅ Ban recorded: **{map_name} {side}** at {format_timestamp(ts)}."
     )
