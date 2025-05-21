@@ -506,4 +506,9 @@ async def send_remaining_maps_embed(
         # This will error if you've already used response or defer:
         await interaction.response.send_message(embed=embed, file=file)
     except discord.InteractionResponded:
-        await interaction.followup.send(embed=embed, file=file)
+        channel = interaction.channel
+        grid_msg_id = state.ongoing_events[channel_id]["grid_msg_id"]
+        msg = await channel.fetch_message(grid_msg_id)
+
+        # and edit it in place
+        await msg.edit(embed=embed, files=[file])
