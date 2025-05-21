@@ -507,8 +507,6 @@ async def send_remaining_maps_embed(
         await interaction.response.send_message(embed=embed, file=file)
     except discord.InteractionResponded:
         channel = interaction.channel
-        grid_msg_id = state.ongoing_events[channel.id]["grid_msg_id"]
-        msg = await channel.fetch_message(grid_msg_id)
-
+        msg = await channel.fetch_message(channel)
         # and edit it in place
         await msg.edit(embed=embed, files=[file])
