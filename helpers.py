@@ -517,7 +517,7 @@ async def send_remaining_maps_embed(
     state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
     team_names: Tuple[str, str] = ("Team A", "Team B")
 ):
-    channel    = interaction.channel
+    channel    = interaction.channel.id
     embed_id   = state_data["embed_message_id"]
     grid_msg_id = state_data.get("grid_msg_id")
 
