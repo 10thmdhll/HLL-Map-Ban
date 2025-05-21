@@ -87,6 +87,7 @@ async def ban_map(
         ongoing["firstban"] = False
         #new_turn = await flip_turn(channel_id)
         #await update_current_turn_embed(interaction.channel, embed_id, new_turn)
+        ongoing["finalbanpost"] = False
         await state.save_state(channel_id)
         
         return
@@ -100,7 +101,7 @@ async def ban_map(
     
     if len(rem) <= 3:
         await interaction.followup.send("🚩 Ban phase complete.", ephemeral=True)
-
+        
         # load the original status embed
         embed_id = ongoing.get("embed_message_id")
         if not embed_id:
@@ -109,35 +110,40 @@ async def ban_map(
 
         if not msg.embeds:
             raise RuntimeError("No embed found on that message")
-
-        # 2) Update only the “Next Step” field
-        embed = msg.embeds[0]
-        idx = next((i for i, f in enumerate(embed.fields)
-                    if f.name == "Next Step:"), None)
-        label = "Next Step:"
-        value = "Set match time and casters"
-        if idx is None:
-            embed.add_field(name=label, value=value, inline=False)
-        else:
-            embed.set_field_at(idx, name=label, value=value, inline=False)
-        await msg.edit(embed=embed)
         
-        # — Post a public winner prediction poll —
-        team_ids     = ongoing["teams"]                 # [role_a_id, role_b_id]
-        guild        = interaction.guild
-        team_a_name  = guild.get_role(team_ids[0]).name
-        team_b_name  = guild.get_role(team_ids[1]).name
-        poll_channel = interaction.channel
+        if ongoing["finalbanpost"] == False:
+            # 2) Update only the “Next Step” field
+            embed = msg.embeds[0]
+            idx = next((i for i, f in enumerate(embed.fields)
+                        if f.name == "Next Step:"), None)
+            label = "Next Step:"
+            value = "Set match time and casters"
+            if idx is None:
+                embed.add_field(name=label, value=value, inline=False)
+            else:
+                embed.set_field_at(idx, name=label, value=value, inline=False)
+            await msg.edit(embed=embed)
+        
+            # — Post a public winner prediction poll —
+            team_ids     = ongoing["teams"]                 # [role_a_id, role_b_id]
+            guild        = interaction.guild
+            team_a_name  = guild.get_role(team_ids[0]).name
+            team_b_name  = guild.get_role(team_ids[1]).name
+            poll_channel = interaction.channel
  
-        poll = await poll_channel.send(
-            "**Winner Predictions**\n"
-            "React below to predict the match winner:\n"
-            "🇦 for **" + team_a_name + "**\n"
-            "🇧 for **" + team_b_name + "**"
+            poll = await poll_channel.send(
+                "**Winner Predictions**\n"
+                "React below to predict the match winner:\n"
+                "🇦 for **" + team_a_name + "**\n"
+                "🇧 for **" + team_b_name + "**"
 )
-        await poll.add_reaction("🇦")
-        await poll.add_reaction("🇧")
-        
+            await poll.add_reaction("🇦")
+            await poll.add_reaction("🇧")
+            ongoing["finalbanpost"] = True
+            await state.save_state(channel_id)
+        else:
+            await interaction.followup.send("🚩 Ban phase already completed.", ephemeral=True)
+            
         return
         
     # ─── Record the ban, then flip turn ─────────────────────────────
