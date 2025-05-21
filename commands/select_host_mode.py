@@ -43,17 +43,9 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     # Determine host_role or ban_mode field
     if option == "Host":
         ongoing["host_role"] = interaction.user.id
-    else:
-        ongoing["ban_mode"] = option
-        ongoing["ban_mode_picker"] = interaction.user.id
     
     await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
     ongoing["Host"] = "Chosen"
-        
-    #if option == "Host":
-    #    new_turn = await flip_turn(channel_id)
-     #   embed_msg_id = ongoing.get("embed_message_id")
-     #   await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
         
     embed_msg_id = ongoing.get("embed_message_id")        
     await interaction.response.send_message(f"Option '{option}' recorded.",
