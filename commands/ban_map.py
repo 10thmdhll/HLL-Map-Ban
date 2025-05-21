@@ -122,7 +122,7 @@ async def ban_map(
                         if f.name == "Remaining Maps"), None)
             label2 = "Final Map"
             print(rem)
-            value2 = f"{guild.get_role(team_ids[0]).name}: SIDE1   |   {guild.get_role(team_ids[1).name}: SIDE2"
+            value2 = f"{guild.get_role(team_ids[0]).name}: SIDE1   |   {guild.get_role(team_ids[1]).name}: SIDE2"
             if idx is None:
                 embed.add_field(name=label, value=value, inline=False)
             else:
