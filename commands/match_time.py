@@ -20,7 +20,7 @@ async def match_time(
     
     
     # Check if the invoking user has that role
-    if team_roles not in [r.id for r in interaction.user.roles]:
+    if (team_roles[0] or team_roles[1]) not in [r.id for r in interaction.user.roles]:
         return await interaction.response.send_message(f"❌ You can’t set the match time.",ephemeral=True)
 
     # 3) Acknowledge so we can take our time
