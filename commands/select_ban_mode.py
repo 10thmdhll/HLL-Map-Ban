@@ -20,7 +20,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     choice_data = ongoing.get("ban_mode")
     print(choice_data)
     if (choice_data is not None):
-        await interaction.response.send_message(f"❌ Ban mode is already set to **{prev}**.",ephemeral=True)
+        await interaction.response.send_message(f"❌ Ban mode is already set.",ephemeral=True)
         return
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
