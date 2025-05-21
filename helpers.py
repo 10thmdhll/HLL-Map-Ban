@@ -185,7 +185,8 @@ async def update_mt_embed(channel: discord.TextChannel, message_id: int, time: s
     
     # Convert your stored ISO string to a Unix timestamp
     dt = datetime.fromisoformat(time)
-    unix_sec = int(dt.replace(tzinfo=datetime.timezone.utc).timestamp())
+    dt_utc   = dt.astimezone(timezone.utc)
+    unix_sec = int(dt_utc.timestamp())
 
     # Build the Discord‐timestamp markup
     ts_field = f"<t:{unix_sec}:F>"
