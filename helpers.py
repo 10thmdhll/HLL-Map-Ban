@@ -39,7 +39,7 @@ def remaining_combos(ch: int) -> List[Tuple[str, str, str]]:
 
     return combos
     
-def _chunk_history_lines(lines: List[str], max_chars: int = 1024) -> List[str]:
+def chunk_history_lines(lines: List[str], max_chars: int = 1024) -> List[str]:
     chunks: List[str] = []
     current = ""
     for line in lines:
