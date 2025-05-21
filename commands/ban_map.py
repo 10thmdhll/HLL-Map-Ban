@@ -99,7 +99,7 @@ async def ban_map(
         )
     
     if len(rem) <= 4:
-        await interaction.followup.send("Ban Phase Complete"
+        await interaction.followup.send("Ban Phase Complete")
         return
         
     # ─── Record the ban, then flip turn ─────────────────────────────
