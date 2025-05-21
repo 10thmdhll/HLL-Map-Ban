@@ -34,6 +34,7 @@ async def ban_map(
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
+    await interaction.response.defer(ephemeral=True)
 
     # ─── Determine team_key & check permissions ────────────────────
     turn_idx   = ongoing["current_turn_index"]
@@ -42,7 +43,7 @@ async def ban_map(
     expected  = team_roles[0] if team_key == "team_a" else team_roles[1]
     if expected not in [r.id for r in interaction.user.roles]:
         mention = f"<@&{expected}>"
-        return await interaction.response.send_message(
+        return await interaction.followup.send(
             f"❌ It’s {mention}’s turn, you can’t do that.", ephemeral=True
         )
 
@@ -60,7 +61,7 @@ async def ban_map(
         # ─── Subsequent bans must be in remaining_combos ────────────────
         rem = remaining_combos(channel_id)
         if (map_name, side) not in [(m, s) for m, _, s in rem]:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
             )
 
@@ -74,7 +75,7 @@ async def ban_map(
         if opp_side not in tb[other_key]["auto"]:
             tb[other_key]["auto"].append(opp_side)
         await state.save_state(channel_id)    
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"✅ Double ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True
         )
 
@@ -92,7 +93,7 @@ async def ban_map(
     # ─── Subsequent bans must be in remaining_combos ────────────────
     rem = remaining_combos(channel_id)
     if (map_name, side) not in [(m, s) for m, _, s in rem]:
-        return await interaction.response.send_message(
+        return await interaction.followup.send(
             f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
         )
 
