@@ -16,15 +16,12 @@ async def match_time(
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.get(channel_id, {})
+    team_roles = ongoing["teams"]
     
     
     # Check if the invoking user has that role
-    if expected_role_id not in [r.id for r in interaction.user.roles]:
-        role_mention = f"<@&{expected_role_id}>"
-        return await interaction.response.send_message(
-            f"❌ You can’t set the match time.",
-            ephemeral=True
-        )
+    if team_roles not in [r.id for r in interaction.user.roles]:
+        return await interaction.response.send_message(f"❌ You can’t set the match time.",ephemeral=True)
 
     # 3) Acknowledge so we can take our time
     await interaction.response.defer()
