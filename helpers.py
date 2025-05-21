@@ -601,7 +601,7 @@ async def send_remaining_maps_embed(
     embed.set_image(url=f"attachment://{filename}")
 
     # ─── Finally send one new grid message ─────────────────────────
-    grid_msg = await status_msg.edit(embed=embed)
+    grid_msg = await status_msg.edit(embed=embed, file=file)
 
     # ─── Persist its ID so next time we delete & replace ───────────
     state_data["grid_msg_id"] = grid_msg.id
