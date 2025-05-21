@@ -12,7 +12,6 @@ from helpers import (
     flip_turn,
     update_current_turn_embed,
     send_remaining_maps_embed,
-    refresh_remaining_maps,
     create_combo_grid_image,
     load_maplist
 )

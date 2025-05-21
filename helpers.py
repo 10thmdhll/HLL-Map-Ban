@@ -521,75 +521,44 @@ async def send_remaining_maps_embed(
     embed_id   = state_data["embed_message_id"]
     grid_msg_id = state_data.get("grid_msg_id")
 
-    # ─── Delete the old grid image message ───────────────────────
-    if grid_msg_id:
-        try:
-            old = await channel.fetch_message(grid_msg_id)
-            await old.delete()
-        except discord.NotFound:
-            pass
-
-    # ─── Generate the new PIL image ──────────────────────────────
+    # 1) Rebuild your grid image
     img = create_combo_grid_image(maps, state_data, team_names)
     buf = BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
 
-    # ─── Build the embed + file ──────────────────────────────────
+    # 2) Package it as a Discord File and point your embed at it
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
-    embed    = (await channel.fetch_message(embed_id)).embeds[0]
-    field_i  = next((i for i,f in enumerate(embed.fields)
-                     if f.name == "Remaining Maps"), None)
 
-    if field_i is None:
+    # Grab the *original* status‐embed so we can re-use it
+    status_msg = await channel.fetch_message(embed_id)
+    embed      = status_msg.embeds[0]
+    # make sure there's a “Remaining Maps” field
+    idx = next((i for i,f in enumerate(embed.fields)
+                if f.name == "Remaining Maps"), None)
+    if idx is None:
         embed.add_field(name="Remaining Maps", value="See below", inline=False)
     else:
-        embed.set_field_at(field_i, name="Remaining Maps", value="See below", inline=False)
+        embed.set_field_at(idx, name="Remaining Maps", value="See below", inline=False)
+
+    # Embed images must be attachments named “attachment://…”
     embed.set_image(url=f"attachment://{filename}")
 
-    # ─── Send the new grid as a *follow-up* so it's its own message ───
-    # (or use response.send_message if you haven't responded yet)
-    try:
-        msg = await interaction.followup.send(embed=embed, file=file, wait=True)
-    except discord.InteractionResponded:
-        msg = await channel.send(embed=embed, file=file)
-
-    # ─── Persist its ID for next time ─────────────────────────────
-    state_data["grid_msg_id"] = msg.id
-    await state.save_state(channel.id)
-        
-async def refresh_remaining_maps(
-    channel: discord.TextChannel,
-    state_data: dict,
-    team_names: Tuple[str, str]
-):
-    # 1) grab the old message
-    old_msg_id = state_data.get("grid_msg_id")
-    if old_msg_id:
+    # 3) If we *already* sent a grid before, just edit that one;
+    #    otherwise, send a brand new followup and remember its id.
+    if grid_msg_id:
         try:
-            old = await channel.fetch_message(old_msg_id)
-            await old.delete()
+            grid_msg = await channel.fetch_message(grid_msg_id)
+            # replace its embed + attachments
+            await grid_msg.edit(embed=embed, attachments=[file])
         except discord.NotFound:
-            pass  # maybe it was already deleted
+            # (it was deleted) fall back to sending anew
+            grid_msg = await channel.send(embed=embed, file=file)
+            state_data["grid_msg_id"] = grid_msg.id
+    else:
+        grid_msg = await channel.send(embed=embed, file=file)
+        state_data["grid_msg_id"] = grid_msg.id
 
-    # 2) rebuild the image
-    maps = [m["name"] for m in await load_maplist()]
-    img  = create_combo_grid_image(maps, state_data, team_names)
-    buf  = BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-
-    # 3) build embed + file
-    filename = f"grid_{uuid.uuid4().hex}.png"
-    file     = discord.File(buf, filename=filename)
-    embed    = discord.Embed(title="Remaining Maps")
-    embed.add_field(name="Remaining Maps", value="See chart below", inline=False)
-    embed.set_image(url=f"attachment://{filename}")
-
-    # 4) send new
-    new_msg = await channel.send(embed=embed, file=file)
-
-    # 5) persist its ID for next time
-    state_data["grid_msg_id"] = new_msg.id
+    # 4) Persist that ID so next time we edit instead of send
     await state.save_state(channel.id)
