@@ -168,6 +168,38 @@ async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id:
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
     
+async def update_mt_embed(channel: discord.TextChannel, message_id: int, time: str):
+    # 1) Fetch the bot’s original embed message
+    msg = await channel.fetch_message(message_id)
+    if not msg.embeds:
+        raise RuntimeError("No embed found on that message")
+
+    # 2) Clone the existing embed
+    embed = msg.embeds[0]
+    
+    field_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Scheduled Time"), None)
+    
+    next_step_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None)
+    
+    
+    if field_index is None:
+        # If it doesn’t exist yet, append it instead
+        embed.add_field(name="Scheduled Time", value=time, inline=False)
+    else:
+        # 4) Mutate that field in-place
+        embed.set_field_at(field_index, name="Scheduled Time", value=time, inline=True)
+     
+    if next_step_index is None:
+        embed.add_field(name="Next Step:",value=f"Current turn role: Add Casters and Predictions",inline=False)
+    else:
+        new_val2 = "Current turn role: Add Casters and Predictions"
+        embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
+
+    # 5) Push the edit back to Discord
+    await msg.edit(embed=embed)
+    
 async def flip_turn(channel_id: int) -> int:
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
