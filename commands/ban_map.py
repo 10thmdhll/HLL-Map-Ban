@@ -97,7 +97,10 @@ async def ban_map(
         return await interaction.followup.send(
             f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
         )
-
+    
+    if len(rem) <= 4:
+        return
+        
     # ─── Record the ban, then flip turn ─────────────────────────────
     bans.append({"map": map_name, "side": side, "timestamp": ts})
     tb[team_key]["manual"].append(side)
