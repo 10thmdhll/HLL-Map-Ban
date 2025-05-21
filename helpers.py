@@ -350,7 +350,28 @@ async def map_autocomplete(interaction, current: str) -> list[Choice[str]]:
         if current.lower() in m.lower()
     ][:25]
 
-
+async def get_or_create_status_msg(
+    channel: discord.TextChannel,
+    state_data: dict
+) -> discord.Message:
+    embed_id = state_data.get("embed_message_id")
+    # 1) Try to fetch existing
+    if embed_id:
+        try:
+            return await channel.fetch_message(embed_id)
+        except discord.NotFound:
+            # it was deleted; forget it so we can recreate
+            state_data.pop("embed_message_id", None)
+    # 2) Build a fresh embed from your state
+    embed = discord.Embed(title="Match Status", color=discord.Color.blue())
+    teams = state_data["teams"]
+    embed.add_field("Teams", f"<@&{teams[0]}> vs <@&{teams[1]}>", inline=True)
+    # … add all the other fields exactly as in your /match_create …
+    msg = await channel.send(embed=embed)
+    state_data["embed_message_id"] = msg.id
+    await state.save_state(channel.id)
+    return msg
+    
 async def side_autocomplete(interaction, current: str) -> List[Choice[str]]:
     ch      = interaction.channel.id
     sel_map = getattr(interaction.namespace, "map_name", None)
@@ -517,13 +538,13 @@ async def send_remaining_maps_embed(
     state_data: dict,
     team_names: tuple[str, str] = ("Team A", "Team B")
 ):
-    embed_id    = state_data["embed_message_id"]
-    status_msg = None
+    status_msg = await get_or_create_status_msg(channel, state_data)
+    embed    = status_msg.embeds[0]
     
     # 1) Try to fetch the existing embed
-    if embed_id:
+    if embed:
         try:
-            status_msg = await channel.fetch_message(embed_id)
+            status_msg = await get_or_create_status_msg(channel, state_data)
         except discord.NotFound:
             # it was deleted: clear out the old reference so we know to rebuild
             state_data.pop("embed_message_id", None)
@@ -565,7 +586,7 @@ async def send_remaining_maps_embed(
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
 
-    status_msg = await channel.fetch_message(embed_id)
+    status_msg = await _get_or_create_status_msg(channel, state_data)
     embed      = status_msg.embeds[0]
 
     # ensure the “Remaining Maps” field exists (or update it)
