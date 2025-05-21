@@ -167,9 +167,11 @@ async def ban_map(
     role_ids = ongoing["teams"]
     role_a   = interaction.guild.get_role(role_ids[0]).name
     role_b   = interaction.guild.get_role(role_ids[1]).name
-
+    maps = [m["name"] for m in await load_maplist()]
+    
     await send_remaining_maps_embed(
         interaction.channel,
+        maps,
         ongoing,
         team_names=(role_a, role_b)
     )
