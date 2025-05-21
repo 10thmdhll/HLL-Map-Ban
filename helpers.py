@@ -512,53 +512,53 @@ def create_combo_grid_image(
     return img
 
 async def send_remaining_maps_embed(
-    interaction: discord.Interaction,
-    maps: List[str],
-    state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
-    team_names: Tuple[str, str] = ("Team A", "Team B")
+    channel: discord.TextChannel,
+    maps: list[str],
+    state_data: dict,
+    team_names: tuple[str, str] = ("Team A", "Team B")
 ):
-    channel    = interaction.channel.id
-    embed_id   = state_data["embed_message_id"]
+    """
+    Deletes any previous grid_msg, rebuilds the combo‐grid image,
+    updates the main status embed, then sends one new grid message.
+    """
+    embed_id    = state_data["embed_message_id"]
     grid_msg_id = state_data.get("grid_msg_id")
 
-    # 1) Rebuild your grid image
+    # ─── Delete the old grid message ───────────────────────────────
+    if grid_msg_id:
+        try:
+            old = await channel.fetch_message(grid_msg_id)
+            await old.delete()
+        except discord.NotFound:
+            pass
+
+    # ─── Build fresh PIL image ─────────────────────────────────────
     img = create_combo_grid_image(maps, state_data, team_names)
     buf = BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
 
-    # 2) Package it as a Discord File and point your embed at it
+    # ─── Prepare Discord file & update main embed ─────────────────
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
 
-    # Grab the *original* status‐embed so we can re-use it
     status_msg = await channel.fetch_message(embed_id)
     embed      = status_msg.embeds[0]
-    # make sure there's a “Remaining Maps” field
+
+    # ensure the “Remaining Maps” field exists (or update it)
     idx = next((i for i,f in enumerate(embed.fields)
                 if f.name == "Remaining Maps"), None)
     if idx is None:
-        embed.add_field(name="Remaining Maps", value="See below", inline=False)
+        embed.add_field(name="Remaining Maps", value="See chart below", inline=False)
     else:
-        embed.set_field_at(idx, name="Remaining Maps", value="See below", inline=False)
+        embed.set_field_at(idx, name="Remaining Maps", value="See chart below", inline=False)
 
-    # Embed images must be attachments named “attachment://…”
+    # point the embed’s image at our new attachment
     embed.set_image(url=f"attachment://{filename}")
 
-    # 3) If we *already* sent a grid before, just edit that one;
-    #    otherwise, send a brand new followup and remember its id.
-    if grid_msg_id:
-        try:
-            grid_msg = await channel.fetch_message(grid_msg_id)
-            # replace its embed + attachments
-            await grid_msg.edit(embed=embed, attachments=[file])
-        except discord.NotFound:
-            # (it was deleted) fall back to sending anew
-            grid_msg = await channel.send(embed=embed, file=file)
-            state_data["grid_msg_id"] = grid_msg.id
-    else:
-        grid_msg = await channel.send(embed=embed, file=file)
-        state_data["grid_msg_id"] = grid_msg.id
+    # ─── Finally send one new grid message ─────────────────────────
+    grid_msg = await channel.send(embed=embed, file=file)
 
-    # 4) Persist that ID so next time we edit instead of send
+    # ─── Persist its ID so next time we delete & replace ───────────
+    state_data["grid_msg_id"] = grid_msg.id
     await state.save_state(channel.id)
