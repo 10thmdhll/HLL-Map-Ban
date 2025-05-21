@@ -12,7 +12,8 @@ from helpers import (
     flip_turn,
     update_current_turn_embed,
     send_remaining_maps_embed,
-    create_combo_grid_image
+    create_combo_grid_image,
+    load_maplist
 )
 
 @app_commands.command(name="ban_map")
