@@ -517,43 +517,47 @@ async def send_remaining_maps_embed(
     state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
     team_names: Tuple[str, str] = ("Team A", "Team B")
 ):
-    message_id = state_data["embed_message_id"]
     channel    = interaction.channel
-    msg = await channel.fetch_message(message_id)
-    embed = msg.embeds[0]
-    
-    # 1) Generate the PIL image
-    img = create_combo_grid_image(maps, state_data, team_names)
+    embed_id   = state_data["embed_message_id"]
+    grid_msg_id = state_data.get("grid_msg_id")
 
-    # 2) Dump to BytesIO
+    # ─── Delete the old grid image message ───────────────────────
+    if grid_msg_id:
+        try:
+            old = await channel.fetch_message(grid_msg_id)
+            await old.delete()
+        except discord.NotFound:
+            pass
+
+    # ─── Generate the new PIL image ──────────────────────────────
+    img = create_combo_grid_image(maps, state_data, team_names)
     buf = BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
 
-    # 3) Prepare Discord attachment + embed
+    # ─── Build the embed + file ──────────────────────────────────
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
-    
-    field_index = next(
-        (i for i, f in enumerate(embed.fields) if f.name == "Remaining Maps"), None)
-    if field_index is None:
-        # If it doesn’t exist yet, append it instead
-        embed.add_field(name="Remaining Maps", value="See Below", inline=False)
-        embed.set_image(url=f"attachment://{filename}")
-    else:
-        # 4) Mutate that field in-place
-        embed.set_field_at(field_index, name="Remaining Maps", value="See Below", inline=True)
-        embed.set_image(url=f"attachment://{filename}")
+    embed    = (await channel.fetch_message(embed_id)).embeds[0]
+    field_i  = next((i for i,f in enumerate(embed.fields)
+                     if f.name == "Remaining Maps"), None)
 
-    # 4) Send via the correct channel:
-    #    - If you have NOT yet responded or deferred, use response.send_message()
-    #    - Otherwise, use followup.send()
+    if field_i is None:
+        embed.add_field(name="Remaining Maps", value="See below", inline=False)
+    else:
+        embed.set_field_at(field_i, name="Remaining Maps", value="See below", inline=False)
+    embed.set_image(url=f"attachment://{filename}")
+
+    # ─── Send the new grid as a *follow-up* so it's its own message ───
+    # (or use response.send_message if you haven't responded yet)
     try:
-        # This will error if you've already used response or defer:
-        await interaction.response.send_message(embed=embed, file=file)
+        msg = await interaction.followup.send(embed=embed, file=file, wait=True)
     except discord.InteractionResponded:
-        # and edit it in place
-        await msg.edit(embed=embed, files=[file])
+        msg = await channel.send(embed=embed, file=file)
+
+    # ─── Persist its ID for next time ─────────────────────────────
+    state_data["grid_msg_id"] = msg.id
+    await state.save_state(channel.id)
         
 async def refresh_remaining_maps(
     channel: discord.TextChannel,
