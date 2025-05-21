@@ -120,7 +120,8 @@ async def ban_map(
             rmx = next((i for i, f in enumerate(embed.fields)
                         if f.name == "Remaining Maps"), None)
             label2 = "Final Map"
-            
+            team_ids     = ongoing["teams"]                 # [role_a_id, role_b_id]
+            guild        = interaction.guild
             final_map = rem[0][0]
             sides = { team_key: side for (_map, team_key, side) in rem }
             team_a_name = guild.get_role(team_ids[0]).name
