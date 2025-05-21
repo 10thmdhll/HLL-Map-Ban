@@ -355,11 +355,11 @@ def create_combo_grid_image(
     """
     team_keys = ["team_a", "team_b"]
     sides     = ["Allied", "Axis"]
-    cell_w    = 150
-    map_w     = 200
+    cell_w    = 75
+    map_w     = 150
     cell_h    = 20
-    header_h  = 30
-    group_h   = 30
+    header_h  = 20
+    group_h   = 20
     margin    = 5
 
     width  = margin*2 + cell_w*2 + map_w + cell_w*2
