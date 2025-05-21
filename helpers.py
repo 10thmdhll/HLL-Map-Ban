@@ -478,6 +478,9 @@ async def send_remaining_maps_embed(
     state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
     team_names: Tuple[str, str] = ("Team A", "Team B")
 ):
+    msg = await channel.fetch_message(message_id)
+    embed = msg.embeds[0]
+    
     # 1) Generate the PIL image
     img = create_combo_grid_image(maps, state_data, team_names)
 
