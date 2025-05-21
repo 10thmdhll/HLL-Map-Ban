@@ -478,11 +478,6 @@ async def send_remaining_maps_embed(
     state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
     team_names: Tuple[str, str] = ("Team A", "Team B")
 ):
-    """
-    In-memory build of the combo grid, then send as an embed
-    under a 'Remaining Maps' field, choosing response vs followup
-    so you never hit 'Unknown Webhook'.
-    """
     # 1) Generate the PIL image
     img = create_combo_grid_image(maps, state_data, team_names)
 
@@ -494,10 +489,17 @@ async def send_remaining_maps_embed(
     # 3) Prepare Discord attachment + embed
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
-    embed    = discord.Embed(title="Remaining Maps")
-    embed.add_field(name="Remaining Maps",
-                    value="See the chart below:", inline=False)
-    embed.set_image(url=f"attachment://{filename}")
+    
+    field_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Remaining Maps"), None)
+    if field_index is None:
+        # If it doesn’t exist yet, append it instead
+        embed.add_field(name="Remaining Maps", value="See Below", inline=False)
+        embed.set_image(url=f"attachment://{filename}")
+    else:
+        # 4) Mutate that field in-place
+        embed.set_field_at(field_index, name="Remaining Maps", value="See Below", inline=True)
+        embed.set_image(url=f"attachment://{filename}")
 
     # 4) Send via the correct channel:
     #    - If you have NOT yet responded or deferred, use response.send_message()
@@ -506,7 +508,5 @@ async def send_remaining_maps_embed(
         # This will error if you've already used response or defer:
         await interaction.response.send_message(embed=embed, file=file)
     except discord.InteractionResponded:
-        channel = interaction.channel
-        msg = await channel.fetch_message(channel)
         # and edit it in place
         await msg.edit(embed=embed, files=[file])
