@@ -53,7 +53,8 @@ async def match_create(
         "casters": {"team_a": None, "team_b": None},
         "additional_casters": [],
         "predictions_poll": None,
-        "embed_message_id": None
+        "embed_message_id": None,
+        "finalbanpost": False
     })
 
     await state.save_state(channel_id)
