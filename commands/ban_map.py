@@ -100,6 +100,27 @@ async def ban_map(
     
     if len(rem) <= 3:
         await interaction.followup.send("Ban Phase Complete")
+        
+        # 1) Fetch the bot’s original embed message
+        msg = await channel.fetch_message(message_id)
+        if not msg.embeds:
+            raise RuntimeError("No embed found on that message")
+
+        # 2) Clone the existing embed
+        embed = msg.embeds[0]
+            next_step_index = next(
+            (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
+            return
+        
+        next_step_index = next(
+        (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None)
+        
+        if next_step_index is None:
+            embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
+        else:
+            new_val2 = "Current turn role: set time and casters"
+            embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
+        await msg.edit(embed=embed)
         return
         
     # ─── Record the ban, then flip turn ─────────────────────────────
