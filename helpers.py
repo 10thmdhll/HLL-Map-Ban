@@ -346,6 +346,12 @@ def create_combo_grid_image(
     state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
     team_names: Tuple[str, str] = ("Team A", "Team B")
 ) -> Image.Image:
+    """
+    Build a grid image showing combos for each map and team, coloring cells:
+      • manual bans → Red (#ff0000)
+      • auto   bans → Orange (#ffa500)
+      • otherwise → White (#ffffff)
+    """
     team_keys = ["team_a", "team_b"]
     sides     = ["Allied", "Axis"]
     cell_w    = 150
@@ -355,7 +361,6 @@ def create_combo_grid_image(
     group_h   = 30
     margin    = 10
 
-    # Canvas size
     width  = margin*2 + cell_w*2 + map_w + cell_w*2
     height = margin*2 + group_h + header_h + len(maps)*cell_h
 
@@ -363,44 +368,56 @@ def create_combo_grid_image(
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
 
+    def text_size(txt: str):
+        bbox = draw.textbbox((0,0), txt, font=font)
+        return bbox[2]-bbox[0], bbox[3]-bbox[1]
+
     # ─── Group header ─────────────────────────────────────────────
     x = margin
     for idx, team in enumerate(team_names):
         span_w = cell_w*2
-        draw.rectangle([x, margin, x+span_w, margin+group_h], fill="#cccccc", outline="black")
-        w, h = draw.textsize(team, font=font)
-        draw.text((x+(span_w-w)/2, margin+(group_h-h)/2), team, fill="black", font=font)
+        draw.rectangle([x, margin, x+span_w, margin+group_h],
+                       fill="#cccccc", outline="black")
+        w, h = text_size(team)
+        draw.text((x + (span_w-w)/2, margin + (group_h-h)/2),
+                  team, fill="black", font=font)
         x += span_w + (map_w if idx == 0 else 0)
 
-    # Maps group header
+    # “Maps” group header
     draw.rectangle(
-        [margin + cell_w*2, margin, margin + cell_w*2 + map_w, margin + group_h],
+        [margin + cell_w*2, margin,
+         margin + cell_w*2 + map_w, margin + group_h],
         fill="#cccccc", outline="black"
     )
-    w, h = draw.textsize("Maps", font=font)
+    w, h = text_size("Maps")
     draw.text(
-        (margin + cell_w*2 + (map_w-w)/2, margin + (group_h-h)/2),
+        (margin + cell_w*2 + (map_w-w)/2,
+         margin + (group_h-h)/2),
         "Maps", fill="black", font=font
     )
 
-    # ─── Sub-headers ───────────────────────────────────────────────
+    # ─── Sub-headers (Allied/Axis/Maps) ────────────────────────────
     y0 = margin + group_h
     x  = margin
     for _ in team_keys:
         for side in sides:
-            draw.rectangle([x, y0, x+cell_w, y0+header_h], fill="#e0e0e0", outline="black")
-            w, h = draw.textsize(side, font=font)
-            draw.text((x+(cell_w-w)/2, y0+(header_h-h)/2), side, fill="black", font=font)
+            draw.rectangle([x, y0, x+cell_w, y0+header_h],
+                           fill="#e0e0e0", outline="black")
+            w, h = text_size(side)
+            draw.text((x + (cell_w-w)/2, y0 + (header_h-h)/2),
+                      side, fill="black", font=font)
             x += cell_w
         x += map_w
     # Maps sub-header
     draw.rectangle(
-        [margin + cell_w*2, y0, margin + cell_w*2 + map_w, y0 + header_h],
+        [margin + cell_w*2, y0,
+         margin + cell_w*2 + map_w, y0 + header_h],
         fill="#e0e0e0", outline="black"
     )
-    w, h = draw.textsize("Maps", font=font)
+    w, h = text_size("Maps")
     draw.text(
-        (margin + cell_w*2 + (map_w-w)/2, y0 + (header_h-h)/2),
+        (margin + cell_w*2 + (map_w-w)/2,
+         y0 + (header_h-h)/2),
         "Maps", fill="black", font=font
     )
 
@@ -409,7 +426,6 @@ def create_combo_grid_image(
         y = margin + group_h + header_h + i*cell_h
         x = margin
 
-        # Fetch ban lists
         tb_a = state_data.get(m, {}).get("team_a", {"manual": [], "auto": []})
         tb_b = state_data.get(m, {}).get("team_b", {"manual": [], "auto": []})
         manual_a, auto_a = tb_a["manual"], tb_a["auto"]
@@ -423,15 +439,19 @@ def create_combo_grid_image(
                 fill = "#ffa500"
             else:
                 fill = "#ffffff"
-            draw.rectangle([x, y, x+cell_w, y+cell_h], fill=fill, outline="black")
-            w, h = draw.textsize(side, font=font)
-            draw.text((x+(cell_w-w)/2, y+(cell_h-h)/2), side, fill="black", font=font)
+            draw.rectangle([x, y, x+cell_w, y+cell_h],
+                           fill=fill, outline="black")
+            w, h = text_size(side)
+            draw.text((x + (cell_w-w)/2, y + (cell_h-h)/2),
+                      side, fill="black", font=font)
             x += cell_w
 
         # Map name cell
-        draw.rectangle([x, y, x+map_w, y+cell_h], fill="#dddddd", outline="black")
-        w, h = draw.textsize(m, font=font)
-        draw.text((x+(map_w-w)/2, y+(cell_h-h)/2), m, fill="black", font=font)
+        draw.rectangle([x, y, x+map_w, y+cell_h],
+                       fill="#dddddd", outline="black")
+        w, h = text_size(m)
+        draw.text((x + (map_w-w)/2, y + (cell_h-h)/2),
+                  m, fill="black", font=font)
         x += map_w
 
         # Team B cells
@@ -442,9 +462,11 @@ def create_combo_grid_image(
                 fill = "#ffa500"
             else:
                 fill = "#ffffff"
-            draw.rectangle([x, y, x+cell_w, y+cell_h], fill=fill, outline="black")
-            w, h = draw.textsize(side, font=font)
-            draw.text((x+(cell_w-w)/2, y+(cell_h-h)/2), side, fill="black", font=font)
+            draw.rectangle([x, y, x+cell_w, y+cell_h],
+                           fill=fill, outline="black")
+            w, h = text_size(side)
+            draw.text((x + (cell_w-w)/2, y + (cell_h-h)/2),
+                      side, fill="black", font=font)
             x += cell_w
 
     return img
