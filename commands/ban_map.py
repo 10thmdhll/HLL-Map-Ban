@@ -123,8 +123,13 @@ async def ban_map(
         await msg.edit(embed=embed)
         
         # — Post a public winner prediction poll —
-        channel = bot.get_channel(ch)
-        poll = await channel.send(
+        team_ids     = ongoing["teams"]                 # [role_a_id, role_b_id]
+        guild        = interaction.guild
+        team_a_name  = guild.get_role(team_ids[0]).name
+        team_b_name  = guild.get_role(team_ids[1]).name
+        poll_channel = interaction.channel
+ 
+        poll = await poll_channel.send(
             "**Winner Predictions**\n"
             "React below to predict the match winner:\n"
             "🇦 for **" + team_a_name + "**\n"
