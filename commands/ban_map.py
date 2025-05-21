@@ -121,6 +121,18 @@ async def ban_map(
         else:
             embed.set_field_at(idx, name=label, value=value, inline=False)
         await msg.edit(embed=embed)
+        
+        # — Post a public winner prediction poll —
+        channel = bot.get_channel(ch)
+        poll = await channel.send(
+            "**Winner Predictions**\n"
+            "React below to predict the match winner:\n"
+            "🇦 for **" + team_a_name + "**\n"
+            "🇧 for **" + team_b_name + "**"
+)
+        await poll.add_reaction("🇦")
+        await poll.add_reaction("🇧")
+        
         return
         
     # ─── Record the ban, then flip turn ─────────────────────────────
