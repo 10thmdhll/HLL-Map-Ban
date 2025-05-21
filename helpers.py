@@ -199,9 +199,9 @@ async def update_mt_embed(channel: discord.TextChannel, message_id: int, time: s
         embed.set_field_at(field_index, name="Scheduled Time", value=ts_field, inline=True)
      
     if next_step_index is None:
-        embed.add_field(name="Next Step:",value=f"Current turn role: Add Casters and Predictions",inline=False)
+        embed.add_field(name="Next Step:",value=f"Current turn role: Add Casters",inline=False)
     else:
-        new_val2 = "Current turn role: Add Casters and Predictions"
+        new_val2 = "Current turn role: Add Casters"
         embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
 
     # 5) Push the edit back to Discord
