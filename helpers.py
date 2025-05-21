@@ -269,7 +269,7 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
         old_lines.extend(embed.fields[idx].value.split("\n"))
 
     # append the new line
-    new_line = "\n" + f"{ct_role} choice: {new_choice}"
+    new_line = f"{ct_role} choice: {new_choice}"
     old_lines.append(new_line)
 
     # chunk into ≤1024-char blocks
