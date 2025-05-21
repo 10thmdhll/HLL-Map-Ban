@@ -18,7 +18,6 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("ban_mode")
-    print(choice_data)
     if (choice_data is not None):
         await interaction.response.send_message(f"❌ Ban mode is already set.",ephemeral=True)
         return
