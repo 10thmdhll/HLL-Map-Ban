@@ -586,7 +586,7 @@ async def send_remaining_maps_embed(
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
 
-    status_msg = await _get_or_create_status_msg(channel, state_data)
+    status_msg = await get_or_create_status_msg(channel, state_data)
     embed      = status_msg.embeds[0]
 
     # ensure the “Remaining Maps” field exists (or update it)
