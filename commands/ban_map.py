@@ -126,5 +126,6 @@ async def ban_map(
         ongoing,
         team_names=(role_a, role_b)
     )
+    printf(rem)
     await state.save_state(channel_id)
         
