@@ -117,10 +117,20 @@ async def ban_map(
                         if f.name == "Next Step:"), None)
             label = "Next Step:"
             value = "Set match time and casters"
+            
+            rmx = next((i for i, f in enumerate(embed.fields)
+                        if f.name == "Remaining Maps"), None)
+            label2 = "Final Map"
+            print(rem)
+            value2 = f"{guild.get_role(team_ids[0]).name}: SIDE1   |   {guild.get_role(team_ids[01).name}: SIDE2"
             if idx is None:
                 embed.add_field(name=label, value=value, inline=False)
             else:
                 embed.set_field_at(idx, name=label, value=value, inline=False)
+            if rmx is None:
+                embed.add_field(name=label2, value=value2, inline=True)
+            else:
+                embed.set_field_at(rmx, name=label2, value=value2, inline=True)
             await msg.edit(embed=embed)
         
             # — Post a public winner prediction poll —
