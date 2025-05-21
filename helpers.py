@@ -474,11 +474,12 @@ def create_combo_grid_image(
 
 async def send_remaining_maps_embed(
     interaction: discord.Interaction,
-    channel: discord.TextChannel,
     maps: List[str],
     state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
     team_names: Tuple[str, str] = ("Team A", "Team B")
 ):
+    message_id = state_data["embed_message_id"]
+    channel    = interaction.channel
     msg = await channel.fetch_message(message_id)
     embed = msg.embeds[0]
     
