@@ -183,13 +183,19 @@ async def update_mt_embed(channel: discord.TextChannel, message_id: int, time: s
     next_step_index = next(
         (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None)
     
+    # Convert your stored ISO string to a Unix timestamp
+    dt = datetime.fromisoformat(time)
+    unix_sec = int(dt.replace(tzinfo=datetime.timezone.utc).timestamp())
+
+    # Build the Discord‐timestamp markup
+    ts_field = f"<t:{unix_sec}:F>"
     
     if field_index is None:
         # If it doesn’t exist yet, append it instead
-        embed.add_field(name="Scheduled Time", value=time, inline=False)
+        embed.add_field(name="Scheduled Time", value=ts_field, inline=False)
     else:
         # 4) Mutate that field in-place
-        embed.set_field_at(field_index, name="Scheduled Time", value=time, inline=True)
+        embed.set_field_at(field_index, name="Scheduled Time", value=ts_field, inline=True)
      
     if next_step_index is None:
         embed.add_field(name="Next Step:",value=f"Current turn role: Add Casters and Predictions",inline=False)
