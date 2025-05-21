@@ -16,7 +16,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
     choice_data = ongoing.get("Host")
-    print(choice_data)
+
     if (choice_data != "TBD"):
         await interaction.response.send_message(f"❌ Host mode is already set.",ephemeral=True)
         return
@@ -50,10 +50,10 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
     ongoing["Host"] = "Chosen"
         
-    if option == "Host":
-        new_turn = await flip_turn(channel_id)
-        embed_msg_id = ongoing.get("embed_message_id")
-        await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
+    #if option == "Host":
+    #    new_turn = await flip_turn(channel_id)
+     #   embed_msg_id = ongoing.get("embed_message_id")
+     #   await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
         
     embed_msg_id = ongoing.get("embed_message_id")        
     await interaction.response.send_message(f"Option '{option}' recorded.",
