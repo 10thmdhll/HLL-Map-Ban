@@ -72,7 +72,7 @@ async def ban_map(
             tb[other_key]["auto"].append(opp_side)
         await state.save_state(channel_id)    
         await interaction.response.send_message(
-            f"✅ Double ban recorded: **{map_name} {side}** at {format_timestamp(ts)}."
+            f"✅ Double ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True
         )
 
         embed_id = ongoing.get("embed_message_id")
@@ -103,7 +103,7 @@ async def ban_map(
         tb[other_key]["auto"].append(opp_side)
     await state.save_state(channel_id)    
     await interaction.response.send_message(
-        f"✅ Ban recorded: **{map_name} {side}** at {format_timestamp(ts)}."
+        f"✅ Ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True
     )
 
     embed_id = ongoing.get("embed_message_id")
