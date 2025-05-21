@@ -120,10 +120,10 @@ async def ban_map(
     role_a   = interaction.guild.get_role(role_ids[0]).name
     role_b   = interaction.guild.get_role(role_ids[1]).name
 
-await refresh_remaining_maps(
-    interaction.channel,
-    ongoing,
-    team_names=(role_a, role_b)
-)
+    await refresh_remaining_maps(
+        interaction.channel,
+        ongoing,
+        team_names=(role_a, role_b)
+    )
     await state.save_state(channel_id)
         
