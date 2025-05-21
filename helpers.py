@@ -7,6 +7,7 @@ from discord.app_commands import Choice
 from io import BytesIO
 import config
 import json
+import uuid
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
