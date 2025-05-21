@@ -110,7 +110,6 @@ async def ban_map(
         embed = msg.embeds[0]
         next_step_index = next(
             (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None) 
-            return
         
         next_step_index = next(
         (i for i, f in enumerate(embed.fields) if f.name == "Next Step:"), None)
