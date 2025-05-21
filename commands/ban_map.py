@@ -102,7 +102,7 @@ async def ban_map(
         await interaction.followup.send("Ban Phase Complete")
         
         # 1) Fetch the bot’s original embed message
-        msg = await channel.fetch_message(message_id)
+        msg = await channel_id.fetch_message(message_id)
         if not msg.embeds:
             raise RuntimeError("No embed found on that message")
 
