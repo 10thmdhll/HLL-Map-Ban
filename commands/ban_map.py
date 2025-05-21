@@ -10,7 +10,9 @@ from helpers import (
     map_autocomplete,
     side_autocomplete,
     flip_turn,
-    update_current_turn_embed
+    update_current_turn_embed,
+    send_remaining_maps_embed,
+    create_combo_grid_image
 )
 
 @app_commands.command(name="ban_map")
@@ -61,7 +63,7 @@ async def ban_map(
                 f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
             )
 
-        # ─── Record the ban, then flip turn ─────────────────────────────
+        # ─── Record the ban
         bans.append({"map": map_name, "side": side, "timestamp": ts})
         tb[team_key]["manual"].append(side)
         # mirror‐ban the opposite side for the other team
@@ -83,6 +85,7 @@ async def ban_map(
         #new_turn = await flip_turn(channel_id)
         #await update_current_turn_embed(interaction.channel, embed_id, new_turn)
         await state.save_state(channel_id)
+        
         return
 
     # ─── Subsequent bans must be in remaining_combos ────────────────
@@ -112,5 +115,16 @@ async def ban_map(
     
     new_turn = await flip_turn(channel_id)
     await update_current_turn_embed(interaction.channel, embed_id, new_turn)
+    
+    maps       = [m["name"] for m in await load_maplist()]  
+    state_data = state.ongoing_events[channel_id]
+    teams      = ( team_key, other_key )
+
+    await send_remaining_maps_embed(
+        interaction,
+        maps,
+        state_data,
+        team_names=teams
+    )
     await state.save_state(channel_id)
         

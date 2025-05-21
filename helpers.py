@@ -465,10 +465,11 @@ async def send_remaining_maps_embed(
     buf.seek(0)
 
     # 3) Build Discord File & Embed
-    file  = discord.File(buf, filename="remaining_maps.png")
+    fname = f"remaining_maps_{uuid.uuid4().hex}.png"
+    file  = discord.File(buf, filename=fname)
     embed = discord.Embed(title="Remaining Maps")
     embed.add_field(name="Remaining Maps", value="See chart below:", inline=False)
-    embed.set_image(url="attachment://remaining_maps.png")
+    embed.set_image(url=f"attachment://{fname}")
 
     # 4) Send in one call
     await interaction.response.send_message(embed=embed, file=file)
