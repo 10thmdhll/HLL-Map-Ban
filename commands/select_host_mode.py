@@ -48,7 +48,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         ongoing["ban_mode_picker"] = interaction.user.id
     
     await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
-    await ongoing["Host"] = "Chosen"
+    ongoing["Host"] = "Chosen"
     await state.save_state(channel_id)
         
     if option == "Host":
