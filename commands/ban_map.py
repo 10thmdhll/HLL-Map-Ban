@@ -116,20 +116,14 @@ async def ban_map(
     new_turn = await flip_turn(channel_id)
     await update_current_turn_embed(interaction.channel, embed_id, new_turn)
     
-    
-    role_ids   = ongoing["teams"]            # e.g. [12345, 67890]
-    role_a     = interaction.guild.get_role(role_ids[0])
-    role_b     = interaction.guild.get_role(role_ids[1])
-    team_names = (role_a.name, role_b.name)
-    maps       = [m["name"] for m in await load_maplist()]  
-    state_data = state.ongoing_events[channel_id]
-    teams      = ( team_key, other_key )
+    role_ids = ongoing["teams"]
+    role_a   = interaction.guild.get_role(role_ids[0]).name
+    role_b   = interaction.guild.get_role(role_ids[1]).name
 
-    await send_remaining_maps_embed(
-        interaction,
-        maps,
-        state_data,
-        team_names
-    )
+await refresh_remaining_maps(
+    interaction.channel,
+    ongoing,
+    team_names=(role_a, role_b)
+)
     await state.save_state(channel_id)
         

@@ -515,3 +515,38 @@ async def send_remaining_maps_embed(
     except discord.InteractionResponded:
         # and edit it in place
         await msg.edit(embed=embed, files=[file])
+        
+async def refresh_remaining_maps(
+    channel: discord.TextChannel,
+    state_data: dict,
+    team_names: Tuple[str, str]
+):
+    # 1) grab the old message
+    old_msg_id = state_data.get("grid_msg_id")
+    if old_msg_id:
+        try:
+            old = await channel.fetch_message(old_msg_id)
+            await old.delete()
+        except discord.NotFound:
+            pass  # maybe it was already deleted
+
+    # 2) rebuild the image
+    maps = [m["name"] for m in await load_maplist()]
+    img  = create_combo_grid_image(maps, state_data, team_names)
+    buf  = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    # 3) build embed + file
+    filename = f"grid_{uuid.uuid4().hex}.png"
+    file     = discord.File(buf, filename=filename)
+    embed    = discord.Embed(title="Remaining Maps")
+    embed.add_field(name="Remaining Maps", value="See chart below", inline=False)
+    embed.set_image(url=f"attachment://{filename}")
+
+    # 4) send new
+    new_msg = await channel.send(embed=embed, file=file)
+
+    # 5) persist its ID for next time
+    state_data["grid_msg_id"] = new_msg.id
+    await state.save_state(channel.id)
