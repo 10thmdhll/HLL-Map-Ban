@@ -54,27 +54,33 @@ async def ban_map(
 
     # ─── First ban is a “double” ban, no validation ─────────────────
     if ongoing.get("firstban", True):
+        # ─── Subsequent bans must be in remaining_combos ────────────────
+        rem = remaining_combos(channel_id)
+        if (map_name, side) not in [(m, s) for m, _, s in rem]:
+            return await interaction.response.send_message(
+                f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
+            )
+
+        # ─── Record the ban, then flip turn ─────────────────────────────
         bans.append({"map": map_name, "side": side, "timestamp": ts})
         tb[team_key]["manual"].append(side)
-        # mirror‐ban the opposite side for the other team,
+        # mirror‐ban the opposite side for the other team
         other_key = "team_b" if team_key == "team_a" else "team_a"
-        opp_side = "Allied" if side == "Allied" else "Allied"
+        opp_side   = "Axis" if side == "Allied" else "Allied"
         # record as an auto‐ban on the other side
         if opp_side not in tb[other_key]["auto"]:
             tb[other_key]["auto"].append(opp_side)
-
-        ongoing["firstban"] = False
-        await state.save_state(channel_id)
+        await state.save_state(channel_id)    
         await interaction.response.send_message(
-            f"🚩 Double‐ban **{map_name} {side}** at {format_timestamp(ts)}."
+            f"✅ Double ban recorded: **{map_name} {side}** at {format_timestamp(ts)}."
         )
 
         embed_id = ongoing.get("embed_message_id")
         if embed_id:
-            await update_ban_embed(
-                interaction.channel, embed_id,
-                f"Double‐ban: {map_name} {side} at {format_timestamp(ts)}"
-            )
+            await update_ban_embed(interaction.channel, embed_id,f"Double ban: {map_name} {side} at {format_timestamp(ts)}")
+        
+        #new_turn = await flip_turn(channel_id)
+        #await update_current_turn_embed(interaction.channel, embed_id, new_turn)
         await state.save_state(channel_id)
         return
 
