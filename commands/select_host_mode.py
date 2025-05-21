@@ -16,7 +16,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
     choice_data = ongoing.get("Host")
-    
+    print(choice_data)
     if (choice_data != "TBD"):
         await interaction.response.send_message(f"❌ Host mode is already set.",ephemeral=True)
         return
