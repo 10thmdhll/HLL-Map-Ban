@@ -287,180 +287,6 @@ async def update_ban_embed(channel: discord.TextChannel, message_id: int, new_ch
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
 
-def create_ban_status_image(maps,bans) -> Image:
-    # — Derive display names —
-    A = team_a_name or "Team A"
-    B = team_b_name or "Team B"
-    
-    current = A if current_turn == "team_a" else B if current_turn == "team_b" else "TBD"
-    decision = decision_choice or "None"
-    banner1 = f"Current Turn: {current}"
-    
-    padding = 20
-    line_spacer = 10
-    
-    # — Measure banner heights —
-    dummy = Image.new("RGB", (1,1))
-    measure = ImageDraw.Draw(dummy)
-    bbox1 = measure.textbbox((0, 0), banner1, font=hdr_font)
-    h1 = bbox1[3] - bbox1[1]
-
-    header_h = padding + h1 + line_spacer
-
-    # — Grid dimensions —
-    rows = len(maps)
-    cols = 3  # Team A, Map name, Team B
-    total_width = CONFIG["max_inline_width"]
-    cell_w = total_width // cols
-    row_bbox = measure.textbbox((0,0), "Allied [ ] | Axis [ ]", font=row_font)
-    row_h    = (row_bbox[3] - row_bbox[1]) + padding
-    img_h = header_h + (rows + 1) * row_h + padding
-
-    # — Create canvas —
-    img = Image.new("RGBA", (total_width + padding*2, img_h), "white")
-    draw = ImageDraw.Draw(img)
-    
-    # — Draw banners —
-    y = padding
-    draw.text((padding, y), banner1, font=hdr_font, fill="black")
-    y += h1 + line_spacer
-    draw.text((padding, y), banner2, font=hdr_font, fill="black")
-    
-    # — Draw grid rows —
-    grid_x0 = padding
-    
-    # — Draw column headers row —
-    header_row_y = header_h
-    
-    # Team A header (spanning first cell)
-    draw.rectangle([grid_x0, header_row_y, grid_x0 + cell_w, header_row_y + row_h], fill="lightgray", outline="black")
-    text = team_a_name or "Team A"
-    bbox = measure.textbbox((0,0), text, font=row_font)
-    w = bbox[2] - bbox[0]; h = bbox[3] - bbox[1]
-    draw.text((grid_x0 + (cell_w - w)/2, header_row_y + (row_h - h)/2), text, font=row_font, fill="black")
-    
-    # Maps header
-    mid_x = grid_x0 + cell_w
-    draw.rectangle([mid_x, header_row_y, mid_x + cell_w, header_row_y + row_h], fill="lightgray", outline="black")
-    text = "Maps"
-    bbox = measure.textbbox((0,0), text, font=row_font)
-    w = bbox[2] - bbox[0]; h = bbox[3] - bbox[1]
-    draw.text((mid_x + (cell_w - w)/2, header_row_y + (row_h - h)/2), text, font=row_font, fill="black")
-    
-    # Team B header
-    right_x = grid_x0 + 2 * cell_w
-    draw.rectangle([right_x, header_row_y, right_x + cell_w, header_row_y + row_h], fill="lightgray", outline="black")
-    text = team_b_name or "Team B"
-    bbox = measure.textbbox((0,0), text, font=row_font)
-    w = bbox[2] - bbox[0]; h = bbox[3] - bbox[1]
-    draw.text((right_x + (cell_w - w)/2, header_row_y + (row_h - h)/2), text, font=row_font, fill="black")
-    
-    # Adjust grid start below header row
-    grid_y0 = header_row_y + row_h
-    half_w = cell_w // 2
-    for i, m in enumerate(maps):
-        name = m["name"]
-        y0 = grid_y0 + i * row_h
-        
-        # Left team (Team A) Allied cell
-        x0 = grid_x0
-        x1 = x0 + half_w
-        ta = bans[name]["team_a"]
-        
-        if "Allied" in ta["manual"]:
-            color = "red"
-        elif "Allied" in ta["auto"]:
-            color = "orange"
-        else:
-            color = "white"
-        
-        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
-        text = "Allies"
-        bbox = measure.textbbox((0,0), text, font=row_font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
-        
-        # Left team (Team A) Axis cell
-        x0 = grid_x0 + half_w
-        x1 = grid_x0 + cell_w
-        
-        if "Axis" in ta["manual"]:
-            color = "red"
-        elif "Axis" in ta["auto"]:
-            color = "orange"
-        else:
-            color = "white"
-        
-        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
-        text = "Axis"
-        bbox = measure.textbbox((0,0), text, font=row_font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
-        
-        # Center map name cell
-        x0 = grid_x0 + cell_w
-        x1 = x0 + cell_w
-        draw.rectangle([x0, y0, x1, y0 + row_h], fill="white", outline="black")
-        bbox = measure.textbbox((0,0), name, font=row_font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        draw.text((x0 + (cell_w - w)/2, y0 + (row_h - h)/2), name, font=row_font, fill="black")
-        
-        # Right team (Team B) Allied cell
-        x0 = grid_x0 + 2 * cell_w
-        x1 = x0 + half_w
-        tb = bans[name]["team_b"]
-        
-        if "Allied" in tb["manual"]:
-            color = "red"
-        elif "Allied" in tb["auto"]:
-            color = "orange"
-        else:
-            color = "white"
-        
-        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
-        text = "Allies"
-        bbox = measure.textbbox((0,0), text, font=row_font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
-        
-        # Right team (Team B) Axis cell
-        x0 = grid_x0 + 2 * cell_w + half_w
-        x1 = x0 + half_w
-        
-        if "Axis" in tb["manual"]:
-            color = "red"
-        elif "Axis" in tb["auto"]:
-            color = "orange"
-        else:
-            color = "white"
-
-        draw.rectangle([x0, y0, x1, y0 + row_h], fill=color, outline="black")
-        text = "Axis"
-        bbox = measure.textbbox((0,0), text, font=row_font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        draw.text((x0 + (half_w - w)/2, y0 + (row_h - h)/2), text, font=row_font, fill="black")
-
-
-    # — Return PIL Image —
-    return img
-    
-def create_ban_image_bytes(
-    maps, bans
-) -> BytesIO:
-    # 1) Build your PIL Image exactly as before, but don’t save it to a file:
-    img = create_ban_status_image(maps, bans)
-
-    # 2) Dump it into a BytesIO buffer
-    buf = BytesIO()
-    img.save(buf, format="PNG", optimize=True)
-    buf.seek(0)
-    return buf
-
 async def load_teammap() -> dict:
     with open("teammap.json") as f:
         return json.load(f)
@@ -515,3 +341,134 @@ async def side_autocomplete(interaction, current: str) -> List[Choice[str]]:
         for s in open_sides
         if current.lower() in s.lower()
     ][:25]
+    
+def create_combo_grid_image(
+    maps: List[str],
+    state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
+    team_names: Tuple[str, str] = ("Team A", "Team B")
+) -> Image.Image:
+    team_keys = ["team_a", "team_b"]
+    sides     = ["Allied", "Axis"]
+    cell_w    = 150
+    map_w     = 300
+    cell_h    = 40
+    header_h  = 50
+    group_h   = 30
+    margin    = 10
+
+    # Canvas size
+    width  = margin*2 + cell_w*2 + map_w + cell_w*2
+    height = margin*2 + group_h + header_h + len(maps)*cell_h
+
+    img  = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.load_default()
+
+    # ─── Group header ─────────────────────────────────────────────
+    x = margin
+    for idx, team in enumerate(team_names):
+        span_w = cell_w*2
+        draw.rectangle([x, margin, x+span_w, margin+group_h], fill="#cccccc", outline="black")
+        w, h = draw.textsize(team, font=font)
+        draw.text((x+(span_w-w)/2, margin+(group_h-h)/2), team, fill="black", font=font)
+        x += span_w + (map_w if idx == 0 else 0)
+
+    # Maps group header
+    draw.rectangle(
+        [margin + cell_w*2, margin, margin + cell_w*2 + map_w, margin + group_h],
+        fill="#cccccc", outline="black"
+    )
+    w, h = draw.textsize("Maps", font=font)
+    draw.text(
+        (margin + cell_w*2 + (map_w-w)/2, margin + (group_h-h)/2),
+        "Maps", fill="black", font=font
+    )
+
+    # ─── Sub-headers ───────────────────────────────────────────────
+    y0 = margin + group_h
+    x  = margin
+    for _ in team_keys:
+        for side in sides:
+            draw.rectangle([x, y0, x+cell_w, y0+header_h], fill="#e0e0e0", outline="black")
+            w, h = draw.textsize(side, font=font)
+            draw.text((x+(cell_w-w)/2, y0+(header_h-h)/2), side, fill="black", font=font)
+            x += cell_w
+        x += map_w
+    # Maps sub-header
+    draw.rectangle(
+        [margin + cell_w*2, y0, margin + cell_w*2 + map_w, y0 + header_h],
+        fill="#e0e0e0", outline="black"
+    )
+    w, h = draw.textsize("Maps", font=font)
+    draw.text(
+        (margin + cell_w*2 + (map_w-w)/2, y0 + (header_h-h)/2),
+        "Maps", fill="black", font=font
+    )
+
+    # ─── Rows ──────────────────────────────────────────────────────
+    for i, m in enumerate(maps):
+        y = margin + group_h + header_h + i*cell_h
+        x = margin
+
+        # Fetch ban lists
+        tb_a = state_data.get(m, {}).get("team_a", {"manual": [], "auto": []})
+        tb_b = state_data.get(m, {}).get("team_b", {"manual": [], "auto": []})
+        manual_a, auto_a = tb_a["manual"], tb_a["auto"]
+        manual_b, auto_b = tb_b["manual"], tb_b["auto"]
+
+        # Team A cells
+        for side in sides:
+            if side in manual_a:
+                fill = "#ff0000"
+            elif side in auto_a:
+                fill = "#ffa500"
+            else:
+                fill = "#ffffff"
+            draw.rectangle([x, y, x+cell_w, y+cell_h], fill=fill, outline="black")
+            w, h = draw.textsize(side, font=font)
+            draw.text((x+(cell_w-w)/2, y+(cell_h-h)/2), side, fill="black", font=font)
+            x += cell_w
+
+        # Map name cell
+        draw.rectangle([x, y, x+map_w, y+cell_h], fill="#dddddd", outline="black")
+        w, h = draw.textsize(m, font=font)
+        draw.text((x+(map_w-w)/2, y+(cell_h-h)/2), m, fill="black", font=font)
+        x += map_w
+
+        # Team B cells
+        for side in sides:
+            if side in manual_b:
+                fill = "#ff0000"
+            elif side in auto_b:
+                fill = "#ffa500"
+            else:
+                fill = "#ffffff"
+            draw.rectangle([x, y, x+cell_w, y+cell_h], fill=fill, outline="black")
+            w, h = draw.textsize(side, font=font)
+            draw.text((x+(cell_w-w)/2, y+(cell_h-h)/2), side, fill="black", font=font)
+            x += cell_w
+
+    return img
+
+async def send_remaining_maps_embed(
+    interaction: discord.Interaction,
+    maps: List[str],
+    state_data: Dict[str, Dict[str, Dict[str, List[str]]]],
+    team_names: Tuple[str, str] = ("Team A", "Team B")
+):
+    # 1) Create the grid image
+    img = create_combo_grid_image(maps, state_data, team_names)
+
+    # 2) Dump into BytesIO
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    # 3) Build Discord File & Embed
+    file  = discord.File(buf, filename="remaining_maps.png")
+    embed = discord.Embed(title="Remaining Maps")
+    embed.add_field(name="Remaining Maps", value="See chart below:", inline=False)
+    embed.set_image(url="attachment://remaining_maps.png")
+
+    # 4) Send in one call
+    await interaction.response.send_message(embed=embed, file=file)
