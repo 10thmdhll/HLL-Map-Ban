@@ -7,8 +7,8 @@ from helpers import update_host_mode_choice_embed, flip_turn, update_current_tur
 @app_commands.command(name="select_host_mode")
 @app_commands.describe(option="Choose host option: ban or host")
 @app_commands.choices(option=[
-    app_commands.Choice(name="Ban Mode - You pick the Double or Final ban setting.  Other team will pick host.", value="ban"),
-    app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Double or Final ban setting.", value="host"),
+    app_commands.Choice(name="Ban Mode - You pick the Double or Final ban setting.  Other team will pick host.", value="Ban"),
+    app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Double or Final ban setting.", value="Host"),
 ])
 async def select_host_mode(interaction: discord.Interaction, option: str):
     """Select hosting choice after coin flip."""
@@ -18,7 +18,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("Host")
-    if (choice_data == "host" or choice_data == "ban"):
+    if (choice_data == "Host" or choice_data == "Ban"):
         # if it’s a dict, pull out the field; if it’s just a string, use it directly
         if isinstance(choice_data, dict):
             prev = choice_data.get("chosen_option")
@@ -51,7 +51,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         "timestamp": datetime.datetime.utcnow().isoformat() + 'Z'
     }
     # Determine host_role or ban_mode field
-    if option == "host":
+    if option == "Host":
         ongoing["host_role"] = interaction.user.id
     else:
         ongoing["ban_mode"] = option
@@ -66,4 +66,5 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
         
     embed_msg_id = ongoing.get("embed_message_id")        
-    await interaction.response.send_message(f"Option '{option}' recorded.")
+    await interaction.response.send_message(f"Option '{option}' recorded.",
+                ephemeral=True)

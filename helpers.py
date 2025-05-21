@@ -89,9 +89,9 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
         else role_mentions[0]
         )
     
-    if new_choice == "host":
+    if new_choice == "Host":
         new_host = ct_role
-    if new_choice == "ban":
+    if new_choice == "Ban":
         new_host = other_mention
             
     if field_index is None:
@@ -117,7 +117,7 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
     
-    if new_choice == "host":
+    if new_choice == "Host":
         msg = await channel.fetch_message(message_id)
         new_turn = await flip_turn(channel.id)
         await update_current_turn_embed(channel, message_id, new_turn)
@@ -162,7 +162,7 @@ async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id:
     if next_step_index is None:
         embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
-        new_val2 = "Current turn role: map_ban"
+        new_val2 = "Current turn role: ban_map"
         embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
 
     # 5) Push the edit back to Discord
