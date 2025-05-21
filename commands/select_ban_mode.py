@@ -18,7 +18,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("Ban Mode")
-    if (choice_data != None):
+    if (choice_data is not None):
         # if it’s a dict, pull out the field; if it’s just a string, use it directly
         if isinstance(choice_data, dict):
             prev = choice_data.get("chosen_option")
