@@ -550,28 +550,11 @@ async def send_remaining_maps_embed(
             state_data.pop("embed_message_id", None)
             await state.save_state(channel.id)
             
-    # 2) If we don't have a status_msg, rebuild & send it
-    if status_msg is None:
-        # Reconstruct the embed from state_data
-        embed = discord.Embed(title="Match Status", color=discord.Color.blue())
-        # (fill in all your fields from state_data here, exactly like in match_create)
-        teams = state_data["teams"]
-        embed.add_field(
-            name="Teams",
-            value=f"<@&{teams[0]}> vs <@&{teams[1]}>",
-            inline=True
-        )
-        # … add Scheduled Time, Coin Flip, Host, etc. …
-        status_msg = await channel.send(embed=embed)
-        state_data["embed_message_id"] = status_msg.id
-        await state.save_state(channel.id)
-            
-    grid_msg_id = state_data.get("grid_msg_id")
-
-    # ─── Delete the old grid message ───────────────────────────────
-    if grid_msg_id:
+    # 2) Delete the old grid message if any
+    old_id = state_data.get("grid_msg_id")
+    if old_id:
         try:
-            old = await channel.fetch_message(grid_msg_id)
+            old = await channel.fetch_message(old_id)
             await old.delete()
         except discord.NotFound:
             pass
@@ -582,12 +565,8 @@ async def send_remaining_maps_embed(
     img.save(buf, format="PNG")
     buf.seek(0)
 
-    # ─── Prepare Discord file & update main embed ─────────────────
     filename = f"remaining_maps_{uuid.uuid4().hex}.png"
     file     = discord.File(buf, filename=filename)
-
-    status_msg = await get_or_create_status_msg(channel, state_data)
-    embed      = status_msg.embeds[0]
 
     # ensure the “Remaining Maps” field exists (or update it)
     idx = next((i for i,f in enumerate(embed.fields)
@@ -599,10 +578,8 @@ async def send_remaining_maps_embed(
 
     # point the embed’s image at our new attachment
     embed.set_image(url=f"attachment://{filename}")
-
+    await status_msg.edit(embed=embed)
     # ─── Finally send one new grid message ─────────────────────────
-    grid_msg = await status_msg.edit(embed=embed, file=file)
-
-    # ─── Persist its ID so next time we delete & replace ───────────
+    grid_msg = await channel.send(embed=embed, file=file)
     state_data["grid_msg_id"] = grid_msg.id
     await state.save_state(channel.id)
