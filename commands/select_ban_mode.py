@@ -19,17 +19,8 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("Ban Mode")
     if (choice_data is not None):
-        # if it’s a dict, pull out the field; if it’s just a string, use it directly
-        if isinstance(choice_data, dict):
-            prev = choice_data.get("chosen_option")
-        else:
-            prev = choice_data
-
-        if prev:
-            return await interaction.response.send_message(
-                f"❌ Ban mode is already set to **{prev}**.",
-                ephemeral=True
-            )
+        await interaction.response.send_message(f"❌ Ban mode is already set to **{prev}**.",ephemeral=True)
+        return
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
     team_roles = ongoing["teams"]  # [role_a_id, role_b_id]
