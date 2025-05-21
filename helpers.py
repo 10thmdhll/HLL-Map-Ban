@@ -1,15 +1,14 @@
 from datetime import datetime
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 import state
 import discord
-from discord import app_commands
+from discord import app_commands, TextChannel
 from discord.app_commands import Choice
 from io import BytesIO
 import config
 import json
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-from discord import TextChannel, app_commands
 
 def format_timestamp(ts: str) -> str:
     from datetime import datetime
