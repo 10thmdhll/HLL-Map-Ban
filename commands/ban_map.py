@@ -98,7 +98,7 @@ async def ban_map(
             f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
         )
     
-    if len(rem) <= 4:
+    if len(rem) <= 3:
         await interaction.followup.send("Ban Phase Complete")
         return
         
