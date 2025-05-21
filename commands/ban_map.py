@@ -109,7 +109,7 @@ async def ban_map(
 
         if not msg.embeds:
             raise RuntimeError("No embed found on that message")
-        print(rem)
+        print({rem[0][0][0]})
         if ongoing["finalbanpost"] == False:
             # 2) Update only the “Next Step” field
             embed = msg.embeds[0]
@@ -122,7 +122,7 @@ async def ban_map(
                         if f.name == "Remaining Maps"), None)
             label2 = "Final Map"
             
-            value2 = f"{guild.get_role(team_ids[0]).name}: SIDE1   |   {guild.get_role(team_ids[1]).name}: SIDE2"
+            value2 = f"{guild.get_role(team_ids[0]).name}: {rem[0][0][0]}   |   {guild.get_role(team_ids[1]).name}: {rem[1][0][0]}"
             if idx is None:
                 embed.add_field(name=label, value=value, inline=False)
             else:
