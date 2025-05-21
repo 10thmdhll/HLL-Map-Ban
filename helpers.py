@@ -494,4 +494,4 @@ async def send_remaining_maps_embed(
     embed.set_image(url=f"attachment://{fname}")
 
     # 4) Send in one call
-    await interaction.response.send_message(embed=embed, file=file)
+    await interaction.followup.send(embed=embed, file=file)
