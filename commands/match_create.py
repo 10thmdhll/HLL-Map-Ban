@@ -49,7 +49,7 @@ async def match_create(
         "ban_mode": None,
         "bans": [],
         "scheduled_time": "TBD",
-        "casters": None},
+        "casters": None,
         "embed_message_id": None,
         "firstban": True,
         "finalbanpost": False
