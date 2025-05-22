@@ -25,12 +25,11 @@ async def match_create(
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
-    
     # Metadata
     ongoing["match_id"] = str(uuid.uuid4())
     ongoing["created_at"] = datetime.utcnow().isoformat() + 'Z'
     ongoing["teams"] = [role_a.id, role_b.id]
-
+    
     # Coin flip
     chooser = role_a if uuid.uuid4().int % 2 == 0 else role_b
     loser = role_b if chooser == role_a else role_a
