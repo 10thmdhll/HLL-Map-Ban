@@ -16,7 +16,7 @@ from helpers import (
     load_maplist
 )
 
-@app_commands.command(name="ban_map")
+@app_commands.command(name="ban_map",description="Ban a map and side combination")
 #@discord.app_commands.checks.cooldown(1, 3.0)
 @app_commands.describe(
     map_name="Map to ban",
@@ -99,7 +99,6 @@ async def ban_map(
         )
     
     if len(rem) <= 3:
-        await interaction.followup.send("🚩 Ban phase complete.", ephemeral=True)
         
         # load the original status embed
         embed_id = ongoing.get("embed_message_id")
@@ -158,7 +157,7 @@ async def ban_map(
             ongoing["finalbanpost"] = True
             await state.save_state(channel_id)
         else:
-            await interaction.followup.send("🚩 Ban phase already completed.", ephemeral=True)
+            await interaction.followup.send("🚩 Ban phase completed.", ephemeral=True)
             
         return
         

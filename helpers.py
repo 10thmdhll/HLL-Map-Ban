@@ -238,11 +238,6 @@ async def update_current_turn_embed(
     message_id: int,
     new_turn_index: int
 ) -> None:
-    """
-    Fetch the existing status embed by message_id, find the 'Current Turn' field,
-    and update it to point to the correct team role mention.
-    """
-    # Load the latest state to resolve which role ID corresponds to this turn
     await state.load_state(channel.id)
     ongoing = state.ongoing_events[channel.id]
     teams = ongoing.get("teams", [])
@@ -330,11 +325,9 @@ async def load_teammap() -> dict:
     with open("teammap.json") as f:
         return json.load(f)
 
-MAPLIST_FILE = Path(__file__).parent / "maplist.json"
 async def load_maplist() -> list[dict]:
-    with open(MAPLIST_FILE) as f:
+    with open("maplist.json") as f:
         return json.load(f)["maps"]
-
 
 async def map_autocomplete(interaction, current: str) -> list[Choice[str]]:
     combos = remaining_combos(interaction.channel.id)

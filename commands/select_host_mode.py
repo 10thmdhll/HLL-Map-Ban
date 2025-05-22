@@ -7,7 +7,7 @@ from helpers import update_host_mode_choice_embed, flip_turn, update_current_tur
 @app_commands.command(name="select_host_mode")
 @app_commands.describe(option="Choose host option: ban or host")
 @app_commands.choices(option=[
-    app_commands.Choice(name="Ban Mode - You pick the Double or Final ban setting.  Other team will pick host.", value="Ban"),
+    app_commands.Choice(name="Ban Mode - You pick the Double or Final ban setting.  Other team will host.", value="Ban"),
     app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Double or Final ban setting.", value="Host"),
 ])
 async def select_host_mode(interaction: discord.Interaction, option: str):
@@ -15,7 +15,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
-    choice_data = ongoing.get("Host")
+    choice_data = ongoing.get("host_role")
 
     if (choice_data != "TBD"):
         await interaction.response.send_message(f"❌ Host mode is already set.",ephemeral=True)
@@ -35,7 +35,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
             ephemeral=True
         )
 
-    ongoing["host_or_mode_choice"] = {
+    ongoing["host_or_ban_choice"] = {
         "chosen_option": option,
         "chosen_by": interaction.user.id,
         "timestamp": datetime.datetime.utcnow().isoformat() + 'Z'
@@ -48,8 +48,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
     
     await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)
-    ongoing["Host"] = "Chosen"
-        
+            
     embed_msg_id = ongoing.get("embed_message_id")        
     await interaction.response.send_message(f"Option '{option}' recorded.",
                 ephemeral=True)

@@ -44,16 +44,14 @@ async def match_create(
     ongoing.update({"update_history": f"Coinflip winner: <@&{chooser.id}>"})
     # Initialize other fields
     ongoing.update({
-        "host_or_mode_choice": None,
+        "host_or_ban_choice": None,
         "host_role": None,
         "ban_mode": None,
         "bans": [],
-        "firstban": True,
         "scheduled_time": "TBD",
-        "casters": {"team_a": None, "team_b": None},
-        "additional_casters": [],
-        "predictions_poll": None,
+        "casters": None},
         "embed_message_id": None,
+        "firstban": True,
         "finalbanpost": False
     })
 
@@ -119,12 +117,12 @@ async def match_create(
     decision = "TBD"
     if region_a in host_rules:
         decision = host_rules[region_a].get(region_b, "TBD")
-    ongoing["host_or_mode_choice"] = decision
+    ongoing["host_or_ban_choice"] = decision
     
     if decision == "Ban":
-        ongoing["Host"] = "Middle Ground Rules"
+        ongoing["host_role"] = "Middle Ground Rules"
     else:
-        ongoing["Host"] = "TBD"
+        ongoing["host_role"] = "TBD"
         
     
 
@@ -135,7 +133,7 @@ async def match_create(
     embed.add_field(name="Coin Flip Winner",value=f"<@&{chooser.id}>",inline=True)
     embed.add_field(name="Host Mode Rules",value=f"{decision}",inline=False)
     embed.add_field(name="Ban Mode", value="TBD", inline=True)
-    embed.add_field(name="Host", value=ongoing["Host"], inline=True)
+    embed.add_field(name="Host", value=ongoing["host_role"], inline=True)
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
     embed.add_field(name="Update History:", value=ongoing["update_history"],inline=False)
