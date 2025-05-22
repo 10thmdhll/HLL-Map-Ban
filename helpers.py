@@ -207,6 +207,34 @@ async def update_mt_embed(channel: discord.TextChannel, message_id: int, time: s
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
     
+async def update_casters_embed(
+    channel: TextChannel,
+    message_id: int,
+    caster_ids: List[int]
+) -> None:
+    # 1) Fetch the original status embed
+    msg = await channel.fetch_message(message_id)
+    if not msg.embeds:
+        raise RuntimeError("No embed found on that message")
+    embed = msg.embeds[0]
+
+    # 2) Build the field value
+    if caster_ids:
+        # mention each user
+        mentions = " ".join(f"<@{uid}>" for uid in caster_ids)
+    else:
+        mentions = "_None_"
+
+    # 3) Find or insert the Casters field
+    idx = next((i for i, f in enumerate(embed.fields) if f.name == "Casters"), None)
+    if idx is None:
+        embed.add_field(name="Casters", value=mentions, inline=False)
+    else:
+        embed.set_field_at(idx, name="Casters", value=mentions, inline=False)
+
+    # 4) Push it back to Discord
+    await msg.edit(embed=embed)
+
 async def flip_turn(channel_id: int) -> int:
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
