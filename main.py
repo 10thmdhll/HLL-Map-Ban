@@ -10,6 +10,8 @@ import commands.select_ban_mode
 import commands.ban_map
 import commands.match_time
 import commands.cleanup_match
+import commands.caster_add
+import commands.caster_remove
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -23,6 +25,8 @@ from commands.select_ban_mode import select_ban_mode
 from commands.ban_map import ban_map
 from commands.match_time import match_time
 from commands.cleanup_match import cleanup_match
+from commands.caster_add import caster_add
+from commands.caster_remove import caster_remove
 
 tree.add_command(match_create)
 tree.add_command(select_host_mode)
@@ -30,6 +34,8 @@ tree.add_command(select_ban_mode)
 tree.add_command(ban_map)
 tree.add_command(match_time)
 tree.add_command(cleanup_match)
+tree.add_command(caster_add)
+tree.add_command(caster_remove)
         
 @bot.event
 async def on_ready():
