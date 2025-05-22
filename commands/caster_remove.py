@@ -19,7 +19,7 @@ async def caster_remove(
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
-
+    casters = ongoing.setdefault("casters", [])
     casters = ongoing.get("casters", [])
     if member.id not in casters:
         return await interaction.response.send_message(

@@ -19,8 +19,8 @@ async def caster_add(
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
-
     casters = ongoing.setdefault("casters", [])
+    casters = ongoing.get("casters", [])
     if member.id in casters:
         return await interaction.response.send_message(
             f"❌ {member.mention} is already in the casters list.",
