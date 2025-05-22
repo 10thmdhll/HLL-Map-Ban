@@ -46,6 +46,8 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
         new_turn = await flip_turn(channel_id)
         embed_msg_id = ongoing.get("embed_message_id")
         await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
+        await state.save_state(channel_id)
+        
     
     await state.save_state(channel_id)
     await interaction.response.send_message(f"✅ Option '{option}' recorded.", ephemeral=True)
