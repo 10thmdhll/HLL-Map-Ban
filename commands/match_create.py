@@ -38,8 +38,16 @@ async def match_create(
         "loser": loser.id,
         "timestamp": datetime.utcnow().isoformat() + 'Z'
     }
-
-    ongoing.update({"current_turn_index": chooser.id})
+    ct = 0
+    teams = ongoing["teams"]
+    print(f"chooser:{chooser}")
+    print(teams)
+    
+    if chooser == teams[1]
+        ct = 1
+    
+    print(f"ct:{ct}")
+    ongoing.update({"current_turn_index": ct})
     ongoing.update({"update_history": f"Coinflip winner: <@&{chooser.id}>"})
     # Initialize other fields
     ongoing.update({
