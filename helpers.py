@@ -240,7 +240,6 @@ async def flip_turn(channel_id: int) -> int:
 
     current = ongoing.get("current_turn_index", 0)
     new_turn = (current + 1) % len(teams)
-
     ongoing["current_turn_index"] = new_turn
 
     # ─── Safely append to update_history ─────────────────────────────────
