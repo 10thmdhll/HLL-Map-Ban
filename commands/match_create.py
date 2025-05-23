@@ -40,10 +40,10 @@ async def match_create(
     }
     ct = 0
     teams = ongoing["teams"]
-    print(f"chooser:{chooser}")
+    print(f"chooser:{chooser.id}")
     print(teams)
     
-    if chooser == teams[1]:
+    if chooser.id == teams[1]:
         ct = 1
     
     print(f"ct:{ct}")
