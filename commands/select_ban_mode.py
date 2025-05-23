@@ -23,13 +23,14 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
         return
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
-    team_roles = ongoing["teams"]  # [role_a_id, role_b_id]
-    # even turns → team A, odd turns → team B
-    expected_role_id = team_roles[0] if turn_idx % 2 == 0 else team_roles[1]
+    team_roles = ongoing["teams"]
+    other_idx = team_roles[0]
+    if turn_idx == team_roles[0]:
+        other_idx = team_roles[1]
 
     # Check if the invoking user has that role
-    if expected_role_id not in [r.id for r in interaction.user.roles]:
-        role_mention = f"<@&{expected_role_id}>"
+    if turn_idx not in [r.id for r in interaction.user.roles]:
+        role_mention = f"<@&{turn_idx}>"
         return await interaction.response.send_message(
             f"❌ It’s {role_mention}’s turn, you can’t do that right now.",
             ephemeral=True
