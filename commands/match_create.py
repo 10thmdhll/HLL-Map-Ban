@@ -53,9 +53,8 @@ async def match_create(
         "firstban": True,
         "finalbanpost": False
     })
-
-    await state.save_state(channel_id)
-
+    state.save_state(channel_id)
+    
     # Load maps
     base_dir = pathlib.Path(__file__).parent.parent
     maplist_path = base_dir / "maplist.json"
@@ -81,7 +80,6 @@ async def match_create(
             {"team_a": {"manual": [], "auto": []},
              "team_b": {"manual": [], "auto": []}}
         )
-    await state.save_state(channel_id)
 
     # Load regions
     teammap_path = base_dir / "teammap.json"
@@ -123,8 +121,6 @@ async def match_create(
     else:
         ongoing["host_role"] = "TBD"
         
-    
-
     # Build and send embed
     embed = discord.Embed(title="Match Status", color=discord.Color.blue())
     embed.add_field(name="Teams",value=f"<@&{role_a.id}> vs <@&{role_b.id}>",inline=True)
@@ -136,7 +132,7 @@ async def match_create(
     embed.add_field(name="Scheduled Time",value=ongoing["scheduled_time"],inline=False)
     embed.add_field(name="Casters", value="TBD", inline=False)
     embed.add_field(name="Update History:", value=ongoing["update_history"],inline=False)
-    embed.add_field(name="Current Turn:",value=f"<@&{ongoing["current_turn_index"]}>",inline=False)
+    embed.add_field(name="Current Turn:",value=f"<@&{chooser.id}>",inline=False)
     if decision == "Ban":
         embed.add_field(name="Next Step:",value=f"<@&{chooser.id}>: select_ban_mode" ,inline=False)
     else:
