@@ -28,8 +28,8 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     if turn_idx == team_roles[0]:
         other_idx = team_roles[1]
         
-    print(f"turn_idx:{turn_idx}")
-    print(f"other_idx:{other_idx}")
+    #print(f"turn_idx:{turn_idx}")
+    #print(f"other_idx:{other_idx}")
 
     # Check if the invoking user has that role
     if turn_idx not in [r.id for r in interaction.user.roles]:
