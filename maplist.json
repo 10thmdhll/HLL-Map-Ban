@@ -9,102 +9,6 @@
 				"Axis": "Available"
 			}
 		},
-		{
-			"name": "Driel – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "El Alamein – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-		{
-			"name": "Elsenborn – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "Foy – Night",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "Hill 400 – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-		{
-			"name": "Hurtgen – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "Kharkov – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-		{
-			"name": "Kursk – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "Mortain – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-		{
-			"name": "Omaha Beach – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "PHL – Night",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-		{
-			"name": "Remagen – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
 	    {
 			"name": "SMDM – Day",
 			"options": 
@@ -115,22 +19,6 @@
 		},
 		{
 			"name": "SME – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "Stalingrad – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
-	    {
-			"name": "Tobruk – Day",
 			"options": 
 			{
 				"Allied": "Available",
