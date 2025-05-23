@@ -53,7 +53,7 @@ async def match_create(
         "firstban": True,
         "finalbanpost": False
     })
-    state.save_state(channel_id)
+    await state.save_state(channel_id)
     
     # Load maps
     base_dir = pathlib.Path(__file__).parent.parent
