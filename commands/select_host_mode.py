@@ -51,13 +51,14 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     
     if option == "Host":
         ongoing["host_role"] = interaction.user.id
-        await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)  
+        await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option) 
+        await state.save_state(channel_id)
+        new_turn = await flip_turn(channel_id)
+        await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn) 
         await state.save_state(channel_id)
     
     else:   
-        await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)  
-        new_turn = await flip_turn(channel_id)
-        await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)        
+        await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)         
         await state.save_state(channel_id)
     
     await interaction.response.send_message(f"Option '{option}' recorded.",ephemeral=True)  
