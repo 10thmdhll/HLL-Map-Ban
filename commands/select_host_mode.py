@@ -25,7 +25,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     turn_idx = ongoing["current_turn_index"] 
     team_roles = ongoing["teams"]
     other_idx = team_roles[0]
-    if turn_idx = team_roles[0]:
+    if turn_idx == team_roles[0]:
         other_idx = team_roles[1]
         
     print(f"turn_idx:{turn_idx})
