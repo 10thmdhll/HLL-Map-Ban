@@ -7,8 +7,8 @@ from helpers import update_host_mode_choice_embed, flip_turn, update_current_tur
 @app_commands.command(name="select_host_mode")
 @app_commands.describe(option="Choose host option: ban or host")
 @app_commands.choices(option=[
-    app_commands.Choice(name="Ban Mode - You pick the Double or Final ban setting.  Other team will host.", value="Ban"),
-    app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Double or Final ban setting.", value="Host"),
+    app_commands.Choice(name="Ban Mode - You pick the Final ban.  Other team will host.", value="Ban"),
+    app_commands.Choice(name="Host Match - You pick the Server Location.  Other team will pick the Final ban.", value="Host"),
 ])
 async def select_host_mode(interaction: discord.Interaction, option: str):
     """Select hosting choice after coin flip."""
