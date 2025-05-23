@@ -22,7 +22,14 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         return
     
     # Determine whose turn it is
-    turn_idx = ongoing["current_turn_index"]   
+    turn_idx = ongoing["current_turn_index"] 
+    team_roles = ongoing["teams"]
+    other_idx = team_roles[0]
+    if turn_idx = team_roles[0]:
+        other_idx = team_roles[1]
+        
+    print(f"turn_idx:{turn_idx})
+    print(f"other_idx:{other_idx})
 
     # Check if the invoking user has that role
     if turn_idx not in [r.id for r in interaction.user.roles]:
@@ -36,17 +43,23 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         "timestamp": datetime.datetime.utcnow().isoformat() + 'Z'
     }
     # Determine host_role or ban_mode field
-    if option == "Host":
-        ongoing["host_role"] = interaction.user.id
-        new_turn = await flip_turn(channel_id)
-        embed_msg_id = ongoing.get("embed_message_id")
-        await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
-        await state.save_state(channel_id)
-    
-    embed_msg_id = ongoing.get("embed_message_id")    
     ongoing["ban_mode"] = "Final"
     ongoing["firstban"] = False
     await update_ban_mode_choice_embed(interaction.channel, embed_msg_id, "Final")
-    await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)        
-    await interaction.response.send_message(f"Option '{option}' recorded.",ephemeral=True)                
     await state.save_state(channel_id)
+    
+    if option == "Host":
+        ongoing["host_role"] = interaction.user.id
+        embed_msg_id = ongoing.get("embed_message_id")
+        await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)  
+        
+        new_turn = await flip_turn(channel_id)
+        await update_current_turn_embed(interaction.channel, embed_msg_id, new_turn)
+        await state.save_state(channel_id)
+    
+    else:
+        embed_msg_id = ongoing.get("embed_message_id")       
+        await update_host_mode_choice_embed(interaction.channel,ongoing["embed_message_id"],option)                    
+        await state.save_state(channel_id)
+    
+    await interaction.response.send_message(f"Option '{option}' recorded.",ephemeral=True)  
