@@ -111,16 +111,11 @@ async def update_host_mode_choice_embed(channel: discord.TextChannel, message_id
     if next_step_index is None:
         embed.add_field(name="Next Step:",value=f"{ct_role} choice: {new_choice}",inline=False)
     else:
-        new_val2 = "Current turn role: select_ban_mode"
+        new_val2 = "Current turn role: ban_map"
         embed.set_field_at(next_step_index,name="Next Step:",value=new_val2,inline=False)
 
     # 5) Push the edit back to Discord
     await msg.edit(embed=embed)
-    
-    if new_choice == "Host":
-        msg = await channel.fetch_message(message_id)
-        new_turn = await flip_turn(channel.id)
-        await update_current_turn_embed(channel, message_id, new_turn)
     
 async def update_ban_mode_choice_embed(channel: discord.TextChannel, message_id: int, new_choice: str):
     # 1) Fetch the bot’s original embed message
@@ -266,7 +261,6 @@ async def update_current_turn_embed(
     message_id: int,
     new_turn_index: int
 ) -> None:
-    await state.load_state(channel.id)
     ongoing = state.ongoing_events[channel.id]
     teams = ongoing.get("teams", [])
     if new_turn_index >= len(teams):
@@ -561,24 +555,6 @@ async def send_remaining_maps_embed(
 ):
     status_msg = await get_or_create_status_msg(channel, state_data)
     embed    = status_msg.embeds[0]
-    
-    # 1) Try to fetch the existing embed
-    if embed:
-        try:
-            status_msg = await get_or_create_status_msg(channel, state_data)
-        except discord.NotFound:
-            # it was deleted: clear out the old reference so we know to rebuild
-            state_data.pop("embed_message_id", None)
-            await state.save_state(channel.id)
-            
-    # 2) Delete the old grid message if any
-    old_id = state_data.get("grid_msg_id")
-    if old_id:
-        try:
-            old = await channel.fetch_message(old_id)
-            await old.delete()
-        except discord.NotFound:
-            pass
 
     # ─── Build fresh PIL image ─────────────────────────────────────
     img = create_combo_grid_image(maps, state_data, team_names)
@@ -601,6 +577,6 @@ async def send_remaining_maps_embed(
     embed.set_image(url=f"attachment://{filename}")
     await status_msg.edit(embed=embed)
     # ─── Finally send one new grid message ─────────────────────────
-    grid_msg = await channel.send(embed=embed, file=file,delete_after=30)
+    grid_msg = await channel.send(embed=embed, file=file)
     state_data["grid_msg_id"] = grid_msg.id
     await state.save_state(channel.id)
