@@ -43,7 +43,7 @@ async def match_create(
     print(f"chooser:{chooser}")
     print(teams)
     
-    if chooser == teams[1]
+    if chooser == teams[1]:
         ct = 1
     
     print(f"ct:{ct}")
