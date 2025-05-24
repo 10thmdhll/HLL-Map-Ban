@@ -24,7 +24,7 @@ async def match_create(interaction: discord.Interaction,role_a: discord.Role,rol
     ongoing["teams"] = [role_a.id, role_b.id]
     
     # Coin flip
-    chooser=random(role_a,role_b)
+    chooser = choice((role_a, role_b))
     #chooser = role_a if uuid.uuid4().int % 2 == 0 else role_b
     loser = role_b if chooser == role_a else role_a
     ongoing["coin_flip"] = {
