@@ -13,4 +13,4 @@ async def cleanup_match(interaction: discord.Interaction):
         os.remove(state._state_file(channel_id))
     except FileNotFoundError:
         pass
-    await interaction.response.send_message("Match state cleaned up.")
+    await interaction.response.send_message("Match state cleaned up.",delete_after=15)
