@@ -217,7 +217,7 @@ async def update_casters_embed(
     # 2) Build the field value
     if caster_ids:
         # mention each user
-        mentions = " ".join(f"<@{uid}>" for uid in caster_ids)
+        mentions = " ".join(f"{uid}" for uid in caster_ids)
     else:
         mentions = "_None_"
 
