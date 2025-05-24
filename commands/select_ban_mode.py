@@ -25,14 +25,12 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     turn_idx = ongoing["current_turn_index"]
     team_roles = ongoing["teams"]
     turn_id = team_roles[turn_idx]
-    print(turn_id)
-    print([r.id for r in interaction.user.roles])
     other_idx = team_roles[0]
     if turn_idx == team_roles[0]:
         other_idx = team_roles[1]
 
     # Check if the invoking user has that role
-    if f"<@&{turn_id}>" not in [r.id for r in interaction.user.roles]:
+    if turn_id not in [r.id for r in interaction.user.roles]:
         await interaction.response.send_message(f"❌ You can’t do that right now.",ephemeral=True,delete_after=15)
         return
         

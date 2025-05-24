@@ -27,12 +27,9 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     other_idx = team_roles[0]
     if turn_idx == team_roles[0]:
         other_idx = team_roles[1]
-        
-    #print(f"turn_idx:{turn_idx}")
-    #print(f"other_idx:{other_idx}")
 
     # Check if the invoking user has that role
-    if f"<@&{turn_id}>" not in [r.id for r in interaction.user.roles]:
+    if turn_id not in [r.id for r in interaction.user.roles]:
         await interaction.response.send_message(f"❌ You can’t do that right now.",ephemeral=True,delete_after=15)
         return
 
