@@ -23,6 +23,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"] 
     team_roles = ongoing["teams"]
+    turn_id = team_roles[turn_idx]
     other_idx = team_roles[0]
     if turn_idx == team_roles[0]:
         other_idx = team_roles[1]
@@ -31,9 +32,8 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
     #print(f"other_idx:{other_idx}")
 
     # Check if the invoking user has that role
-    if turn_idx not in [r.id for r in interaction.user.roles]:
-        role_mention = f"<@&{turn_idx}>"
-        await interaction.response.send_message(f"❌ It’s {role_mention}’s turn, you can’t do that right now.",ephemeral=True,delete_after=15)
+    if f"<@&{turn_id}>" not in [r.id for r in interaction.user.roles]:
+        await interaction.response.send_message(f"❌ You can’t do that right now.",ephemeral=True,delete_after=15)
         return
 
     ongoing["host_or_ban_choice"] = {
