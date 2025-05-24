@@ -576,7 +576,7 @@ async def send_remaining_maps_embed(
     # point the embed’s image at our new attachment
     embed.set_image(url=f"attachment://{filename}")
     await status_msg.edit(embed=embed)
-    # ─── Finally send one new grid message ─────────────────────────
-    grid_msg = await channel.send(embed=embed, file=file)
+    # ─── Finally send one new grid message ─────────────────────────    
+    grid_msg = await channel.send(embed=embed, file=file,delete_after=15)
     state_data["grid_msg_id"] = grid_msg.id
     await state.save_state(channel.id)
