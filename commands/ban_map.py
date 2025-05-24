@@ -150,6 +150,7 @@ async def ban_map(
             await poll.add_reaction("🇧")
             ongoing["finalbanpost"] = True
             await state.save_state(channel_id)
+            await interaction.followup.send("🚩 Match sides confirmed.", ephemeral=False)
         else:
             await interaction.followup.send("🚩 Ban phase completed.", ephemeral=False)
             
