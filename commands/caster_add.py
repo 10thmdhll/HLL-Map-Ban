@@ -18,10 +18,10 @@ async def caster_add(interaction: discord.Interaction,member: str):
     if member in casters:
         return await interaction.response.send_message(f"❌ {member} is already in the casters list.",ephemeral=True,delete_after=15)
 
-    casters.append(member.id)
+    casters.append(member)
     await state.save_state(channel_id)
 
-    await interaction.response.send_message(f"✅ Added {member.mention} to casters.",ephemeral=True,delete_after=15)
+    await interaction.response.send_message(f"✅ Added {member} to casters.",ephemeral=True,delete_after=15)
 
     embed_id = ongoing.get("embed_message_id")
     if embed_id:
