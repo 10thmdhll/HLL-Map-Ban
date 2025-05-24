@@ -26,7 +26,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     team_roles = ongoing["teams"]
     turn_id = team_roles[turn_idx]
     print(turn_id)
-    print(r.id for r in interaction.user.roles)
+    print([r.id for r in interaction.user.roles])
     other_idx = team_roles[0]
     if turn_idx == team_roles[0]:
         other_idx = team_roles[1]
