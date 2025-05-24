@@ -5,7 +5,7 @@ import json
 import discord
 import pathlib
 import logging
-import random
+from random import choice
 from discord import app_commands
 import state
 from helpers import update_host_mode_choice_embed
