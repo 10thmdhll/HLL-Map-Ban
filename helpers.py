@@ -8,6 +8,7 @@ from io import BytesIO
 import config
 import json
 import uuid
+import asyncio
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
@@ -577,6 +578,14 @@ async def send_remaining_maps_embed(
     embed.set_image(url=f"attachment://{filename}")
     await status_msg.edit(embed=embed)
     # ─── Finally send one new grid message ─────────────────────────    
-    grid_msg = await channel.send(embed=embed, file=file, delete_after=15)
+    grid_msg = await channel.send(embed=embed, file=file, wait=True)
+    asyncio.create_task(delete_later(grid_msg, 15))
     state_data["grid_msg_id"] = grid_msg.id
     await state.save_state(channel.id)
+    
+async def delete_later(msg: discord.Message, delay: float):
+    await asyncio.sleep(delay)
+    try:
+        await msg.delete()
+    except discord.NotFound:
+        pass
