@@ -5,23 +5,16 @@ import json
 import discord
 import pathlib
 import logging
+import random
 from discord import app_commands
 import state
 from helpers import update_host_mode_choice_embed
 
 logger = logging.getLogger(__name__)
 
-@app_commands.command(name="match_create")
-@app_commands.describe(
-    role_a="Discord role for Team A",
-    role_b="Discord role for Team B"
-)
-async def match_create(
-    interaction: discord.Interaction,
-    role_a: discord.Role,
-    role_b: discord.Role
-):
-    """Initialize a match, perform a coin flip, and post a status embed."""
+@app_commands.command(name="match_create",description="Create a match between 2 discord roles")
+@app_commands.describe(role_a="Discord role for Team A",role_b="Discord role for Team B")
+async def match_create(interaction: discord.Interaction,role_a: discord.Role,role_b: discord.Role):
     channel_id = interaction.channel.id
     await state.load_state(channel_id)
     ongoing = state.ongoing_events.setdefault(channel_id, {})
@@ -31,7 +24,8 @@ async def match_create(
     ongoing["teams"] = [role_a.id, role_b.id]
     
     # Coin flip
-    chooser = role_a if uuid.uuid4().int % 2 == 0 else role_b
+    chooser=random(role_a,role_b)
+    #chooser = role_a if uuid.uuid4().int % 2 == 0 else role_b
     loser = role_b if chooser == role_a else role_a
     ongoing["coin_flip"] = {
         "winner": chooser.id,
@@ -95,14 +89,12 @@ async def match_create(
             data = json.load(f)
 
         # Build role-name → region map from "team_regions"
-        # File shape: { "team_regions": [ { "name": "3AC", "options": { "region": "NA" } }, … ] }
         for entry in data.get("team_regions", []):
             name = entry["name"]
             region = entry["options"]["region"]
             region_lookup[name] = region
 
         # Build region_pairings lookup
-        # File shape: { "region_pairings": [ { "name": "NA", "options": { "EU": "Host", … } }, … ] }
         for rp in data.get("region_pairings", []):
             src = rp["name"]
             host_rules[src] = rp["options"]
@@ -148,7 +140,4 @@ async def match_create(
     await state.save_state(channel_id)
 
     # Acknowledge privately
-    await interaction.response.send_message(
-        "Match created and status posted.",
-        ephemeral=True
-    )
+    await interaction.response.send_message("Match created and status posted.",ephemeral=True,delete_after=15)

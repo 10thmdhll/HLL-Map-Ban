@@ -1,14 +1,6 @@
 {
 	"maps": 
 	[
-		{	
-			"name": "Carentan – Day",
-			"options": 
-			{
-				"Allied": "Available",
-				"Axis": "Available"
-			}
-		},
 	    {
 			"name": "SMDM – Day",
 			"options": 

@@ -19,7 +19,7 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     # ─── Prevent re-selection ───────────────────────────────────────────
     choice_data = ongoing.get("ban_mode")
     if (choice_data is not None):
-        await interaction.response.send_message(f"❌ Ban mode is already set.",ephemeral=True)
+        await interaction.response.send_message(f"❌ Ban mode is already set.",ephemeral=True,delete_after=15)
         return
     # Determine whose turn it is
     turn_idx = ongoing["current_turn_index"]
@@ -31,10 +31,8 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
     # Check if the invoking user has that role
     if turn_idx not in [r.id for r in interaction.user.roles]:
         role_mention = f"<@&{turn_idx}>"
-        return await interaction.response.send_message(
-            f"❌ It’s {role_mention}’s turn, you can’t do that right now.",
-            ephemeral=True
-        )
+        await interaction.response.send_message(f"❌ It’s {role_mention}’s turn, you can’t do that right now.",ephemeral=True,delete_after=15)
+        return
         
     ongoing["ban_mode"] = {
         "chosen_option": option,
@@ -51,4 +49,4 @@ async def select_ban_mode(interaction: discord.Interaction, option: str):
         
     
     await state.save_state(channel_id)
-    await interaction.response.send_message(f"✅ Option '{option}' recorded.", ephemeral=True)
+    await interaction.response.send_message(f"✅ Option '{option}' recorded.", ephemeral=True,delete_after=15)
