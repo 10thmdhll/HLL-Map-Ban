@@ -43,9 +43,7 @@ async def ban_map(
     expected  = team_roles[0] if team_key == "team_a" else team_roles[1]
     if expected not in [r.id for r in interaction.user.roles]:
         mention = f"<@&{expected}>"
-        return await interaction.followup.send(
-            f"❌ It’s {mention}’s turn, you can’t do that.", ephemeral=True
-        )
+        return await interaction.followup.send(f"❌ It’s {mention}’s turn, you can’t do that.", ephemeral=True)
 
     # ─── Grab (or init) both ban‐trackers ────────────────────────────
     bans = ongoing.setdefault("bans", [])
@@ -61,9 +59,8 @@ async def ban_map(
         # ─── Subsequent bans must be in remaining_combos ────────────────
         rem = remaining_combos(channel_id)
         if (map_name, side) not in [(m, s) for m, _, s in rem]:
-            return await interaction.followup.send(
-                f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
-            )
+            await interaction.followup.send(f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True)
+            return
 
         # ─── Record the ban
         bans.append({"map": map_name, "side": side, "timestamp": ts})
@@ -75,9 +72,7 @@ async def ban_map(
         if opp_side not in tb[other_key]["auto"]:
             tb[other_key]["auto"].append(opp_side)
         await state.save_state(channel_id)    
-        await interaction.followup.send(
-            f"✅ Double ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True
-        )
+        await interaction.followup.send(f"✅ Double ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True)
 
         embed_id = ongoing.get("embed_message_id")
         if embed_id:
@@ -94,9 +89,8 @@ async def ban_map(
     # ─── Subsequent bans must be in remaining_combos ────────────────
     rem = remaining_combos(channel_id)
     if (map_name, side) not in [(m, s) for m, _, s in rem]:
-        return await interaction.followup.send(
-            f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True
-        )
+        await interaction.followup.send(f"❌ Invalid ban: {map_name} {side} isn’t available.", ephemeral=True)
+        return
     
     if len(rem) <= 3:
         
@@ -171,7 +165,7 @@ async def ban_map(
     if opp_side not in tb[other_key]["auto"]:
         tb[other_key]["auto"].append(opp_side)
     await state.save_state(channel_id)    
-    await interaction.followup.send(f"✅ Ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True,delete_after=15)
+    await interaction.followup.send(f"✅ Ban recorded: **{map_name} {side}** at {format_timestamp(ts)}.", ephemeral=True)
 
     embed_id = ongoing.get("embed_message_id")
     if embed_id:
