@@ -21,7 +21,7 @@ async def select_host_mode(interaction: discord.Interaction, option: str):
         return
     
     # Determine whose turn it is
-    turn_idx = ongoing["current_turn_index"] 
+    turn_idx = ongoing["current_turn_index"]
     team_roles = ongoing["teams"]
     turn_id = team_roles[turn_idx]
     other_idx = team_roles[0]
