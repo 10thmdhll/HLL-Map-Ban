@@ -17,7 +17,7 @@ from helpers import (
 )
 
 @app_commands.command(name="ban_map",description="Ban a map and side combination")
-#@discord.app_commands.checks.cooldown(1, 3.0)
+@discord.app_commands.checks.cooldown(1, 5.0)
 @app_commands.describe(
     map_name="Map to ban",
     side="Team side identifier"
