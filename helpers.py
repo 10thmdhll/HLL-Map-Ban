@@ -579,7 +579,7 @@ async def send_remaining_maps_embed(
     await status_msg.edit(embed=embed)
     # ─── Finally send one new grid message ─────────────────────────    
     grid_msg = await channel.send(embed=embed, file=file)
-    asyncio.create_task(delete_later(grid_msg, 15))
+    asyncio.create_task(delete_later(grid_msg, 60))
     state_data["grid_msg_id"] = grid_msg.id
     await state.save_state(channel.id)
     
